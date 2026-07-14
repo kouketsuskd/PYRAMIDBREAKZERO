@@ -1,75 +1,187 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>PYRAMID BREAK ZERO - DAYBREAK</title>
+<meta name="theme-color" content="#03050a">
+<title>PYRAMID BREAK ZERO - DAYBREAK v2</title>
 <style>
-*{box-sizing:border-box;user-select:none;-webkit-user-select:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:monospace}
-#wrap{position:relative;width:100vw;height:100dvh}canvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}
-#touch{position:absolute;inset:0;pointer-events:none}.b{position:absolute;pointer-events:auto;touch-action:none;border:3px solid #fff;background:#0a0d14dd;color:#fff;font:bold 18px monospace;border-radius:10px;box-shadow:0 4px #000}.b:active,.down{transform:translateY(3px)}
-#u{left:78px;bottom:108px;width:58px;height:58px}#d{left:78px;bottom:28px;width:58px;height:58px}#l{left:16px;bottom:68px;width:58px;height:58px}#r{left:140px;bottom:68px;width:58px;height:58px}
-#ok{right:22px;bottom:62px;width:82px;height:82px;border-radius:50%;border-color:#ffd84a;color:#ffd84a}#bk{right:120px;bottom:24px;width:66px;height:66px;border-radius:50%;border-color:#ff6570;color:#ff6570}
-#start,#end{position:absolute;inset:0;z-index:20;background:radial-gradient(circle at 50% 35%,#263451,#05070d 65%,#000);display:grid;place-items:center;padding:24px}.card{width:min(92vw,760px);border:4px solid #fff;background:#020306ee;text-align:center;padding:26px}.logo{font-size:clamp(34px,7vw,68px);font-weight:1000;line-height:.88}.logo b{color:#ffd84a}.card button{border:3px solid #fff;background:#05070d;color:#fff;font:bold 20px monospace;padding:14px 26px}.hidden{display:none!important}.small{font-size:12px;color:#c7cfdb;line-height:1.7}
-#rot{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;font-weight:bold}@media(orientation:portrait) and (max-width:850px){#rot{display:grid}}
-</style></head><body><div id="wrap"><canvas id="g" width="960" height="540"></canvas>
-<div id="touch"><button class="b" id="u">▲</button><button class="b" id="d">▼</button><button class="b" id="l">◀</button><button class="b" id="r">▶</button><button class="b" id="ok">決定</button><button class="b" id="bk">戻る</button></div>
-<div id="start"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK</b></div><p>感動型ボス戦RPG</p><button id="go">物語を始める</button><p class="small">六人の選択が機械天使の心を変える。<br>ターン制コマンド＋弾幕回避＋絆必殺技。</p></div></div>
-<div id="end" class="hidden"><div class="card"><div class="logo" id="et">DAYBREAK</div><p id="ep"></p><button id="again">もう一度</button></div></div><div id="rot">iPhoneを横向きにしてください</div>
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+body{display:grid;place-items:center}
+#wrap{position:relative;width:100vw;height:100dvh;background:#000}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+#start,#end{position:absolute;inset:0;z-index:20;background:radial-gradient(circle at 50% 35%,#273957,#070912 63%,#010103);display:grid;place-items:center;padding:22px}
+.card{width:min(92vw,780px);padding:26px;border:4px solid #fff;background:#020306f2;text-align:center;box-shadow:0 0 45px #000}
+.logo{font-size:clamp(34px,7vw,70px);font-weight:1000;line-height:.86;text-shadow:5px 5px 0 #203b67}.logo b{color:#ffd75a}
+.card button{margin-top:18px;padding:14px 28px;border:3px solid #fff;background:#05070d;color:#fff;font:900 20px monospace}
+.small{font-size:12px;line-height:1.7;color:#c7d1dd}.hidden{display:none!important}
+#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}
+@media(orientation:portrait) and (max-width:850px){#rotate{display:grid}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="game" width="960" height="540"></canvas>
+<div id="start"><div class="card">
+<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK II</b></div>
+<p>タップ操作専用・感動型ボス戦RPG</p>
+<button id="go">物語を始める</button>
+<p class="small">メニューは直接タップ。弾幕中はハートを指でドラッグ。<br>ハートには強い縁取り・光・残像を付け、弾幕の中でも見失いにくくしています。</p>
+</div></div>
+<div id="end" class="hidden"><div class="card"><div class="logo" id="endTitle">DAYBREAK</div><p id="endText"></p><button id="again">もう一度</button></div></div>
+<div id="rotate">iPhoneを横向きにしてください</div>
+</div>
 <script>
 (()=>{"use strict";
-const C=document.getElementById("g"),X=C.getContext("2d"),W=960,H=540;X.imageSmoothingEnabled=false;
-const K={u:0,d:0,l:0,r:0,ok:0,bk:0},cl=(v,a,b)=>Math.max(a,Math.min(b,v)),rr=(a,b)=>a+Math.random()*(b-a);
-let S="opening",sub="dialog",last=0,sel=0,active=0,turn=0,bond=0,score=0,msg="",mt=0,shake=0,flash=0,dialog=[],di=0,after=null;
-let bullets=[],parts=[],atk=230,adir=1,def=0,freeze=0,foresee=0,guard=0,phoenix=0,world=0,berserk=0,audio=null,mood="quiet",mus=null;
-const P=[
-{name:"トシユキ",max:110,hp:110,mp:70,mm:70,c:"#6958a7",skill:"ザ・ワールド",q:"時間は止められる。でも、想いまでは止められない。",pow:18,spd:1},
-{name:"カズアキ",max:180,hp:180,mp:45,mm:45,c:"#70483d",skill:"ワールド・イズ・マイン",q:"全部背負う。それが俺の役目だ。",pow:34,spd:.82},
-{name:"マッピー",max:105,hp:105,mp:85,mm:85,c:"#caa25a",skill:"ピラミッド・ハート",q:"勝つんじゃない。みんなで帰るんだ。",pow:15,spd:1},
-{name:"ケイタ",max:115,hp:115,mp:70,mm:70,c:"#ea8e2e",skill:"鳳翼天翔",q:"燃え尽きても、朝はまた来る。",pow:24,spd:1.2},
-{name:"イサジ",max:165,hp:165,mp:40,mm:40,c:"#e7bd48",skill:"領域展開・鬼",q:"怖くても進む。それが俺たちだ。",pow:31,spd:.9},
-{name:"リョウゴ",max:120,hp:120,mp:75,mm:75,c:"#3d86bf",skill:"虫の知らせ",q:"未来は決まってない。だから見に行く。",pow:21,spd:1.3}
+const cv=document.getElementById("game"),g=cv.getContext("2d");g.imageSmoothingEnabled=false;
+const W=960,H=540,arena={x:170,y:260,w:620,h:228};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a);
+let scene="opening",sub="dialog",last=0,sel=0,active=0,turn=0,bond=0,score=0,shake=0,flash=0;
+let dialogue=[],di=0,after=null,msg="",msgT=0,bullets=[],particles=[],trails=[];
+let attackX=230,attackDir=1,defT=0,patternId=0,patternClock=0,freeze=0,foresight=false,guard=false,berserk=0;
+let deaths=0,sacrifices=0,talkCount=0,perfects=0;
+let audio=null,musicTimer=null,musicMood="quiet",noteStep=0;
+const items={herb:5,dew:3,leaf:2,ether:3};
+const party=[
+{name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#6d5eb0",skill:"ザ・ワールド",quote:"時間は止められる。でも、想いまでは止められない。",pow:20,spd:1},
+{name:"カズアキ",max:190,hp:190,mp:48,mm:48,c:"#754a3e",skill:"ワールド・イズ・マイン",quote:"全部背負う。それが俺の役目だ。",pow:36,spd:.84},
+{name:"マッピー",max:115,hp:115,mp:90,mm:90,c:"#cda75e",skill:"ピラミッド・ハート",quote:"勝つんじゃない。みんなで帰るんだ。",pow:16,spd:1},
+{name:"ケイタ",max:125,hp:125,mp:75,mm:75,c:"#ed912f",skill:"鳳翼天翔",quote:"燃え尽きても、朝はまた来る。",pow:26,spd:1.2},
+{name:"イサジ",max:175,hp:175,mp:44,mm:44,c:"#ebc34e",skill:"領域展開・鬼",quote:"怖くても進む。それが俺たちだ。",pow:33,spd:.92},
+{name:"リョウゴ",max:130,hp:130,mp:80,mm:80,c:"#3f8bc7",skill:"虫の知らせ",quote:"未来は決まってない。だから見に行く。",pow:23,spd:1.32}
 ];
-const B={name:"機械天使 アルカ・セラフ",max:2400,hp:2400,phase:1,armor:8,resolve:100,weak:"none",mercy:0};
-const Ht={x:480,y:386,r:7,spd:230,inv:0,mode:"red",vy:0},I={herb:5,dew:3,leaf:2,ether:3};
-const acts=["たたかう","わざ","どうぐ","まもる","はなす","こうたい"];
+const boss={name:"機械天使 アルカ・セラフ",max:3000,hp:3000,phase:1,armor:10,resolve:120,mercy:0,weak:"none"};
+const heart={x:480,y:380,r:9,inv:0,mode:"red",vy:0,drag:false,offX:0,offY:0};
+const actions=["たたかう","わざ","どうぐ","まもる","はなす","こうたい"];
+const menuRects=[];
 function ac(){if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)}
-function beep(f=220,d=.08,t="square",v=.025){if(!audio)return;let o=audio.createOscillator(),a=audio.createGain();o.type=t;o.frequency.value=f;a.gain.value=v;o.connect(a);a.connect(audio.destination);o.start();a.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+d);o.stop(audio.currentTime+d)}
-function music(){if(mus)return;let i=0;mus=setInterval(()=>{let q=mood==="quiet"?[220,277,330,277,247,220,196,220]:mood==="hope"?[196,247,294,392,330,294,247,294,220,277,330,440,392,330,294,277]:mood==="despair"?[82,98,110,123,110,98,73,82]:[110,147,165,196,220,196,165,147,123,165,185,247,220,196,165,147];beep(q[i++%q.length],.16,mood==="quiet"?"sine":"square",mood==="quiet"?.018:.014)},165)}
-function say(a,f=null){dialog=Array.isArray(a)?a:[a];di=0;sub="dialog";after=f}
-function nxt(){di++;if(di>=dialog.length){sub="choose";if(after){let f=after;after=null;f()}}}
-function toast(s,t=1.1){msg=s;mt=t}
-function part(x,y,c,n=12,p=1){for(let i=0;i<n;i++)parts.push({x,y,vx:rr(-180,180)*p,vy:rr(-220,80)*p,l:rr(.3,.7),c,s:rr(2,6)})}
-function cur(){if(P[active].hp<=0){let i=P.findIndex(p=>p.hp>0);active=i<0?0:i}return P[active]}
-function reset(){P.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(B,{hp:B.max,phase:1,armor:8,resolve:100,weak:"none",mercy:0});Object.assign(I,{herb:5,dew:3,leaf:2,ether:3});S="opening";sub="dialog";turn=0;sel=0;active=0;bond=0;score=0;bullets=[];parts=[];freeze=foresee=guard=phoenix=world=berserk=0;mood="quiet";say(["――空から、壊れた神が落ちてきた。","その翼は祈りではなく、命令で動いていた。","機械天使「私は、終わらせるために作られた。」","トシユキ「じゃあ俺たちは、始めるために来た。」"],()=>{S="menu";sub="choose";toast("六人の物語が始まる。",1.4)})}
-function dmg(n){n=Math.max(1,Math.floor(n-B.armor));B.hp-=n;score+=n*10;part(480,130,"#fff",22,1.3);beep(85,.15,"square",.07);shake=10;if(B.hp<=0){B.hp=0;ending(false)}}
-function choose(){if(sub!=="choose")return;if(S==="menu"){if(sel===0){S="attack";atk=230;adir=1}if(sel===1){S="skill";sel=0}if(sel===2){S="item";sel=0}if(sel===3){guard=1;bond=Math.min(100,bond+12);say([cur().name+"は仲間の前に立った。","「ここは俺が受ける。」"],defense)}if(sel===4)talk();if(sel===5){S="switch";sel=0}}else if(S==="skill")skill();else if(S==="item")item();else if(S==="switch"){if(P[sel].hp>0){active=sel;S="menu";sel=0;toast(cur().name+"に交代")}else toast("戦闘不能")}}
-function skill(){let p=cur(),cost=[25,30,30,30,28,24][active];if(p.mp<cost)return toast("MPが足りない");p.mp-=cost;flash=.15;shake=9;
-if(active===0){if(world){freeze=2.2;dmg(35);say([p.q,"止まった世界で、仲間の傷が少し癒えた。"],()=>{P.forEach(a=>a.hp=Math.min(a.max,a.hp+18));defense()})}else{world=1;freeze=4.5;bond=Math.min(100,bond+20);P.forEach(a=>{if(a.hp<=0)a.hp=Math.ceil(a.max*.35)});say([p.q,"倒れた仲間たちの時間が、もう一度だけ動き出す。"],defense)}}
-if(active===1){p.hp=Math.max(1,p.hp-Math.ceil(p.max*.22));B.armor=0;dmg(145);bond=Math.min(100,bond+14);say([p.q,"カズアキは自分の命を刃に変えた。"],defense)}
-if(active===2){P.forEach(a=>a.hp=Math.min(a.max,a.hp+34));bond=Math.min(100,bond+20);B.mercy+=15;say([p.q,"黄金の結界が六人を包んだ。"],defense)}
-if(active===3){if(!phoenix){phoenix=1;P.forEach(a=>a.hp=a.hp<=0?Math.ceil(a.max*.55):Math.min(a.max,a.hp+28));p.hp=1;bond=Math.min(100,bond+25);say([p.q,"不死鳥は灰の中から、仲間の名前を呼んだ。"],defense)}else{dmg(B.weak==="fire"?160:95);say([p.q,"炎は破壊ではなく、帰る道を照らした。"],defense)}}
-if(active===4){berserk=3;dmg(105);bond=Math.min(100,bond+8);say([p.q,"鬼の力がイサジの理性を飲み込もうとする。"],defense)}
-if(active===5){foresee=1;B.weak=["fire","power","heart"][Math.floor(Math.random()*3)];bond=Math.min(100,bond+16);dmg(48);say([p.q,"次の弾幕の軌道が、青い残像として見える。"],defense)}}
-function item(){let p=cur();if(sel===0){if(!I.herb)return toast("やくそうがない");I.herb--;p.hp=Math.min(p.max,p.hp+55);bond=Math.min(100,bond+6);say([p.name+"はやくそうを使った。","苦い味が、生きていることを思い出させた。"],defense)}if(sel===1){if(!I.dew)return toast("しずくがない");I.dew--;P.forEach(a=>a.hp=Math.min(a.max,a.hp+42));bond=Math.min(100,bond+14);say(["せかいじゅのしずくが、六人の傷に降り注いだ。"],defense)}if(sel===2){if(!I.leaf)return toast("葉がない");let d=P.find(a=>a.hp<=0);if(!d)return toast("今は必要ない");I.leaf--;d.hp=Math.ceil(d.max*.6);bond=Math.min(100,bond+18);say([d.name+"は、遠い声に呼び戻された。"],defense)}if(sel===3){if(!I.ether)return toast("せいすいがない");I.ether--;p.mp=Math.min(p.mm,p.mp+45);say([p.name+"のMPが回復した。"],defense)}}
-function talk(){let q=[["マッピー「あなたは、誰かに止めてほしいんじゃないのか？」","機械天使「……命令に、願いは必要ない。」"],["リョウゴ「未来には、君が泣いている姿が見える。」","機械天使「私は、泣く機能を持たない。」"],["ケイタ「機能じゃなくても、痛いものは痛い。」","翼の一枚が、わずかに震えた。"],["トシユキ「帰りたい気持ちを選べ。」","機械天使「帰る場所など、私にはない。」"],["イサジ「なら作ればいい。俺たちもそうしてきた。」","機械天使の瞳から、光が一滴こぼれた。"]],i=Math.min(q.length-1,Math.floor(B.mercy/20));B.mercy+=20;bond=Math.min(100,bond+15);B.resolve=Math.max(0,B.resolve-18);say(q[i],()=>{if(B.resolve<=0&&bond>=70)ending(true);else defense()})}
-function attack(dt){atk+=adir*dt*420;if(atk>730){atk=730;adir=-1}if(atk<230){atk=230;adir=1}if(K.ok){K.ok=0;let q=1-Math.abs(480-atk)/250,m=cur().pow*(.7+cl(q,0,1)*1.8);if((active===3&&B.weak==="fire")||(active===1&&B.weak==="power")||(active===2&&B.weak==="heart"))m*=1.35;if(berserk&&active===4)m*=1.8;dmg(m);toast(q>.88?"PERFECT!":q>.55?"GOOD!":"HIT");setTimeout(defense,650)}}
-function link(){bond=0;flash=.35;shake=16;mood="hope";say(["絆が、六人の心を一つにつないだ。","トシユキ「止める。」――時が静止する。","カズアキ「俺が道を作る。」――装甲が断たれる。","リョウゴ「未来は見えた。」――弱点が光る。","イサジ「全部ぶっ壊す。」――鬼の拳が空を裂く。","ケイタ「終わらせよう。」――不死鳥が夜を焼く。","マッピー「みんな、帰ろう。」","六人連携奥義――『DAYBREAK』"],()=>{dmg(520);if(B.hp>0)defense()})}
-function defense(){if(B.hp<=0)return;if(bond>=100)return link();S="def";sub="play";def=B.phase===3?8.5:B.phase===2?7.2:6.2;bullets=[];Object.assign(Ht,{x:480,y:386,inv:.5,mode:B.phase===2?"blue":"red",vy:0});pattern()}
-function pattern(){if(B.phase===1){for(let i=0;i<12;i++)bullets.push({x:220+i*47,y:282-rr(0,80),vx:rr(-25,25),vy:115+rr(0,60),r:6,c:"#eaf4ff",k:"f"});for(let i=0;i<4;i++)bullets.push({x:480,y:385,vx:Math.cos(i*Math.PI/2)*120,vy:Math.sin(i*Math.PI/2)*120,r:7,c:"#ffd45b",k:"g"})}else if(B.phase===2){for(let i=0;i<18;i++){let a=i*Math.PI*2/18;bullets.push({x:480+Math.cos(a)*210,y:385+Math.sin(a)*100,vx:-Math.cos(a)*150,vy:-Math.sin(a)*150,r:7,c:"#b8d7ff",k:"o"})}bullets.push({x:180,y:320,vx:210,vy:0,r:9,c:"#ff6b7d",k:"h"},{x:780,y:450,vx:-210,vy:0,r:9,c:"#ff6b7d",k:"h"})}else{for(let i=0;i<22;i++){let s=i%2,y=286+(i%11)*18;bullets.push({x:s?770:190,y,vx:s?-220:220,vy:Math.sin(i)*55,r:6,c:i%4===0?"#ffd45b":"#fff",k:"l"})}for(let i=0;i<7;i++)bullets.push({x:480,y:385,vx:rr(-260,260),vy:rr(-220,220),r:8,c:"#d46bff",k:"c"})}}
-function hurt(n){if(guard){n=Math.ceil(n*.55);bond=Math.min(100,bond+4)}let p=cur();p.hp-=n;if(p.hp<=0){p.hp=0;let a=P.filter(x=>x.hp>0);if(!a.length)return over();active=P.indexOf(a[0])}}
-function defup(dt){if(freeze>0){freeze-=dt;def-=dt*.25;return}let dx=(K.l?-1:0)+(K.r?1:0),dy=(K.u?-1:0)+(K.d?1:0),sp=Ht.spd*cur().spd;if(Ht.mode==="blue"){Ht.vy+=580*dt;if(K.u&&Ht.y>410)Ht.vy=-290;Ht.x=cl(Ht.x+dx*sp*dt,202,758);Ht.y=cl(Ht.y+Ht.vy*dt,285,480);if(Ht.y>=480){Ht.y=480;Ht.vy=0}}else{Ht.x=cl(Ht.x+dx*sp*dt,202,758);Ht.y=cl(Ht.y+dy*sp*dt,285,480)}
-for(const b of bullets){if(b.k==="h"){let ax=Ht.x-b.x,ay=Ht.y-b.y,l=Math.hypot(ax,ay)||1;b.vx+=ax/l*80*dt;b.vy+=ay/l*80*dt}if(b.k==="g"){let ax=b.x-480,ay=b.y-385;b.vx+=-ay*dt*2;b.vy+=ax*dt*2}b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.k==="f"&&b.y>490){b.y=280;b.x=rr(205,755)}if(Math.hypot(b.x-Ht.x,b.y-Ht.y)<b.r+Ht.r&&Ht.inv<=0){hurt(B.phase===3?22:B.phase===2?17:13);Ht.inv=.85;part(Ht.x,Ht.y,"#ff4c61",12);shake=8}}
-Ht.inv=Math.max(0,Ht.inv-dt);def-=dt;if(def<=0){foresee=guard=0;berserk=Math.max(0,berserk-1);next()}}
-function next(){turn++;B.phase=B.hp<720?3:B.hp<1550?2:1;if(B.phase===2)mood="battle";if(B.phase===3)mood="despair";active=(active+1)%P.length;if(P[active].hp<=0){let i=P.findIndex(p=>p.hp>0);active=i}cur().mp=Math.min(cur().mm,cur().mp+8);S="menu";sub="choose";sel=0;bullets=[];toast(cur().name+"のターン")}
-function ending(peace){S="ending";mood="hope";say(peace?["機械天使は、武器を降ろした。","機械天使「私も、朝を見てもいいのですか？」","六人「もちろん。」","翼から外れた歯車は、花びらのように舞った。","トシユキ「今日は、いい日になりそうだ。」"]:["最後の一撃が、機械天使の胸を貫いた。","けれど誰も、勝ったとは思わなかった。","機械天使「ありがとう……ようやく眠れる。」","マッピー「眠るんじゃない。次は朝を見に行こう。」"],finish)}
-function finish(){S="end";document.getElementById("et").textContent="DAYBREAK";document.getElementById("ep").textContent="誰も勝者ではなかった。\\nただ、七人は朝日を見た。\\nSCORE "+score;document.getElementById("end").classList.remove("hidden")}
-function over(){S="end";document.getElementById("et").textContent="GAME OVER";document.getElementById("ep").textContent="それでも、物語はここで終わらない。";document.getElementById("end").classList.remove("hidden")}
-function input(){if(sub==="dialog"){if(K.ok){K.ok=0;nxt()}return}if(S==="menu"){if(K.l){sel=(sel+5)%6;K.l=0}if(K.r){sel=(sel+1)%6;K.r=0}if(K.u){sel=(sel+4)%6;K.u=0}if(K.d){sel=(sel+2)%6;K.d=0}if(K.ok){K.ok=0;choose()}}else if(S==="item"||S==="switch"||S==="skill"){let m=S==="item"?4:S==="switch"?6:1;if(K.u){sel=(sel+m-1)%m;K.u=0}if(K.d){sel=(sel+1)%m;K.d=0}if(K.ok){K.ok=0;choose()}if(K.bk){K.bk=0;S="menu";sel=0}}}
-function upd(dt){mt=Math.max(0,mt-dt);shake*=.86;flash=Math.max(0,flash-dt);parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=420*dt;p.l-=dt});parts=parts.filter(p=>p.l>0);input();if(S==="attack")attack(dt);if(S==="def")defup(dt)}
-function R(x,y,w,h,c){X.fillStyle=c;X.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}function T(s,x,y,z=18,c="#fff",a="left"){X.fillStyle=c;X.font=`900 ${z}px monospace`;X.textAlign=a;X.fillText(s,x,y)}
-function boss(){X.save();X.translate(480,118);X.strokeStyle=B.phase===3?"#ff6a78":"#eaf4ff";X.lineWidth=7;for(let s of[-1,1]){X.save();X.scale(s,1);let w=B.phase===1?4:B.phase===2?6:8;for(let i=0;i<w;i++){X.beginPath();X.moveTo(40,0);X.lineTo(90+i*17,-55+i*14);X.lineTo(145+i*19,-40+i*15);X.stroke()}X.restore()}R(-62,-48,124,115,"#7b8795");R(-49,-36,98,88,"#171d25");X.fillStyle="#d5b569";X.beginPath();X.moveTo(0,-100);X.lineTo(-48,-30);X.lineTo(48,-30);X.fill();R(-18,-60,36,16,"#eff8ff");R(-8,-57,16,11,"#5cbcff");R(-3,-53,6,6,"#000");X.restore()}
-function draw(){let sx=shake?rr(-shake,shake):0,sy=shake?rr(-shake,shake):0;X.save();X.translate(sx,sy);R(0,0,W,H,"#030407");boss();T(B.name,480,25,19,"#fff","center");R(220,39,520,14,"#242833");R(220,39,520*(B.hp/B.max),14,"#ff4050");T(`${B.hp}/${B.max}`,480,74,13,"#fff","center");T(`絆 ${bond}%`,820,30,15,bond>=100?"#ffd84e":"#a8c9ff","center");R(760,42,120,8,"#222");R(760,42,120*(bond/100),8,"#ffd84e");
-if(S==="def"){R(190,270,580,225,"#020205");X.strokeStyle="#fff";X.lineWidth=4;X.strokeRect(190,270,580,225);for(const b of bullets){if(foresee){X.globalAlpha=.2;R(b.x+b.vx*.35,b.y+b.vy*.35,b.r*2,b.r*2,"#55c8ff");X.globalAlpha=1}R(b.x-b.r,b.y-b.r,b.r*2,b.r*2,b.c)}X.fillStyle=Ht.inv>0&&Math.floor(Ht.inv*14)%2?"#fff":Ht.mode==="blue"?"#4f8cff":"#ff3b50";X.beginPath();X.moveTo(Ht.x,Ht.y+8);X.bezierCurveTo(Ht.x-15,Ht.y-2,Ht.x-10,Ht.y-15,Ht.x,Ht.y-7);X.bezierCurveTo(Ht.x+10,Ht.y-15,Ht.x+15,Ht.y-2,Ht.x,Ht.y+8);X.fill();T(`回避 ${def.toFixed(1)}`,480,260,14,"#ffd84e","center")}else{R(170,275,620,132,"#020205");X.strokeStyle="#fff";X.lineWidth=4;X.strokeRect(170,275,620,132);if(sub==="dialog"){T(dialog[di]||"",480,340,17,"#fff","center");T("決定で進む",750,392,11,"#999","right")}else if(S==="menu"){acts.forEach((a,i)=>T((i===sel?"▶ ":"  ")+a,225+(i%3)*205,322+Math.floor(i/3)*52,20,i===sel?"#ffd84e":"#fff"));T(`${cur().name}  ${cur().skill}`,480,432,15,cur().c,"center")}else if(S==="skill"){T("▶ "+cur().skill,220,325,22,"#ffd84e");T(cur().q,480,370,15,"#ddd","center")}else if(S==="item"){let n=[`やくそう×${I.herb}`,`しずく×${I.dew}`,`せかいじゅのは×${I.leaf}`,`まほうのせいすい×${I.ether}`];n.forEach((a,i)=>T((i===sel?"▶ ":"  ")+a,220+(i%2)*300,322+Math.floor(i/2)*50,19,i===sel?"#ffd84e":"#fff"))}else if(S==="switch"){P.forEach((p,i)=>T((i===sel?"▶ ":"  ")+p.name+" HP "+p.hp,220+(i%2)*300,315+Math.floor(i/2)*29,16,i===sel?"#ffd84e":p.hp>0?"#fff":"#666"))}else if(S==="attack"){R(230,345,500,12,"#555");R(470,330,20,42,"#ffd84e");R(atk-4,326,8,50,"#fff");T("中央で決定！",480,315,17,"#fff","center")}}
-P.forEach((p,i)=>{let x=64+i*145,y=468,w=132;R(x,y-58,w,64,"#0b0e14");X.strokeStyle=i===active?"#ffd84e":"#445";X.lineWidth=3;X.strokeRect(x,y-58,w,64);R(x+8,y-47,18,18,p.c);T(p.name,x+32,y-33,13,p.hp>0?"#fff":"#666");T(`HP ${p.hp}/${p.max}`,x+8,y-14,11);R(x+8,y-9,112,6,"#252a33");R(x+8,y-9,112*(p.hp/p.max),6,p.hp/p.max>.35?"#4fe168":"#ff4e5e");T(`MP ${p.mp}`,x+86,y-33,10,"#9bd1ff")});if(mt>0){R(175,230,610,38,"#000d");T(msg,480,256,17,"#fff","center")}for(const p of parts)R(p.x,p.y,p.s,p.s,p.c);X.restore();if(flash>0){X.fillStyle=`rgba(255,255,255,${flash*4})`;X.fillRect(0,0,W,H)}}
-function loop(t){let dt=Math.min(.033,(t-last)/1000||0);last=t;if(S!=="end")upd(dt);draw();requestAnimationFrame(loop)}
-function bind(id,k){let e=document.getElementById(id),f=v=>q=>{q.preventDefault();K[k]=v;e.classList.toggle("down",v)};["pointerdown","touchstart"].forEach(n=>e.addEventListener(n,f(1),{passive:false}));["pointerup","pointercancel","pointerout","touchend"].forEach(n=>e.addEventListener(n,f(0),{passive:false}))}["u","d","l","r","ok","bk"].forEach(k=>bind(k,k));
-document.getElementById("go").onclick=()=>{ac();music();document.getElementById("start").classList.add("hidden");reset()};document.getElementById("again").onclick=()=>{document.getElementById("end").classList.add("hidden");reset()};reset();requestAnimationFrame(loop);
-})();</script></div></body></html>
+function beep(f=220,d=.08,t="sine",v=.025){if(!audio)return;const o=audio.createOscillator(),a=audio.createGain();o.type=t;o.frequency.value=f;a.gain.value=v;o.connect(a);a.connect(audio.destination);o.start();a.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+d);o.stop(audio.currentTime+d)}
+function music(){if(musicTimer)return;musicTimer=setInterval(()=>{const seq=musicMood==="quiet"?[220,277,330,392,330,277,247,220]:musicMood==="hope"?[196,247,294,392,440,392,330,294,220,277,330,440,494,440,392,330]:musicMood==="despair"?[82,98,110,123,110,98,73,82]:[110,147,165,196,220,247,220,196,123,165,185,247,277,247,220,185];const f=seq[noteStep++%seq.length];beep(f,.18,musicMood==="quiet"?"sine":"triangle",musicMood==="quiet"?.018:.016);if(noteStep%8===0)beep(f/2,.38,"sine",.012)},170)}
+function say(a,f=null){dialogue=Array.isArray(a)?a:[a];di=0;sub="dialog";after=f}
+function nextDialog(){di++;if(di>=dialogue.length){sub="choose";if(after){const f=after;after=null;f()}}}
+function toast(s,t=1.1){msg=s;msgT=t}
+function part(x,y,c,n=12,p=1){for(let i=0;i<n;i++)particles.push({x,y,vx:rnd(-190,190)*p,vy:rnd(-240,90)*p,l:rnd(.3,.8),c,s:rnd(2,7)})}
+function current(){if(party[active].hp<=0){const i=party.findIndex(p=>p.hp>0);active=i<0?0:i}return party[active]}
+function reset(){
+party.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(boss,{hp:boss.max,phase:1,armor:10,resolve:120,mercy:0,weak:"none"});Object.assign(items,{herb:5,dew:3,leaf:2,ether:3});
+scene="opening";sub="dialog";active=turn=sel=bond=score=shake=flash=0;deaths=sacrifices=talkCount=perfects=0;bullets=[];particles=[];trails=[];freeze=0;foresight=guard=false;berserk=0;musicMood="quiet";
+say(["――空から、壊れた神が落ちてきた。","その翼は祈りではなく、命令で動いていた。","機械天使「私は、終わらせるために作られた。」","トシユキ「じゃあ俺たちは、始めるために来た。」"],()=>{scene="menu";sub="choose";toast("六人の物語が始まる。",1.4)})
+}
+function damageBoss(n){n=Math.max(1,Math.floor(n-boss.armor));boss.hp-=n;score+=n*10;shake=12;flash=.08;part(480,125,"#fff",24,1.4);beep(80,.16,"square",.06);if(boss.hp<=0){boss.hp=0;combatEnd()}}
+function chooseAction(index){
+sel=index;
+if(index===0){scene="attack";attackX=230;attackDir=1;sub="play"}
+if(index===1){scene="skill";sub="choose"}
+if(index===2){scene="item";sub="choose"}
+if(index===3){guard=true;bond=Math.min(100,bond+13);say([current().name+"は仲間の前に立った。","「ここは俺が受ける。」"],beginDefense)}
+if(index===4)talk()
+if(index===5){scene="switch";sub="choose"}
+}
+function useSkill(){
+const p=current(),cost=[26,32,32,32,30,25][active];if(p.mp<cost)return toast("MPが足りない");p.mp-=cost;flash=.18;shake=10;
+if(active===0){freeze=4.2;bond=Math.min(100,bond+20);party.forEach(a=>{if(a.hp<=0){a.hp=Math.ceil(a.max*.32);deaths=Math.max(0,deaths-1)}});say([p.quote,"倒れた仲間たちの時間が、もう一度だけ動き出す。"],beginDefense)}
+if(active===1){p.hp=Math.max(1,p.hp-Math.ceil(p.max*.25));sacrifices++;boss.armor=0;damageBoss(175);bond=Math.min(100,bond+16);say([p.quote,"カズアキは自分の命を刃に変えた。"],beginDefense)}
+if(active===2){party.forEach(a=>a.hp=Math.min(a.max,a.hp+40));boss.resolve=Math.max(0,boss.resolve-8);bond=Math.min(100,bond+22);say([p.quote,"黄金の結界が、六人の鼓動を一つにした。"],beginDefense)}
+if(active===3){party.forEach(a=>{if(a.hp<=0){a.hp=Math.ceil(a.max*.55);deaths=Math.max(0,deaths-1)}else a.hp=Math.min(a.max,a.hp+26)});p.hp=1;sacrifices++;bond=Math.min(100,bond+28);say([p.quote,"不死鳥は灰の中から、仲間の名前を呼んだ。"],beginDefense)}
+if(active===4){berserk=3;damageBoss(125);bond=Math.min(100,bond+10);say([p.quote,"鬼の力が、怒りではなく仲間を守るために目覚めた。"],beginDefense)}
+if(active===5){foresight=true;boss.weak=["fire","power","heart"][Math.floor(Math.random()*3)];bond=Math.min(100,bond+18);damageBoss(55);say([p.quote,"危険な未来だけが、青い残像になって浮かんだ。"],beginDefense)}
+}
+function useItem(i){
+const p=current();
+if(i===0){if(!items.herb)return toast("やくそうがない");items.herb--;p.hp=Math.min(p.max,p.hp+65);bond=Math.min(100,bond+7);say([p.name+"はやくそうを使った。","苦い味が、生きていることを思い出させた。"],beginDefense)}
+if(i===1){if(!items.dew)return toast("しずくがない");items.dew--;party.forEach(a=>a.hp=Math.min(a.max,a.hp+48));bond=Math.min(100,bond+15);say(["せかいじゅのしずくが、六人の傷に降り注いだ。"],beginDefense)}
+if(i===2){if(!items.leaf)return toast("葉がない");const d=party.find(a=>a.hp<=0);if(!d)return toast("今は必要ない");items.leaf--;d.hp=Math.ceil(d.max*.65);deaths=Math.max(0,deaths-1);bond=Math.min(100,bond+20);say([d.name+"は、遠い声に呼び戻された。"],beginDefense)}
+if(i===3){if(!items.ether)return toast("せいすいがない");items.ether--;p.mp=Math.min(p.mm,p.mp+50);say([p.name+"のMPが回復した。"],beginDefense)}
+}
+function talk(){
+talkCount++;const q=[
+["マッピー「あなたは、誰かに止めてほしいんじゃないのか？」","機械天使「……命令に、願いは必要ない。」"],
+["リョウゴ「未来には、君が泣いている姿が見える。」","機械天使「私は、泣く機能を持たない。」"],
+["ケイタ「機能じゃなくても、痛いものは痛い。」","翼の一枚が、わずかに震えた。"],
+["トシユキ「帰りたい気持ちを選べ。」","機械天使「帰る場所など、私にはない。」"],
+["イサジ「なら作ればいい。俺たちもそうしてきた。」","機械天使の瞳から、光が一滴こぼれた。"],
+["カズアキ「帰る場所は、誰かと一緒に作るものだ。」","機械天使「……私にも、できますか？」"]
+];const i=Math.min(q.length-1,Math.floor(boss.mercy/20));boss.mercy+=20;boss.resolve=Math.max(0,boss.resolve-20);bond=Math.min(100,bond+16);say(q[i],()=>{if(boss.resolve<=0&&bond>=75)peaceEnd();else beginDefense()})
+}
+function attackTap(){const q=1-Math.abs(480-attackX)/250,m=current().pow*(.75+clamp(q,0,1)*1.9);if(q>.9)perfects++;damageBoss(m*((berserk&&active===4)?1.8:1));toast(q>.9?"PERFECT!":q>.58?"GOOD!":"HIT");setTimeout(beginDefense,600)}
+function sixLink(){bond=0;musicMood="hope";flash=.35;shake=18;say(["絆が、六人の心を一つにつないだ。","トシユキ「止める。」――時が静止する。","カズアキ「俺が道を作る。」――装甲が断たれる。","リョウゴ「未来は見えた。」――弱点が光る。","イサジ「全部ぶっ壊す。」――鬼の拳が空を裂く。","ケイタ「終わらせよう。」――不死鳥が夜を焼く。","マッピー「みんな、帰ろう。」","六人連携奥義――『DAYBREAK』"],()=>{damageBoss(620);if(boss.hp>0)beginDefense()})}
+function beginDefense(){if(boss.hp<=0)return;if(bond>=100)return sixLink();scene="defense";sub="play";defT=boss.phase===3?9.4:boss.phase===2?8:6.8;patternClock=0;bullets=[];trails=[];heart.x=480;heart.y=380;heart.inv=.6;heart.mode=boss.phase===2?"blue":"red";heart.vy=0;patternId=(turn+boss.phase*3)%10;spawnPattern(patternId)}
+function spawnPattern(id){
+if(id===0)for(let i=0;i<16;i++)bullets.push({x:190+i*39,y:260-rnd(0,140),vx:rnd(-20,20),vy:145+rnd(0,75),r:6,c:"#eef7ff",k:"rain"});
+if(id===1)for(let i=0;i<18;i++){const a=i*Math.PI*2/18;bullets.push({x:480+Math.cos(a)*260,y:375+Math.sin(a)*130,vx:-Math.cos(a)*170,vy:-Math.sin(a)*170,r:7,c:"#ffd761",k:"orbit"})}
+if(id===2)for(let i=0;i<10;i++)bullets.push({x:i%2?790:150,y:280+i*22,vx:i%2?-240:240,vy:0,r:7,c:"#ff667b",k:"laser",warn:.8});
+if(id===3)for(let i=0;i<8;i++)bullets.push({x:480,y:375,vx:rnd(-270,270),vy:rnd(-230,230),r:9,c:"#c96cff",k:"split",life:1.5});
+if(id===4)for(let i=0;i<6;i++)bullets.push({x:rnd(220,740),y:rnd(290,460),vx:0,vy:0,r:16,c:"#101018",k:"black"});
+if(id===5)for(let i=0;i<14;i++)bullets.push({x:200+i*43,y:i%2?300:460,vx:0,vy:i%2?130:-130,r:6,c:i%3?"#fff":"#55baff",k:"wall"});
+if(id===6)for(let i=0;i<12;i++)bullets.push({x:rnd(200,760),y:rnd(280,470),vx:rnd(-70,70),vy:rnd(-70,70),r:7,c:i%2?"#fff":"#5be6ff",k:"fake",fake:i%3===0});
+if(id===7)for(let i=0;i<16;i++){const a=i*Math.PI*2/16;bullets.push({x:480,y:375,vx:Math.cos(a)*210,vy:Math.sin(a)*210,r:7,c:"#ffcf58",k:"burst"})}
+if(id===8)for(let i=0;i<9;i++)bullets.push({x:i%2?760:200,y:290+i*22,vx:i%2?-170:170,vy:Math.sin(i)*80,r:10,c:"#ff8b45",k:"missile"});
+if(id===9){bullets.push({x:480,y:375,vx:0,vy:0,r:28,c:"#202038",k:"gravity"});for(let i=0;i<10;i++)bullets.push({x:rnd(200,760),y:rnd(280,470),vx:rnd(-100,100),vy:rnd(-100,100),r:6,c:"#fff",k:"star"})}
+}
+function updateDefense(dt){
+if(freeze>0){freeze-=dt;defT-=dt*.3;return}
+patternClock+=dt;const speed=current().spd;
+if(heart.drag){trails.push({x:heart.x,y:heart.y,l:.32});if(trails.length>18)trails.shift()}
+if(heart.mode==="blue"){heart.vy+=600*dt;heart.y+=heart.vy*dt;if(heart.y>arena.y+arena.h-12){heart.y=arena.y+arena.h-12;heart.vy=0}}
+for(const b of bullets){
+if(b.warn>0){b.warn-=dt;continue}
+if(b.k==="black"){const dx=b.x-heart.x,dy=b.y-heart.y,l=Math.hypot(dx,dy)||1;heart.x+=dx/l*45*dt;heart.y+=dy/l*45*dt}
+if(b.k==="gravity"){const dx=b.x-heart.x,dy=b.y-heart.y,l=Math.hypot(dx,dy)||1;heart.x+=dx/l*95*dt;heart.y+=dy/l*95*dt}
+if(b.k==="missile"){const dx=heart.x-b.x,dy=heart.y-b.y,l=Math.hypot(dx,dy)||1;b.vx+=dx/l*75*dt;b.vy+=dy/l*75*dt}
+b.x+=b.vx*dt;b.y+=b.vy*dt;
+if(b.k==="rain"&&b.y>arena.y+arena.h){b.y=arena.y-20;b.x=rnd(arena.x,arena.x+arena.w)}
+if(b.k==="split"){b.life-=dt;if(b.life<0){b.life=999;for(let i=0;i<4;i++){const a=i*Math.PI/2;bullets.push({x:b.x,y:b.y,vx:Math.cos(a)*190,vy:Math.sin(a)*190,r:5,c:"#ff9cff",k:"piece"})}}}
+if(b.k==="fake"&&b.fake)continue;
+if(Math.hypot(b.x-heart.x,b.y-heart.y)<b.r+heart.r&&heart.inv<=0){hurt(boss.phase===3?25:boss.phase===2?19:15);heart.inv=.8;part(heart.x,heart.y,"#ff4760",14);shake=9}
+}
+heart.x=clamp(heart.x,arena.x+12,arena.x+arena.w-12);heart.y=clamp(heart.y,arena.y+12,arena.y+arena.h-12);heart.inv=Math.max(0,heart.inv-dt);defT-=dt;
+if(defT<=0){foresight=guard=false;berserk=Math.max(0,berserk-1);nextTurn()}
+}
+function hurt(n){if(guard){n=Math.ceil(n*.55);bond=Math.min(100,bond+5)}const p=current();p.hp-=n;if(p.hp<=0){p.hp=0;deaths++;const a=party.filter(x=>x.hp>0);if(!a.length)return gameOver();active=party.indexOf(a[0])}}
+function nextTurn(){turn++;boss.phase=boss.hp<850?3:boss.hp<1900?2:1;if(boss.phase===2)musicMood="battle";if(boss.phase===3)musicMood="despair";active=(active+1)%party.length;if(party[active].hp<=0){const i=party.findIndex(p=>p.hp>0);active=i}current().mp=Math.min(current().mm,current().mp+9);scene="menu";sub="choose";bullets=[];trails=[];toast(current().name+"のターン")}
+function peaceEnd(){scene="ending";musicMood="hope";say(["機械天使は、武器を降ろした。","機械天使「私も、朝を見てもいいのですか？」","六人「もちろん。」","翼から外れた歯車は、花びらのように舞った。","トシユキ「今日は、いい日になりそうだ。」"],()=>finish("TRUE DAYBREAK","誰も倒れず、機械天使を救った。"))}
+function combatEnd(){scene="ending";musicMood="hope";say(["最後の一撃が、機械天使の胸を貫いた。","けれど誰も、勝ったとは思わなかった。","機械天使「ありがとう……ようやく眠れる。」","マッピー「眠るんじゃない。次は朝を見に行こう。」"],()=>{let title="HUMAN END",text="戦いの果てに、七人は朝日を見た。";if(sacrifices>=2){title="SACRIFICE END";text="誰かの命が、みんなの朝を守った。"}else if(berserk>0){title="CHAOS END";text="鬼の力は勝利と引き換えに、静かな傷を残した。"}else if(perfects>=6&&deaths===0){title="HERO END";text="六人は誰も倒れず、力で夜を越えた。"}finish(title,text)})}
+function finish(title,text){scene="end";document.getElementById("endTitle").textContent=title;document.getElementById("endText").textContent=text+"\\nSCORE "+score+"\\n会話 "+talkCount+"回 / 犠牲 "+sacrifices+"回";document.getElementById("end").classList.remove("hidden")}
+function gameOver(){scene="end";document.getElementById("endTitle").textContent="NIGHT END";document.getElementById("endText").textContent="それでも、物語はここで終わらない。";document.getElementById("end").classList.remove("hidden")}
+function update(dt){msgT=Math.max(0,msgT-dt);shake*=.86;flash=Math.max(0,flash-dt);particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=420*dt;p.l-=dt});particles=particles.filter(p=>p.l>0);trails.forEach(t=>t.l-=dt);trails=trails.filter(t=>t.l>0);if(scene==="attack"){attackX+=attackDir*dt*430;if(attackX>730){attackX=730;attackDir=-1}if(attackX<230){attackX=230;attackDir=1}}if(scene==="defense")updateDefense(dt)}
+function R(x,y,w,h,c){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function T(s,x,y,z=18,c="#fff",a="left"){g.fillStyle=c;g.font=`900 ${z}px monospace`;g.textAlign=a;g.fillText(s,x,y)}
+function drawBoss(){g.save();g.translate(480,118);g.strokeStyle=boss.phase===3?"#ff6879":"#ecf6ff";g.lineWidth=7;for(const s of[-1,1]){g.save();g.scale(s,1);const w=boss.phase===1?4:boss.phase===2?7:10;for(let i=0;i<w;i++){g.beginPath();g.moveTo(42,0);g.lineTo(92+i*15,-58+i*12);g.lineTo(150+i*17,-42+i*13);g.stroke()}g.restore()}R(-65,-50,130,118,"#7c8896");R(-51,-37,102,90,"#171d25");g.fillStyle="#d6b66a";g.beginPath();g.moveTo(0,-105);g.lineTo(-50,-30);g.lineTo(50,-30);g.fill();R(-19,-63,38,17,"#f3fbff");R(-8,-60,16,12,"#56bdff");R(-3,-56,6,6,"#000");if(boss.phase>=2){g.strokeStyle=boss.phase===3?"#ff4f72":"#ffd85a";g.lineWidth=4;g.beginPath();g.arc(0,-64,78+Math.sin(performance.now()/120)*8,0,Math.PI*2);g.stroke()}g.restore()}
+function drawHeart(){
+for(const t of trails){g.globalAlpha=t.l/.32*.45;g.fillStyle="#fff";g.beginPath();g.arc(t.x,t.y,heart.r+5,0,Math.PI*2);g.fill()}g.globalAlpha=1;
+g.save();g.shadowColor=heart.mode==="blue"?"#55a8ff":"#ff3658";g.shadowBlur=22;
+g.strokeStyle="#fff";g.lineWidth=6;g.fillStyle=heart.inv>0&&Math.floor(heart.inv*14)%2?"#fff":heart.mode==="blue"?"#397cff":"#ff2649";
+g.beginPath();g.moveTo(heart.x,heart.y+11);g.bezierCurveTo(heart.x-20,heart.y-1,heart.x-13,heart.y-19,heart.x,heart.y-9);g.bezierCurveTo(heart.x+13,heart.y-19,heart.x+20,heart.y-1,heart.x,heart.y+11);g.closePath();g.fill();g.stroke();
+g.fillStyle="#fff";g.beginPath();g.arc(heart.x-3,heart.y-4,2.5,0,Math.PI*2);g.fill();g.restore()
+}
+function draw(){
+const sx=shake?rnd(-shake,shake):0,sy=shake?rnd(-shake,shake):0;g.save();g.translate(sx,sy);R(0,0,W,H,"#030407");drawBoss();T(boss.name,480,24,19,"#fff","center");R(220,38,520,14,"#242833");R(220,38,520*(boss.hp/boss.max),14,boss.phase===3?"#ff4b66":"#ff4050");T(`${boss.hp}/${boss.max}`,480,73,13,"#fff","center");T(`絆 ${bond}%`,820,28,15,bond>=100?"#ffd84e":"#a8c9ff","center");R(760,40,120,8,"#222");R(760,40,120*bond/100,8,"#ffd84e");
+menuRects.length=0;
+if(scene==="defense"){R(arena.x,arena.y,arena.w,arena.h,"#020205");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);for(const b of bullets){if(b.warn>0){g.globalAlpha=.3;R(b.x-2,b.y-18,4,36,"#ff3344");g.globalAlpha=1;continue}if(foresight){g.globalAlpha=.18;R(b.x+b.vx*.28,b.y+b.vy*.28,b.r*2,b.r*2,"#4fc8ff");g.globalAlpha=1}R(b.x-b.r,b.y-b.r,b.r*2,b.r*2,b.fake?"#506070":b.c)}drawHeart();T(`回避 ${defT.toFixed(1)}`,480,252,14,"#ffd84e","center")}
+else{R(160,272,640,136,"#020205");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(160,272,640,136);
+if(sub==="dialog"){T(dialogue[di]||"",480,338,17,"#fff","center");T("画面をタップ",755,394,11,"#aaa","right")}
+else if(scene==="menu"){actions.forEach((a,i)=>{const rx=185+(i%3)*205,ry=291+Math.floor(i/3)*55,rw=185,rh=42;menuRects.push({x:rx,y:ry,w:rw,h:rh,type:"action",i});R(rx,ry,rw,rh,i===sel?"#2a2108":"#090b10");T(a,rx+rw/2,ry+28,19,i===sel?"#ffd84e":"#fff","center")});T(`${current().name} / ${current().skill}`,480,430,15,current().c,"center")}
+else if(scene==="skill"){menuRects.push({x:190,y:300,w:580,h:76,type:"skill",i:0});R(190,300,580,76,"#17120a");T(current().skill,480,330,23,"#ffd84e","center");T(current().quote,480,361,14,"#ddd","center")}
+else if(scene==="item"){const n=[`やくそう ×${items.herb}`,`しずく ×${items.dew}`,`せかいじゅのは ×${items.leaf}`,`まほうのせいすい ×${items.ether}`];n.forEach((a,i)=>{const rx=190+(i%2)*300,ry=292+Math.floor(i/2)*50;menuRects.push({x:rx,y:ry,w:280,h:40,type:"item",i});R(rx,ry,280,40,"#0b0d13");T(a,rx+140,ry+27,17,"#fff","center")})}
+else if(scene==="switch"){party.forEach((p,i)=>{const rx=185+(i%2)*310,ry=286+Math.floor(i/2)*38;menuRects.push({x:rx,y:ry,w:290,h:34,type:"switch",i});R(rx,ry,290,34,"#0b0d13");T(`${p.name}  HP ${p.hp}/${p.max}`,rx+145,ry+23,15,p.hp>0?"#fff":"#666","center")})}
+else if(scene==="attack"){R(230,345,500,12,"#555");R(470,330,20,42,"#ffd84e");R(attackX-4,326,8,50,"#fff");T("中央に来た瞬間をタップ！",480,313,17,"#fff","center")}}
+party.forEach((p,i)=>{const x=54+i*148,y=468,w=138;R(x,y-58,w,66,"#0a0d14");g.strokeStyle=i===active?"#ffd84e":"#445";g.lineWidth=3;g.strokeRect(x,y-58,w,66);R(x+8,y-47,18,18,p.c);T(p.name,x+32,y-33,13,p.hp>0?"#fff":"#666");T(`HP ${p.hp}/${p.max}`,x+8,y-14,11,"#fff");R(x+8,y-9,118,7,"#242933");R(x+8,y-9,118*p.hp/p.max,7,p.hp/p.max>.35?"#4ee16b":"#ff4e61");T(`MP ${p.mp}`,x+92,y-33,10,"#9ad0ff")});
+if(msgT>0){R(175,230,610,38,"#000e");T(msg,480,256,17,"#fff","center")}for(const p of particles)R(p.x,p.y,p.s,p.s,p.c);g.restore();if(flash>0){g.fillStyle=`rgba(255,255,255,${flash*4})`;g.fillRect(0,0,W,H)}
+}
+function canvasPos(e){const r=cv.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*W/r.width,y:(p.clientY-r.top)*H/r.height}}
+cv.addEventListener("pointerdown",e=>{e.preventDefault();ac();const p=canvasPos(e);
+if(scene==="defense"){heart.drag=true;heart.offX=heart.x-p.x;heart.offY=heart.y-p.y;heart.x=clamp(p.x+heart.offX,arena.x+12,arena.x+arena.w-12);heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12);if(heart.mode==="blue"&&p.y<heart.y-8)heart.vy=-310;return}
+if(sub==="dialog"){nextDialog();return}
+if(scene==="attack"){attackTap();return}
+for(const m of menuRects)if(p.x>=m.x&&p.x<=m.x+m.w&&p.y>=m.y&&p.y<=m.y+m.h){if(m.type==="action")chooseAction(m.i);if(m.type==="skill")useSkill();if(m.type==="item")useItem(m.i);if(m.type==="switch"){if(party[m.i].hp>0){active=m.i;scene="menu";sub="choose";toast(party[m.i].name+"に交代")}}return}
+});
+cv.addEventListener("pointermove",e=>{if(!heart.drag||scene!=="defense")return;e.preventDefault();const p=canvasPos(e);heart.x=clamp(p.x+heart.offX,arena.x+12,arena.x+arena.w-12);heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12)});
+["pointerup","pointercancel","pointerout"].forEach(n=>cv.addEventListener(n,()=>heart.drag=false));
+function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(scene!=="end")update(dt);draw();requestAnimationFrame(loop)}
+document.getElementById("go").onclick=()=>{ac();music();document.getElementById("start").classList.add("hidden");reset()};
+document.getElementById("again").onclick=()=>{document.getElementById("end").classList.add("hidden");reset()};
+reset();requestAnimationFrame(loop);
+})();</script>
+</div>
+</body></html>
