@@ -1,3 +1,3 @@
-# PYRAMID BREAK ZERO: ANGEL CORE
+# PYRAMID BREAK ZERO - DAYBREAK
 
-六人の仲間が翼の生えた機械天使と戦う、ターン制＋弾幕回避RPG戦闘ゲームです。
+感動型ボス戦RPG。GitHub Pages対応。
