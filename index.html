@@ -24,7 +24,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-acti
 <div id="wrap">
 <canvas id="game" width="540" height="960"></canvas>
 <div id="start"><div class="card">
-<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK VIII</b></div>
+<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK VII.1I</b></div>
 <p>縦画面・敵ターン／必殺技 完全修正版</p>
 <button id="go">物語を始める</button>
 <p class="small">スマホ縦画面専用。メニューは直接タップ、弾幕中はハートを指でドラッグ。<br>ハートには強い縁取り・光・残像を付け、弾幕の中でも見失いにくくしています。</p>
@@ -44,7 +44,7 @@ let deaths=0,sacrifices=0,talkCount=0,perfects=0;
 let skillFx={t:0,type:"",name:"",color:"#fff"};let damagePop=[];
 let attackTime=0,attackHits=0,attackTotal=0,attackEnded=false,attackLastQuality=0;
 let skillGame=null;let memoryGame={timer:0,phase:0,progress:0,choice:-1,targets:[],held:false};
-let platform={x:70,y:640,vx:0,vy:0,ground:690,camera:0,goal:1320,dead:false,coins:0,lives:3,checkpoint:70,won:false,tutorialPage:0,ready:false};
+let platform={x:70,y:640,vx:0,vy:0,ground:690,camera:0,goal:1040,dead:false,coins:0,falls:0,checkpoint:70,won:false,tutorialPage:0,ready:false,moveHold:0,moveDir:0,inv:0};
 let beam={timer:0,aimX:270,aimY:500,shots:0,cores:[],bossX:270,bossY:450,drag:false};
 let seal={timer:0,index:0,nodes:[]};
 let gimmickLock=false;
@@ -99,7 +99,7 @@ p.mp-=cost;
 const types=["clock","slash","pyramid","phoenix","oni","future"];
 skillFx={t:0,type:types[active],name:p.skill,color:p.c};
 memoryGame={timer:8.5,phase:0,progress:0,choice:-1,targets:[],held:false};
-scene="skillstory";sub="play";
+scene="skillstory";sub="play";dialogue=[];di=0;afterDialogue=null;
 const sets=[
 [{x:110,y:470,r:34,label:"過去",good:false},{x:270,y:390,r:34,label:"今",good:true},{x:430,y:510,r:34,label:"未来",good:false}],
 [{x:135,y:430,r:38,label:"自分",good:false},{x:405,y:430,r:38,label:"仲間",good:true}],
@@ -111,6 +111,8 @@ const sets=[
 memoryGame.targets=sets[active];
 }
 function resolveSkill(success){
+if(scene!=="skillstory")return;
+scene="skillResolve";sub="play";
 const p=current(),bonus=success?1.55:1.0;memoryGame.timer=0;
 if(active===0){party.forEach(a=>{if(a.hp<=0){a.hp=Math.ceil(a.max*.35);deaths=Math.max(0,deaths-1)}a.hp=Math.min(a.max,a.hp+Math.floor(20*bonus))});bond=Math.min(100,bond+(success?24:15));say([p.quote,success?"トシユキは『今』を選んだ。止めた時間を、仲間のためにもう一度動かす。":"秒針は迷いながらも、仲間の鼓動を探した。"],beginDefense)}
 if(active===1){p.hp=Math.max(1,p.hp-Math.ceil(p.max*.20));sacrifices++;boss.armor=0;damageBoss(145*bonus);bond=Math.min(100,bond+(success?20:12));say([p.quote,success?"カズアキは自分ではなく、仲間の名前を斬撃に刻んだ。":"刃は震えた。それでも前へ進んだ。"],beginDefense)}
@@ -170,7 +172,7 @@ bossFx.charge=.9;bossFx.attack=1.1;scene="defense";sub="play";defT=boss.phase===
 }
 function beginPlatform(){
 gimmickLock=true;scene="platformTutorial";sub="play";
-platform={x:70,y:640,vx:0,vy:0,ground:690,camera:0,goal:1320,dead:false,coins:0,lives:3,checkpoint:70,won:false,tutorialPage:0,ready:false};
+platform={x:70,y:640,vx:0,vy:0,ground:690,camera:0,goal:1040,dead:false,coins:0,falls:0,checkpoint:70,won:false,tutorialPage:0,ready:false,moveHold:0,moveDir:0,inv:0};
 }
 function beginBeam(){
 gimmickLock=true;scene="beam";sub="play";
@@ -323,22 +325,53 @@ if(defT<=0){foresight=guard=false;berserk=Math.max(0,berserk-1);nextTurn()}
 
 function updatePlatform(dt){
 if(!platform.ready)return;
-platform.vy+=780*dt;platform.x+=platform.vx*dt;platform.y+=platform.vy*dt;
-const worldX=platform.x+platform.camera;
-const holes=[[360,440],[820,900]];let ground=690;
-for(const h of holes)if(worldX>h[0]&&worldX<h[1])ground=850;
-const floating=[[210,610,130],[520,560,150],[950,600,150],[1160,540,145]];
-for(const p of floating)if(worldX>p[0]&&worldX<p[0]+p[2]&&platform.y<=p[1]&&platform.y+platform.vy*dt>=p[1])ground=Math.min(ground,p[1]);
-if(platform.y>=ground-28){platform.y=ground-28;platform.vy=0}
-if(worldX>620&&platform.checkpoint<620){platform.checkpoint=620;toast("CHECKPOINT",.8)}
-if(worldX>platform.goal){platform.won=true;return endGimmick(true)}
-if(platform.y>830){
- platform.lives--;if(platform.lives<=0){platform.lives=3;platform.checkpoint=Math.max(70,platform.checkpoint-300)}
- platform.camera=Math.max(0,platform.checkpoint-120);platform.x=platform.checkpoint-platform.camera;platform.y=610;platform.vx=0;platform.vy=0;
- toast("落ちても戻れる。もう一度。",1.0);
+platform.inv=Math.max(0,platform.inv-dt);
+if(platform.moveHold>0){
+ platform.moveHold-=dt;
+ platform.vx=platform.moveDir*205;
+}else{
+ platform.vx*=Math.pow(.025,dt);
+ if(Math.abs(platform.vx)<4)platform.vx=0;
 }
-if(platform.x>360){platform.camera+=platform.x-360;platform.x=360}
-platform.x=clamp(platform.x,55,360);
+platform.vy+=760*dt;
+platform.x+=platform.vx*dt;
+platform.y+=platform.vy*dt;
+
+const worldX=platform.x+platform.camera;
+/* 広めの穴2つだけ。端に安全床を残す */
+const holes=[[390,455],[780,845]];
+let ground=690;
+for(const h of holes)if(worldX>h[0]&&worldX<h[1])ground=850;
+
+/* 大きく着地しやすい足場 */
+const floating=[[205,610,155],[495,565,185],[865,595,175]];
+for(const p of floating){
+ const prevY=platform.y-platform.vy*dt;
+ if(worldX>p[0]-10&&worldX<p[0]+p[2]+10&&prevY<=p[1]-20&&platform.y>=p[1]-28&&platform.vy>=0){
+   ground=Math.min(ground,p[1]);
+ }
+}
+if(platform.y>=ground-28){platform.y=ground-28;platform.vy=0}
+
+/* 自動チェックポイント */
+if(worldX>520&&platform.checkpoint<520){platform.checkpoint=520;toast("CHECKPOINT ― ここから再開",1.0)}
+if(worldX>platform.goal){platform.won=true;return endGimmick(true)}
+
+/* 落下はゲームオーバーではなくHPダメージ＋即復帰 */
+if(platform.y>820){
+ platform.falls++;
+ const p=current();
+ p.hp=Math.max(1,p.hp-12);
+ platform.camera=Math.max(0,platform.checkpoint-110);
+ platform.x=platform.checkpoint-platform.camera;
+ platform.y=620;platform.vx=0;platform.vy=0;platform.moveHold=0;platform.inv=1.2;
+ shake=10;particle(arena.x+platform.x,platform.y,"#ff4d62",18);
+ toast(`落下ダメージ -12　HP ${p.hp}/${p.max}`,1.2);
+}
+
+/* カメラ追従 */
+if(platform.x>350){platform.camera+=platform.x-350;platform.x=350}
+platform.x=clamp(platform.x,55,350);
 }function updateBeam(dt){
 beam.timer-=dt;beam.bossX=270+Math.sin(performance.now()/330)*150;beam.bossY=430+Math.cos(performance.now()/470)*70;
 if(beam.timer<=0)endGimmick(beam.cores.every(c=>c.hp<=0));
@@ -379,134 +412,33 @@ bossFx.blink+=dt;bossFx.wing+=dt*(boss.phase===3?8:boss.phase===2?6:4);bossFx.ho
 bossFx.tilt*=Math.pow(.06,dt);bossFx.core=Math.max(0,bossFx.core-dt);
 bgStars.forEach(s=>{s.y+=s.v*dt;if(s.y>960){s.y=-4;s.x=Math.random()*540}});
 particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=420*dt;p.l-=dt});particles=particles.filter(p=>p.l>0);damagePop.forEach(d=>{d.y+=d.v*dt;d.v*=.94;d.l-=dt});damagePop=damagePop.filter(d=>d.l>0);trails.forEach(t=>t.l-=dt);trails=trails.filter(t=>t.l>0);if(scene==="attack"){attackTime-=dt;attackX+=attackDir*dt*(430+attackHits*34);if(attackX>470){attackX=470;attackDir=-1}if(attackX<70){attackX=70;attackDir=1}if(attackTime<=0&&!attackEnded)finishComboAttack()}
-if(scene==="skillstory"){memoryGame.timer-=dt;if(memoryGame.timer<=0)resolveSkill(false)}
-if(scene==="defense")updateDefense(dt);
-if(scene==="platform")updatePlatform(dt);
-if(scene==="beam")updateBeam(dt);
-if(scene==="seal")updateSeal(dt)}
-function R(x,y,w,h,c){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
-function T(s,x,y,z=18,c="#fff",a="left"){g.fillStyle=c;g.font=`900 ${z}px monospace`;g.textAlign=a;g.fillText(s,x,y)}
-function wrapped(s,x,y,maxW,lineH=24,size=16){
-g.font=`900 ${size}px monospace`;g.textAlign="center";const chars=[...String(s)];let line="",lines=[];
-for(const ch of chars){const test=line+ch;if(g.measureText(test).width>maxW&&line){lines.push(line);line=ch}else line=test}
-if(line)lines.push(line);lines.slice(0,4).forEach((v,i)=>T(v,x,y+i*lineH,size,"#fff","center"));
-}
-function drawBoss(){
-const hover=Math.sin(bossFx.hover)*7;
-const flap=Math.sin(bossFx.wing)*10;
-const recoil=bossFx.hit>0?Math.sin(bossFx.hit*55)*14:0;
-const charge=bossFx.charge>0?(1-bossFx.charge/.9):0;
-const scale=.88+(bossFx.transform>0?Math.sin((1-bossFx.transform/2.4)*Math.PI)*.18:0);
-const tilt=bossFx.tilt+(bossFx.roar>0?Math.sin(performance.now()/45)*.04:0);
-g.save();g.translate(270+recoil,205+hover);g.rotate(tilt);g.scale(scale,scale);
-
-if(bossFx.charge>0){
- g.save();g.globalAlpha=.5;g.strokeStyle=boss.phase===3?"#ff4166":"#78d6ff";g.lineWidth=5;
- for(let i=0;i<6;i++){g.beginPath();g.arc(0,-20,45+i*24+charge*45,0,Math.PI*2);g.stroke()}g.restore()
-}
-if(bossFx.roar>0){
- g.save();g.globalAlpha=bossFx.roar/1.6;g.strokeStyle="#fff";g.lineWidth=4;
- for(let i=0;i<5;i++){g.beginPath();g.arc(0,5,90+i*34+(1-bossFx.roar/1.6)*80,0,Math.PI*2);g.stroke()}g.restore()
-}
-
-const wingCount=boss.phase===1?4:boss.phase===2?7:10;
-for(const side of[-1,1]){
- g.save();g.scale(side,1);
- for(let i=0;i<wingCount;i++){
-   const y=-58+i*12;
-   const ext=92+i*15+(i%2?flap:-flap)*.7;
-   const tip=150+i*17+(i%2?flap:-flap);
-   g.strokeStyle=boss.phase===3?(i%2?"#ff4e70":"#ffeef2"):"#ecf6ff";
-   g.lineWidth=7-(i*.15);
-   g.beginPath();g.moveTo(42,0);g.quadraticCurveTo(ext*.55,y-18,ext,y);g.lineTo(tip,-42+i*13+flap*.25);g.stroke();
-   if(i%2===0){g.globalAlpha=.32;g.strokeStyle="#68cfff";g.lineWidth=2;g.stroke();g.globalAlpha=1}
- }
- g.restore()
-}
-
-const bodyPulse=1+Math.sin(performance.now()/140)*.025;
-g.save();g.scale(bodyPulse,bodyPulse);
-R(-65,-50,130,118,bossFx.hit>0?"#b8c6d6":"#7c8896");
-R(-51,-37,102,90,boss.phase===3?"#250912":"#171d25");
-g.restore();
-
-g.fillStyle=boss.phase===3?"#ff5575":"#d6b66a";
-g.beginPath();g.moveTo(0,-105-flap*.15);g.lineTo(-50,-30);g.lineTo(50,-30);g.closePath();g.fill();
-
-const blink=(Math.sin(bossFx.blink*1.7)>0.985)||bossFx.hit>0;
-if(blink){R(-19,-56,38,5,"#d9f5ff")}
-else{
- R(-19,-63,38,17,"#f3fbff");
- const eyeX=Math.sin(performance.now()/380)*6;
- R(-8+eyeX,-60,16,12,boss.phase===3?"#ff5074":"#56bdff");R(-3+eyeX,-56,6,6,"#000");
-}
-
-const corePulse=12+Math.sin(performance.now()/80)*5+(bossFx.core>0?18*bossFx.core:0);
-g.save();g.shadowColor=boss.phase===3?"#ff2850":"#55cfff";g.shadowBlur=25+corePulse;
-g.fillStyle=boss.phase===3?"#ff3157":"#69d5ff";g.beginPath();g.arc(0,14,corePulse,0,Math.PI*2);g.fill();g.restore();
-
-if(boss.phase>=2){
- g.strokeStyle=boss.phase===3?"#ff4f72":"#ffd85a";g.lineWidth=4;
- for(let i=0;i<3;i++){g.globalAlpha=.9-i*.25;g.beginPath();g.arc(0,-64,78+i*18+Math.sin(performance.now()/120+i)*8,performance.now()/700+i,performance.now()/700+i+4.8);g.stroke()}g.globalAlpha=1
-}
-if(bossFx.transform>0){
- g.save();g.globalAlpha=Math.min(1,bossFx.transform);
- for(let i=0;i<18;i++){const a=i*Math.PI*2/18+performance.now()/350;g.fillStyle=i%2?"#fff":"#ffd85a";g.fillRect(Math.cos(a)*(85+i*5),Math.sin(a)*(55+i*4),5,5)}g.restore()
-}
-g.restore()
-}
-function drawHeart(){
-for(const t of trails){g.globalAlpha=Math.max(0,t.l/.32)*.42;g.fillStyle="#fff";g.beginPath();g.arc(t.x,t.y,heart.r+5,0,Math.PI*2);g.fill()}
-g.globalAlpha=1;g.save();g.shadowColor="#ff3658";g.shadowBlur=24;g.strokeStyle="#fff";g.lineWidth=6;
-g.fillStyle=heart.inv>0&&Math.floor(heart.inv*14)%2?"#fff":"#ff2649";
-g.beginPath();g.moveTo(heart.x,heart.y+12);g.bezierCurveTo(heart.x-21,heart.y-1,heart.x-14,heart.y-20,heart.x,heart.y-9);g.bezierCurveTo(heart.x+14,heart.y-20,heart.x+21,heart.y-1,heart.x,heart.y+12);g.closePath();g.fill();g.stroke();
-g.fillStyle="#fff";g.beginPath();g.arc(heart.x-3,heart.y-4,2.7,0,Math.PI*2);g.fill();g.restore()
-}
-function drawSkillFx(){
-if(!skillFx||skillFx.t<=0)return;
-const t=skillFx.t,progress=1-t/1.35;g.save();g.globalAlpha=Math.min(1,t*2);
-if(skillFx.type==="clock"){R(0,0,W,H,"#101018dd");g.strokeStyle="#d8c7ff";g.lineWidth=6;for(let i=0;i<5;i++){g.beginPath();g.arc(270,480,55+i*30,0,Math.PI*2);g.stroke()}for(let i=0;i<12;i++){const a=i*Math.PI/6;g.beginPath();g.moveTo(270+Math.cos(a)*55,480+Math.sin(a)*55);g.lineTo(270+Math.cos(a)*170,480+Math.sin(a)*170);g.stroke()}g.beginPath();g.moveTo(270,480);g.lineTo(270+Math.cos(progress*10)*120,480+Math.sin(progress*10)*120);g.stroke()}
-if(skillFx.type==="slash"){R(0,0,W,H,"#fff");g.strokeStyle="#090b12";g.lineWidth=28;g.beginPath();g.moveTo(-60,850);g.lineTo(600,180);g.stroke();g.strokeStyle="#7fd8ff";g.lineWidth=7;g.stroke()}
-if(skillFx.type==="pyramid"){R(0,0,W,H,"#161006dd");g.fillStyle="#d5aa55";g.beginPath();g.moveTo(270,180);g.lineTo(60,730);g.lineTo(480,730);g.closePath();g.fill();g.strokeStyle="#fff";g.lineWidth=7;g.stroke();g.fillStyle="#55bdff";g.beginPath();g.ellipse(270,505,46,24,0,0,Math.PI*2);g.fill()}
-if(skillFx.type==="phoenix"){R(0,0,W,H,"#5b1308dd");g.fillStyle="#ff7b21";g.beginPath();g.moveTo(20,650);g.quadraticCurveTo(160,150,270,470);g.quadraticCurveTo(380,150,520,650);g.quadraticCurveTo(370,540,270,790);g.quadraticCurveTo(170,540,20,650);g.fill();g.fillStyle="#ffe36b";g.beginPath();g.moveTo(270,250);g.lineTo(220,570);g.lineTo(320,570);g.fill()}
-if(skillFx.type==="oni"){R(0,0,W,H,"#2b0000dd");T("鬼",270,690,310,"#ff273e","center");g.strokeStyle="#fff";g.lineWidth=10;g.strokeRect(60+progress*130,260,420-progress*260,420)}
-if(skillFx.type==="future"){R(0,0,W,H,"#00234ddd");for(let i=0;i<20;i++){g.strokeStyle=i%2?"#51cfff":"#fff";g.lineWidth=3;g.beginPath();g.moveTo(0,i*48);g.lineTo(W,i*48+Math.sin(i+progress*12)*42);g.stroke()}for(const q of bullets){g.strokeStyle="#55d9ff";g.strokeRect(q.x+q.vx*.28-5,q.y+q.vy*.28-5,10,10)}}
-T(skillFx.name,270,120,32,"#fff","center");g.restore()
-}
-function drawBackground(){
-R(0,0,W,H,"#02040a");
-for(const s of bgStars){g.globalAlpha=.25+s.a*.55;R(s.x,s.y,s.s,s.s,boss.phase===3?"#ffb3c0":"#d8ecff")}g.globalAlpha=1;
-const glow=g.createRadialGradient(270,190,10,270,190,310);glow.addColorStop(0,boss.phase===3?"#4a0a18":"#0d3154");glow.addColorStop(1,"#02040a");g.fillStyle=glow;g.fillRect(0,0,W,520);
-for(let i=0;i<6;i++){g.globalAlpha=.08;g.strokeStyle=boss.phase===3?"#ff3355":"#68cfff";g.lineWidth=2;g.beginPath();g.moveTo(0,240+i*38+Math.sin(performance.now()/500+i)*12);g.lineTo(W,210+i*42);g.stroke()}g.globalAlpha=1
-}
-function draw(){
-const sx=shake?rnd(-shake,shake):0,sy=shake?rnd(-shake,shake):0;g.save();g.translate(sx,sy);drawBackground();drawBoss();T(boss.name,270,24,18,"#fff","center");R(70,38,400,14,"#242833");R(70,38,400*(boss.hp/boss.max),14,boss.phase===3?"#ff4b66":"#ff4050");T(`${boss.hp}/${boss.max}`,270,72,13,"#fff","center");T(`絆 ${bond}%`,465,92,14,bond>=100?"#ffd84e":"#a8c9ff","center");R(390,104,120,8,"#222");R(390,104,120*bond/100,8,"#ffd84e");
-menuRects.length=0;
-if(scene==="defense"){
-if(bossFx.charge>0){g.save();g.globalAlpha=bossFx.charge/.9;T("CHARGING...",270,285,20,boss.phase===3?"#ff5070":"#7fd8ff","center");g.restore()}
-R(arena.x,arena.y,arena.w,arena.h,"#020205");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);for(const b of bullets){if(b.warn>0){g.globalAlpha=.3;R(b.x-2,b.y-18,4,36,"#ff3344");g.globalAlpha=1;continue}if(foresight){g.globalAlpha=.18;R(b.x+b.vx*.28,b.y+b.vy*.28,b.r*2,b.r*2,"#4fc8ff");g.globalAlpha=1}R(b.x-b.r,b.y-b.r,b.r*2,b.r*2,b.fake?"#506070":b.c)}drawHeart();T(`回避 ${defT.toFixed(1)}`,270,292,14,"#ffd84e","center")}
-else if(!["platform","platformTutorial","beam","seal","skillstory"].includes(scene)){R(30,745,480,145,"#020205");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(30,745,480,145);
-if(sub==="dialog"){}
-else if(scene==="menu"){actions.forEach((a,i)=>{const rx=45+(i%2)*230,ry=760+Math.floor(i/2)*42,rw=220,rh=36;menuRects.push({x:rx,y:ry,w:rw,h:rh,type:"action",i});R(rx,ry,rw,rh,i===sel?"#2a2108":"#090b10");T(a,rx+rw/2,ry+24,17,i===sel?"#ffd84e":"#fff","center")});T(`${current().name} / ${current().skill}`,270,915,14,current().c,"center")}
-else if(scene==="skill"){menuRects.push({x:50,y:775,w:440,h:78,type:"skill",i:0});R(50,775,440,78,"#17120a");T(current().skill,270,805,22,"#ffd84e","center");T(current().quote,270,838,13,"#ddd","center")}
-else if(scene==="item"){const n=[`やくそう ×${items.herb}`,`しずく ×${items.dew}`,`せかいじゅのは ×${items.leaf}`,`まほうのせいすい ×${items.ether}`];n.forEach((a,i)=>{const rx=45+(i%2)*230,ry=760+Math.floor(i/2)*45;menuRects.push({x:rx,y:ry,w:220,h:38,type:"item",i});R(rx,ry,220,38,"#0b0d13");T(a,rx+110,ry+25,15,"#fff","center")})}
-else if(scene==="switch"){party.forEach((p,i)=>{const rx=45+(i%2)*230,ry=755+Math.floor(i/2)*40;menuRects.push({x:rx,y:ry,w:220,h:34,type:"switch",i});R(rx,ry,220,34,"#0b0d13");T(`${p.name} HP ${p.hp}`,rx+110,ry+23,14,p.hp>0?"#fff":"#666","center")})}
-else if(scene==="attack"){
-R(70,810,400,12,"#555");
-for(let i=0;i<5;i++)R(110+i*80,805,4,22,i===2?"#ffd84e":"#777");
-R(260,792,20,48,"#ffd84e");
-R(attackX-6,788,12,56,Math.sin(performance.now()/70)>0?"#fff":"#7fd8ff");
-T("連続タップ攻撃：最大7HIT",270,773,16,"#fff","center");
-T(`TIME ${attackTime.toFixed(1)}  HIT ${attackHits}  TOTAL ${attackTotal}`,270,865,13,"#ffd84e","center");
-}}
-
 if(scene==="skillstory"){
-R(35,300,470,430,"#05040bdd");g.strokeStyle=current().c;g.lineWidth=4;g.strokeRect(35,300,470,430);
-T(current().skill,270,340,24,"#ffd84e","center");
-const instructions=["止める時間ではなく、動かす瞬間を選べ","自分か仲間か。守りたい名前を選べ","勝利ではなく、帰る場所を選べ","炎ではなく、呼び戻すものを選べ","怒りではなく、拳の意味を選べ","見えた未来ではなく、選び直す意志を選べ"];
-wrapped(instructions[active],270,380,390,24,15);
-for(const t of memoryGame.targets){g.save();g.shadowColor=t.good?current().c:"#555";g.shadowBlur=t.good?14:4;g.fillStyle="#111725";g.strokeStyle=current().c;g.lineWidth=4;g.beginPath();g.arc(t.x,t.y,t.r,0,Math.PI*2);g.fill();g.stroke();T(t.label,t.x,t.y+6,15,"#fff","center");g.restore()}
-T(`残り ${Math.max(0,memoryGame.timer).toFixed(1)}`,270,700,14,"#fff","center");
+/* 必殺技専用画面。味方HUDも通常会話も表示しない */
+R(22,250,496,520,"#05040bf2");
+g.strokeStyle=current().c;g.lineWidth=5;g.strokeRect(22,250,496,520);
+R(38,270,464,78,"#0d1120");
+T(current().skill,270,305,25,"#ffd84e","center");
+const instructions=[
+"過去や未来ではなく、仲間と生きている『今』を選ぶ。",
+"自分の命か、仲間の命か。刃に刻む名前を選ぶ。",
+"勝利よりも大切なもの――みんなで『帰る』場所を選ぶ。",
+"炎ではなく、灰の中から呼び戻す『名前』を選ぶ。",
+"怒りに任せず、この拳で『守る』ものを選ぶ。",
+"見えた絶望ではなく、未来をもう一度『選ぶ』。"
+];
+wrapped(instructions[active],270,376,420,25,15);
+
+for(const t of memoryGame.targets){
+ const pulse=1+Math.sin(performance.now()/180+t.x)*.045;
+ g.save();g.translate(t.x,t.y);g.scale(pulse,pulse);
+ g.shadowColor=current().c;g.shadowBlur=18;
+ g.fillStyle="#111725";g.strokeStyle=current().c;g.lineWidth=5;
+ g.beginPath();g.arc(0,0,t.r,0,Math.PI*2);g.fill();g.stroke();
+ T(t.label,0,6,15,"#fff","center");g.restore();
+}
+R(80,700,380,9,"#222834");
+R(80,700,380*clamp(memoryGame.timer/8.5,0,1),9,current().c);
+T("言葉をタップして、必殺技に意味を与える",270,742,13,"#cdd7e8","center");
 }
 if(scene==="platformTutorial"){
 R(20,260,500,560,"#081124");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(20,260,500,560);
@@ -521,21 +453,76 @@ R(110,690,320,65,"#201807");g.strokeStyle="#ffd84e";g.lineWidth=3;g.strokeRect(1
 T(platform.tutorialPage<2?"タップして次へ":"タップしてスタート",270,730,19,"#ffd84e","center");
 }
 if(scene==="platform"){
-R(arena.x,arena.y,arena.w,arena.h,"#6ec6ff");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
+R(arena.x,arena.y,arena.w,arena.h,"#72c9ff");
+g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
 const cam=platform.camera;
-for(let i=0;i<7;i++){g.fillStyle=i%2?"#fff":"#e9f7ff";g.beginPath();g.arc(arena.x+70+i*80-(cam*.18%80),arena.y+65+(i%2)*35,28,0,Math.PI*2);g.fill()}
-R(arena.x,650,arena.w,60,"#5bc45b");
-for(let x=0;x<1500;x+=40){let hole=(x>360&&x<440)||(x>820&&x<900);if(!hole){R(arena.x+x-cam,680,42,30,"#8a5b2d");R(arena.x+x-cam,680,42,8,"#62c65d")}}
-const pls=[[210,610,130],[520,560,150],[950,600,150],[1160,540,145]];
-for(const p of pls){R(arena.x+p[0]-cam,p[1],p[2],22,"#c98b35");for(let k=0;k<p[2];k+=22)R(arena.x+p[0]+k-cam,p[1]+3,16,16,"#efbd58")}
-for(let i=0;i<8;i++){const ex=300+i*150-cam;R(arena.x+ex,652-(i%3)*55,22,22,"#e84a3c");R(arena.x+ex+5,657-(i%3)*55,12,6,"#fff")}
-R(arena.x+platform.goal-cam,480,12,200,"#fff");R(arena.x+platform.goal+12-cam,480,68,40,"#ffd84e");
-R(arena.x+platform.x-14,platform.y-28,28,28,"#ff3f55");R(arena.x+platform.x-8,platform.y-34,16,8,"#ffd84e");
-T(`LIFE ${platform.lives}`,75,330,14,"#fff");T(`CHECK ${platform.checkpoint>70?"ON":"OFF"}`,450,330,14,"#fff","right");
-R(30,745,480,150,"#020205dd");g.strokeStyle="#fff";g.lineWidth=3;g.strokeRect(30,745,480,150);
-g.fillStyle="#111827";g.beginPath();g.arc(110,820,58,0,Math.PI*2);g.fill();g.stroke();T("◀",80,828,25,"#fff","center");T("▶",140,828,25,"#fff","center");
-g.fillStyle="#321019";g.beginPath();g.arc(430,820,48,0,Math.PI*2);g.fill();g.strokeStyle="#ffd84e";g.stroke();T("A",430,830,28,"#ffd84e","center");
-T("ゲームパッドで旗を目指せ",270,885,14,"#fff","center");
+const worldX=platform.x+cam;
+
+/* 遠景 */
+R(arena.x,615,arena.w,95,"#64c85e");
+for(let i=0;i<8;i++){
+ const cx=arena.x+45+i*78-(cam*.12%78),cy=arena.y+58+(i%3)*28;
+ g.fillStyle=i%2?"#fff":"#eefaff";
+ g.beginPath();g.arc(cx,cy,25,0,Math.PI*2);g.arc(cx+24,cy+6,20,0,Math.PI*2);g.arc(cx-22,cy+9,18,0,Math.PI*2);g.fill();
+}
+for(let i=0;i<7;i++){
+ const hx=arena.x+i*95-(cam*.25%95);
+ g.fillStyle=i%2?"#4aa957":"#55b963";g.beginPath();g.moveTo(hx,650);g.lineTo(hx+55,560-(i%2)*35);g.lineTo(hx+110,650);g.fill();
+}
+
+/* 地面と穴 */
+for(let x=0;x<1200;x+=40){
+ const hole=(x>390&&x<455)||(x>780&&x<845);
+ if(!hole){
+   R(arena.x+x-cam,680,42,30,"#89572d");
+   R(arena.x+x-cam,680,42,9,"#59c45b");
+   R(arena.x+x+6-cam,695,7,7,"#b57a3d");
+   R(arena.x+x+25-cam,690,7,7,"#b57a3d");
+ }
+}
+
+/* 大きい足場 */
+const pls=[[205,610,155],[495,565,185],[865,595,175]];
+for(const p of pls){
+ R(arena.x+p[0]-cam,p[1],p[2],24,"#c88b35");
+ for(let k=0;k<p[2];k+=28){R(arena.x+p[0]+k-cam,p[1]+4,21,16,"#efbd58");R(arena.x+p[0]+k+5-cam,p[1]+7,4,4,"#8d5b24")}
+}
+
+/* 敵は触れても軽いダメージに留め、進行を塞がない */
+for(let i=0;i<5;i++){
+ const ex=330+i*150-cam,ey=652-(i%2)*50;
+ R(arena.x+ex,ey,24,24,"#d94b3f");R(arena.x+ex+5,ey+6,5,5,"#fff");R(arena.x+ex+15,ey+6,5,5,"#fff");
+}
+
+/* 旗 */
+R(arena.x+platform.goal-cam,472,12,208,"#fff");
+R(arena.x+platform.goal+12-cam,472,72,42,"#ffd84e");
+T("GOAL",arena.x+platform.goal+48-cam,500,12,"#443100","center");
+
+/* 主人公 */
+g.save();g.globalAlpha=platform.inv>0&&Math.floor(platform.inv*12)%2?.35:1;
+R(arena.x+platform.x-14,platform.y-28,28,28,"#ff3f55");
+R(arena.x+platform.x-9,platform.y-35,18,9,"#ffd84e");
+R(arena.x+platform.x-9,platform.y-16,5,5,"#fff");
+g.restore();
+
+/* 上部UI */
+R(48,318,444,38,"#07111ccc");
+T(`HP ${current().hp}/${current().max}`,62,343,13,"#fff");
+T(`落下 ${platform.falls}回`,475,343,13,"#fff","right");
+R(62,365,416,10,"#1e3142");
+R(62,365,416*clamp(worldX/platform.goal,0,1),10,"#ffd84e");
+T("START",62,393,11,"#fff");T("GOAL",478,393,11,"#fff","right");
+
+/* 専用ゲームパッド */
+R(24,735,492,170,"#020205ee");
+g.strokeStyle="#fff";g.lineWidth=3;g.strokeRect(24,735,492,170);
+g.fillStyle="#111827";g.beginPath();g.arc(122,818,67,0,Math.PI*2);g.fill();g.stroke();
+R(64,798,116,40,"#182233");R(102,760,40,116,"#182233");
+T("◀",82,827,28,"#fff","center");T("▶",162,827,28,"#fff","center");
+g.fillStyle="#351019";g.beginPath();g.arc(425,817,54,0,Math.PI*2);g.fill();g.strokeStyle="#ffd84e";g.lineWidth=4;g.stroke();
+T("A",425,829,31,"#ffd84e","center");
+T("左右をタップで少し進む　Aでジャンプ",270,892,13,"#d9e3f2","center");
 }
 if(scene==="beam"){
 R(arena.x,arena.y,arena.w,arena.h,"#090512");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
@@ -549,7 +536,7 @@ R(arena.x,arena.y,arena.w,arena.h,"#090b18");g.strokeStyle="#fff";g.lineWidth=4;
 for(const n of seal.nodes){g.globalAlpha=n.hit?.15:1;g.strokeStyle=n.n===seal.index+1?"#ffd84e":"#59627a";g.lineWidth=5;g.beginPath();g.arc(n.x,n.y,n.r,0,Math.PI*2);g.stroke();T(n.n,n.x,n.y+7,20,n.n===seal.index+1?"#ffd84e":"#8992aa","center");g.globalAlpha=1}
 T("封印順序を見失うな",270,745,16,"#fff","center");T(`残り ${seal.timer.toFixed(1)}`,270,775,14,"#ffd84e","center");
 }
-if(!["defense","platform","beam","seal","skillgame"].includes(scene)){
+if(!["defense","platform","platformTutorial","beam","seal","skillstory"].includes(scene)){
 party.forEach((p,i)=>{const x=20+(i%2)*260,y=500+Math.floor(i/2)*70,w=240;
 const bob=i===active?Math.sin(performance.now()/160)*2:0;g.save();g.translate(0,bob);
 R(x,y,w,58,i===active?"#111827":"#0a0d14");
@@ -575,7 +562,8 @@ drawSkillFx();for(const d of damagePop){g.save();g.globalAlpha=Math.max(0,d.l);g
 function canvasPos(e){const r=cv.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*W/r.width,y:(p.clientY-r.top)*H/r.height}}
 cv.addEventListener("pointerdown",e=>{e.preventDefault();ac();const p=canvasPos(e);
 if(scene==="skillstory"){
-const target=memoryGame.targets.find(t=>Math.hypot(p.x-t.x,p.y-t.y)<=t.r+14);
+sub="play";
+const target=memoryGame.targets.find(t=>Math.hypot(p.x-t.x,p.y-t.y)<=t.r+22);
 if(target){beep(target.good?520:120,.12,target.good?"sine":"square",.05);resolveSkill(target.good)}
 return}
 if(scene==="platformTutorial"){
@@ -583,8 +571,13 @@ platform.tutorialPage++;
 if(platform.tutorialPage>=3){platform.ready=true;scene="platform";sub="play";toast("旗まで行こう。落ちても戻れる。",1.2)}
 return}
 if(scene==="platform"){
-if(p.y>745&&p.x>365){if(platform.vy===0)platform.vy=-410}
-else if(p.y>745&&p.x<170){platform.vx=p.x<110?-190:190}
+if(p.y>742&&p.x>350){
+ if(platform.vy===0){platform.vy=-405;beep(420,.06,"square",.025)}
+}else if(p.y>742&&p.x<205){
+ platform.moveDir=p.x<122?-1:1;
+ platform.moveHold=.48; /* タップだけでも約0.5秒進む */
+ beep(platform.moveDir>0?240:190,.04,"square",.018);
+}
 return}
 if(scene==="beam"){
 if(p.y>720){beam.shots++;beep(520,.06,"square",.04);let hit=beam.cores.find(c=>c.hp>0&&Math.hypot(c.x-beam.aimX,c.y-beam.aimY)<35);if(hit){hit.hp--;particle(hit.x,hit.y,"#ff4565",10);if(beam.cores.every(c=>c.hp<=0))endGimmick(true)}}
@@ -607,7 +600,7 @@ e.preventDefault();
 heart.x=clamp(p.x+heart.offX,arena.x+12,arena.x+arena.w-12);
 heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12)
 });
-["pointerup","pointercancel","pointerout"].forEach(n=>cv.addEventListener(n,()=>{heart.drag=false;beam.drag=false;if(scene==="platform")platform.vx=0}));
+["pointerup","pointercancel","pointerout"].forEach(n=>cv.addEventListener(n,()=>{heart.drag=false;beam.drag=false}));
 function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(scene!=="end")update(dt);draw();requestAnimationFrame(loop)}
 document.getElementById("go").onclick=()=>{ac();music();document.getElementById("start").classList.add("hidden");reset()};
 document.getElementById("again").onclick=()=>{document.getElementById("end").classList.add("hidden");reset()};
