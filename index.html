@@ -24,7 +24,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-acti
 <div id="wrap">
 <canvas id="game" width="540" height="960"></canvas>
 <div id="start"><div class="card">
-<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK V.2</b></div>
+<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK VII</b></div>
 <p>縦画面・敵ターン／必殺技 完全修正版</p>
 <button id="go">物語を始める</button>
 <p class="small">スマホ縦画面専用。メニューは直接タップ、弾幕中はハートを指でドラッグ。<br>ハートには強い縁取り・光・残像を付け、弾幕の中でも見失いにくくしています。</p>
@@ -42,6 +42,12 @@ let dialogue=[],di=0,after=null,msg="",msgT=0,bullets=[],particles=[],trails=[];
 let attackX=70,attackDir=1,defT=0,patternId=0,patternClock=0,freeze=0,foresight=false,guard=false,berserk=0;
 let deaths=0,sacrifices=0,talkCount=0,perfects=0;
 let skillFx={t:0,type:"",name:"",color:"#fff"};let damagePop=[];
+let attackTime=0,attackHits=0,attackTotal=0,attackEnded=false,attackLastQuality=0;
+let skillGame=null;
+let platform={x:55,y:660,vx:0,vy:0,ground:680,camera:0,goal:1550,dead:false,coins:0};
+let beam={timer:0,aimX:270,aimY:500,shots:0,cores:[],bossX:270,bossY:450,drag:false};
+let seal={timer:0,index:0,nodes:[]};
+let gimmickLock=false;
 let bossFx={hit:0,charge:0,roar:0,transform:0,blink:0,tilt:0,wing:0,hover:0,core:0,attack:0};
 let bgStars=[];for(let i=0;i<70;i++)bgStars.push({x:Math.random()*540,y:Math.random()*960,s:Math.random()*2+1,v:Math.random()*18+8,a:Math.random()});
 let audio=null,musicTimer=null,musicMood="quiet",noteStep=0;
@@ -69,13 +75,17 @@ function current(){if(party[active].hp<=0){const i=party.findIndex(p=>p.hp>0);ac
 function reset(){
 party.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(boss,{hp:boss.max,phase:1,armor:10,resolve:120,mercy:0,weak:"none"});Object.assign(items,{herb:5,dew:3,leaf:2,ether:3});
 scene="opening";sub="dialog";active=turn=sel=bond=score=shake=flash=0;deaths=sacrifices=talkCount=perfects=0;skillFx={t:0,type:"",name:"",color:"#fff"};damagePop=[];
-bossFx={hit:0,charge:0,roar:0,transform:0,blink:0,tilt:0,wing:0,hover:0,core:0,attack:0};bullets=[];particles=[];trails=[];freeze=0;foresight=guard=false;berserk=0;musicMood="quiet";
+bossFx={hit:0,charge:0,roar:0,transform:0,blink:0,tilt:0,wing:0,hover:0,core:0,attack:0};
+attackTime=attackHits=attackTotal=attackLastQuality=0;attackEnded=false;skillGame=null;gimmickLock=false;
+platform={x:55,y:660,vx:0,vy:0,ground:680,camera:0,goal:1550,dead:false,coins:0};
+beam={timer:0,aimX:270,aimY:500,shots:0,cores:[],bossX:270,bossY:450,drag:false};
+seal={timer:0,index:0,nodes:[]};bullets=[];particles=[];trails=[];freeze=0;foresight=guard=false;berserk=0;musicMood="quiet";
 say(["――空から、壊れた神が落ちてきた。","その翼は祈りではなく、命令で動いていた。","機械天使「私は、終わらせるために作られた。」","トシユキ「じゃあ俺たちは、始めるために来た。」"],()=>{scene="menu";sub="choose";toast("六人の物語が始まる。",1.4)})
 }
 function damageBoss(n){n=Math.max(1,Math.floor(n-boss.armor));boss.hp-=n;score+=n*10;damagePop.push({x:270,y:220,v:-105,l:1.15,n:Math.floor(n),crit:n>=120});shake=12;flash=.08;part(270,220,"#fff",24,1.4);beep(80,.16,"square",.06);if(boss.hp<=0){boss.hp=0;combatEnd()}}
 function chooseAction(index){
 sel=index;
-if(index===0){scene="attack";attackX=70;attackDir=1;sub="play"}
+if(index===0){scene="attack";attackX=70;attackDir=1;attackTime=3.6;attackHits=0;attackTotal=0;attackEnded=false;sub="play"}
 if(index===1){scene="skill";sub="choose"}
 if(index===2){scene="item";sub="choose"}
 if(index===3){guard=true;bond=Math.min(100,bond+13);say([current().name+"は仲間の前に立った。","「ここは俺が受ける。」"],beginDefense)}
@@ -83,16 +93,32 @@ if(index===4)talk()
 if(index===5){scene="switch";sub="choose"}
 }
 function useSkill(){
-const p=current();skillFx={t:1.35,type:["clock","slash","pyramid","phoenix","oni","future"][active],name:p.skill,color:p.c};
-const cost=[26,32,32,32,30,25][active];if(p.mp<cost)return toast("MPが足りない");p.mp-=cost;flash=.18;shake=10;
-if(active===0){freeze=1.25;bond=Math.min(100,bond+20);party.forEach(a=>{if(a.hp<=0){a.hp=Math.ceil(a.max*.32);deaths=Math.max(0,deaths-1)}});say([p.quote,"倒れた仲間たちの時間が、もう一度だけ動き出す。"],beginDefense)}
-if(active===1){p.hp=Math.max(1,p.hp-Math.ceil(p.max*.25));sacrifices++;boss.armor=0;damageBoss(175);bond=Math.min(100,bond+16);say([p.quote,"カズアキは自分の命を刃に変えた。"],beginDefense)}
-if(active===2){party.forEach(a=>a.hp=Math.min(a.max,a.hp+40));boss.resolve=Math.max(0,boss.resolve-8);bond=Math.min(100,bond+22);say([p.quote,"黄金の結界が、六人の鼓動を一つにした。"],beginDefense)}
-if(active===3){party.forEach(a=>{if(a.hp<=0){a.hp=Math.ceil(a.max*.55);deaths=Math.max(0,deaths-1)}else a.hp=Math.min(a.max,a.hp+26)});p.hp=1;sacrifices++;bond=Math.min(100,bond+28);say([p.quote,"不死鳥は灰の中から、仲間の名前を呼んだ。"],beginDefense)}
-if(active===4){berserk=3;damageBoss(125);bond=Math.min(100,bond+10);say([p.quote,"鬼の力が、怒りではなく仲間を守るために目覚めた。"],beginDefense)}
-if(active===5){foresight=true;boss.weak=["fire","power","heart"][Math.floor(Math.random()*3)];bond=Math.min(100,bond+18);damageBoss(55);say([p.quote,"危険な未来だけが、青い残像になって浮かんだ。"],beginDefense)}
+const p=current(),cost=[26,32,32,32,30,25][active];
+if(p.mp<cost){
+ skillFx={t:0,type:"",name:"",color:"#fff"};
+ scene="menu";sub="choose";
+ toast("MPが足りない ― コマンドに戻ります",1.5);
+ beep(90,.18,"square",.05);
+ return;
 }
-function useItem(i){
+p.mp-=cost;
+const types=["clock","slash","pyramid","phoenix","oni","future"];
+skillFx={t:2.8,type:types[active],name:p.skill,color:p.c};
+skillGame={type:types[active],timer:3.0,hits:0,target:0,targets:[]};
+for(let i=0;i<4;i++)skillGame.targets.push({x:rnd(95,445),y:rnd(330,680),r:24,hit:false,n:i+1});
+scene="skillgame";sub="play";
+}
+function resolveSkill(){
+if(!skillGame)return;
+const bonus=1+Math.min(.8,skillGame.hits*.2),p=current();
+skillGame=null;
+if(active===0){freeze=1.0;bond=Math.min(100,bond+20);party.forEach(a=>{if(a.hp<=0){a.hp=Math.ceil(a.max*.35);deaths=Math.max(0,deaths-1)}a.hp=Math.min(a.max,a.hp+Math.floor(18*bonus))});say([p.quote,"止まった秒針の間で、仲間の心音だけが響いた。","トシユキ「戻ってこい。まだ朝を見ていない。」"],beginDefense)}
+if(active===1){p.hp=Math.max(1,p.hp-Math.ceil(p.max*.22));sacrifices++;boss.armor=0;damageBoss(150*bonus);bond=Math.min(100,bond+16);say([p.quote,"画面を裂いた傷は、カズアキ自身の胸にも刻まれた。","カズアキ「痛みごと、俺が道にする。」"],beginDefense)}
+if(active===2){party.forEach(a=>a.hp=Math.min(a.max,a.hp+Math.floor(36*bonus)));boss.resolve=Math.max(0,boss.resolve-10);bond=Math.min(100,bond+24);say([p.quote,"ピラミッドの内側に、六人の思い出が星のように灯った。"],beginDefense)}
+if(active===3){party.forEach(a=>{if(a.hp<=0){a.hp=Math.ceil(a.max*.55);deaths=Math.max(0,deaths-1)}else a.hp=Math.min(a.max,a.hp+Math.floor(25*bonus))});p.hp=1;sacrifices++;bond=Math.min(100,bond+28);say([p.quote,"不死鳥は炎ではなく、呼び続けた名前から生まれた。"],beginDefense)}
+if(active===4){berserk=3;damageBoss(105*bonus);bond=Math.min(100,bond+12);say([p.quote,"鬼は怒りに従わなかった。仲間を守る拳だけを選んだ。"],beginDefense)}
+if(active===5){foresight=true;boss.weak=["fire","power","heart"][Math.floor(Math.random()*3)];bond=Math.min(100,bond+20);damageBoss(48*bonus);say([p.quote,"見えた未来は絶望だった。だからリョウゴは、別の未来を選んだ。"],beginDefense)}
+}function useItem(i){
 const p=current();
 if(i===0){if(!items.herb)return toast("やくそうがない");items.herb--;p.hp=Math.min(p.max,p.hp+65);bond=Math.min(100,bond+7);say([p.name+"はやくそうを使った。","苦い味が、生きていることを思い出させた。"],beginDefense)}
 if(i===1){if(!items.dew)return toast("しずくがない");items.dew--;party.forEach(a=>a.hp=Math.min(a.max,a.hp+48));bond=Math.min(100,bond+15);say(["せかいじゅのしずくが、六人の傷に降り注いだ。"],beginDefense)}
@@ -106,12 +132,67 @@ talkCount++;const q=[
 ["ケイタ「機能じゃなくても、痛いものは痛い。」","翼の一枚が、わずかに震えた。"],
 ["トシユキ「帰りたい気持ちを選べ。」","機械天使「帰る場所など、私にはない。」"],
 ["イサジ「なら作ればいい。俺たちもそうしてきた。」","機械天使の瞳から、光が一滴こぼれた。"],
-["カズアキ「帰る場所は、誰かと一緒に作るものだ。」","機械天使「……私にも、できますか？」"],["マッピー「君が壊したものより、これから守れるものを数えよう。」","機械天使「私は……守る側になれますか？」"],["トシユキ「過去は変えられない。でも、次の一秒は選べる。」","機械天使「次の一秒を……私にください。」"]
+["カズアキ「帰る場所は、誰かと一緒に作るものだ。」","機械天使「……私にも、できますか？」"],["マッピー「君が壊したものより、これから守れるものを数えよう。」","機械天使「私は……守る側になれますか？」"],["トシユキ「過去は変えられない。でも、次の一秒は選べる。」","機械天使「次の一秒を……私にください。」"],
+["機械天使「私は、壊した数しか覚えていない。」","マッピー「じゃあ今日から、守れた数を一緒に数えよう。」"],
+["機械天使「朝は、私のようなものにも来ますか？」","リョウゴ「朝は誰かを選ばない。だから俺たちも君を選ぶ。」"]
 ];const i=Math.min(q.length-1,Math.floor(boss.mercy/20));boss.mercy+=20;boss.resolve=Math.max(0,boss.resolve-20);bond=Math.min(100,bond+16);say(q[i],()=>{if(boss.resolve<=0&&bond>=75)peaceEnd();else beginDefense()})
 }
-function attackTap(){const q=1-Math.abs(270-attackX)/200,m=current().pow*(.75+clamp(q,0,1)*1.9);if(q>.9)perfects++;damageBoss(m*((berserk&&active===4)?1.8:1));toast(q>.9?"PERFECT!":q>.58?"GOOD!":"HIT");setTimeout(beginDefense,600)}
-function sixLink(){bond=0;musicMood="hope";flash=.35;shake=18;say(["絆が、六人の心を一つにつないだ。","トシユキ「止める。」――時が静止する。","カズアキ「俺が道を作る。」――装甲が断たれる。","リョウゴ「未来は見えた。」――弱点が光る。","イサジ「全部ぶっ壊す。」――鬼の拳が空を裂く。","ケイタ「終わらせよう。」――不死鳥が夜を焼く。","マッピー「みんな、帰ろう。」","六人連携奥義――『DAYBREAK』"],()=>{damageBoss(620);if(boss.hp>0)beginDefense()})}
-function beginDefense(){if(boss.hp<=0)return;if(bond>=100)return sixLink();bossFx.charge=.9;bossFx.attack=1.1;scene="defense";sub="play";defT=boss.phase===3?9.4:boss.phase===2?8:6.8;patternClock=0;bullets=[];trails=[];heart.x=270;heart.y=515;heart.inv=.6;heart.mode="red";heart.vy=0;patternId=(turn*3+boss.phase*5)%28;spawnPattern(patternId)}
+function attackTap(){
+if(attackEnded||scene!=="attack")return;
+const q=1-Math.abs(270-attackX)/200;
+const quality=clamp(q,0,1);
+attackLastQuality=quality;
+const hit=Math.floor(current().pow*(.34+quality*.95)*(1+attackHits*.10));
+attackHits++;attackTotal+=hit;
+damageBoss(hit);
+if(quality>.9){perfects++;bond=Math.min(100,bond+3);toast("PERFECT CHAIN ×"+attackHits,.45)}
+else if(quality>.58)toast("GOOD ×"+attackHits,.4);
+else toast("RUSH ×"+attackHits,.35);
+attackDir*=-1;
+attackX=clamp(attackX+(Math.random()<.5?-35:35),70,470);
+if(attackHits>=7)finishComboAttack();
+}
+function finishComboAttack(){
+if(attackEnded)return;
+attackEnded=true;
+const finisher=Math.floor(attackTotal*(attackHits>=5?.35:.15));
+if(finisher>0)damageBoss(finisher);
+damagePop.push({x:270,y:260,v:-80,l:1.25,n:"COMBO "+attackHits,crit:attackHits>=6});
+setTimeout(()=>{if(boss.hp>0)beginDefense()},520);
+}function sixLink(){bond=0;musicMood="hope";flash=.35;shake=18;say(["絆が、六人の心を一つにつないだ。","トシユキ「止める。」――時が静止する。","カズアキ「俺が道を作る。」――装甲が断たれる。","リョウゴ「未来は見えた。」――弱点が光る。","イサジ「全部ぶっ壊す。」――鬼の拳が空を裂く。","ケイタ「終わらせよう。」――不死鳥が夜を焼く。","マッピー「みんな、帰ろう。」","六人連携奥義――『DAYBREAK』"],()=>{damageBoss(620);if(boss.hp>0)beginDefense()})}
+function beginDefense(){
+if(boss.hp<=0||gimmickLock)return;
+if(bond>=100)return sixLink();
+if(turn>0&&turn%7===2)return beginPlatform();
+if(turn>0&&turn%7===4)return beginBeam();
+if(turn>0&&turn%7===6)return beginSeal();
+bossFx.charge=.9;bossFx.attack=1.1;scene="defense";sub="play";defT=boss.phase===3?10.2:boss.phase===2?8.8:7.4;patternClock=0;bullets=[];trails=[];heart.x=270;heart.y=515;heart.inv=.6;heart.mode="red";heart.vy=0;patternId=(turn*3+boss.phase*5)%28;spawnPattern(patternId)
+}
+function beginPlatform(){
+gimmickLock=true;scene="platform";sub="play";
+platform={x:55,y:650,vx:0,vy:0,ground:680,camera:0,goal:1550,dead:false,coins:0};
+toast("断片世界：出口まで走れ！",1.4);
+}
+function beginBeam(){
+gimmickLock=true;scene="beam";sub="play";
+beam={timer:10.5,aimX:270,aimY:500,shots:0,bossX:270,bossY:430,drag:false,cores:[
+{x:160,y:420,hp:3},{x:380,y:470,hp:3},{x:270,y:350,hp:4}]};
+toast("機械天使のコアを照準して破壊せよ",1.4);
+}
+function beginSeal(){
+gimmickLock=true;scene="seal";sub="play";
+seal={timer:8.5,index:0,nodes:[]};
+for(let i=0;i<7;i++)seal.nodes.push({x:rnd(80,460),y:rnd(340,690),r:25,n:i+1,hit:false});
+toast("光る番号を順番に封印せよ",1.4);
+}
+function endGimmick(success){
+if(!gimmickLock)return;
+gimmickLock=false;
+if(success){bond=Math.min(100,bond+16);damageBoss(70+boss.phase*25)}
+else hurt(24+boss.phase*6);
+if(boss.hp<=0||scene==="end")return;
+nextTurn();
+}
 function spawnPattern(id){
 const A=arena;
 if(id===0)for(let i=0;i<18;i++)bullets.push({x:A.x+i*35,y:A.y-rnd(20,190),vx:rnd(-25,25),vy:155+rnd(0,90),r:6,c:"#eef7ff",k:"rain"});
@@ -240,9 +321,50 @@ heart.inv=Math.max(0,heart.inv-dt);
 defT-=dt;
 if(defT<=0){foresight=guard=false;berserk=Math.max(0,berserk-1);nextTurn()}
 }
+
+function updatePlatform(dt){
+platform.vy+=900*dt;platform.x+=platform.vx*dt;platform.y+=platform.vy*dt;
+const worldX=platform.x+platform.camera;
+const holes=[[310,410],[710,825],[1090,1195]];
+let ground=680;
+for(const h of holes)if(worldX>h[0]&&worldX<h[1])ground=850;
+const platforms=[[180,620,120],[480,570,150],[860,605,120],[1260,550,170]];
+for(const p of platforms)if(worldX>p[0]&&worldX<p[0]+p[2]&&platform.y<=p[1]&&platform.y+platform.vy*dt>=p[1])ground=Math.min(ground,p[1]);
+if(platform.y>=ground-22){platform.y=ground-22;platform.vy=0}
+platform.camera=Math.max(0,platform.x-150);
+if(platform.x>350){platform.camera+=platform.x-350;platform.x=350}
+if(worldX>platform.goal)return endGimmick(true);
+if(platform.y>830)return endGimmick(false);
+}
+function updateBeam(dt){
+beam.timer-=dt;beam.bossX=270+Math.sin(performance.now()/330)*150;beam.bossY=430+Math.cos(performance.now()/470)*70;
+if(beam.timer<=0)endGimmick(beam.cores.every(c=>c.hp<=0));
+}
+function updateSeal(dt){
+seal.timer-=dt;
+if(seal.timer<=0)endGimmick(false);
+if(seal.index>=seal.nodes.length)endGimmick(true);
+}
 function hurt(n){if(guard){n=Math.ceil(n*.55);bond=Math.min(100,bond+5)}const p=current();p.hp-=n;if(p.hp<=0){p.hp=0;deaths++;const a=party.filter(x=>x.hp>0);if(!a.length)return gameOver();active=party.indexOf(a[0])}}
-function nextTurn(){turn++;boss.phase=boss.hp<850?3:boss.hp<1900?2:1;if(boss.phase===2){musicMood="battle";bossFx.transform=1.8;bossFx.roar=1.2;if(turn===4)say(["機械天使「私は……壊れた神だった。」","マッピー「壊れているなら、直せばいい。君も、俺たちも。」"],()=>{scene="menu";sub="choose"})}
-if(boss.phase===3){musicMood="despair";bossFx.transform=2.4;bossFx.roar=1.6;if(turn===8)say(["機械天使「どうして、まだ私の名前を呼ぶのですか？」","ケイタ「名前を呼ぶのは、帰ってきてほしいからだ。」","機械天使の翼が、ほんの少しだけ下がった。"],()=>{scene="menu";sub="choose"})}active=(active+1)%party.length;if(party[active].hp<=0){const i=party.findIndex(p=>p.hp>0);active=i}current().mp=Math.min(current().mm,current().mp+9);scene="menu";sub="choose";bullets=[];trails=[];toast(current().name+"のターン")}
+function nextTurn(){
+turn++;
+boss.phase=boss.hp<850?3:boss.hp<1900?2:1;
+active=(active+1)%party.length;
+if(party[active].hp<=0){const i=party.findIndex(p=>p.hp>0);active=i}
+current().mp=Math.min(current().mm,current().mp+9);
+bullets=[];trails=[];
+if(boss.phase===2&&turn===4){
+ musicMood="battle";bossFx.transform=1.8;bossFx.roar=1.2;
+ return say(["機械天使「私は……壊れた神だった。」","マッピー「壊れているなら、直せばいい。君も、俺たちも。」"],()=>{scene="menu";sub="choose"});
+}
+if(boss.phase===3&&turn===8){
+ musicMood="despair";bossFx.transform=2.4;bossFx.roar=1.6;
+ return say(["機械天使「どうして、まだ私の名前を呼ぶのですか？」","ケイタ「名前を呼ぶのは、帰ってきてほしいからだ。」","機械天使の翼が、ほんの少しだけ下がった。"],()=>{scene="menu";sub="choose"});
+}
+if(boss.phase===2)musicMood="battle";
+if(boss.phase===3)musicMood="despair";
+scene="menu";sub="choose";toast(current().name+"のターン");
+}
 function peaceEnd(){scene="ending";musicMood="hope";say(["機械天使は、武器を降ろした。","機械天使「私も、朝を見てもいいのですか？」","六人「もちろん。」","翼から外れた歯車は、花びらのように舞った。","トシユキ「今日は、いい日になりそうだ。」"],()=>finish("TRUE DAYBREAK","誰も倒れず、機械天使を救った。"))}
 function combatEnd(){scene="ending";musicMood="hope";say(["最後の一撃が、機械天使の胸を貫いた。","けれど誰も、勝ったとは思わなかった。","機械天使「ありがとう……ようやく眠れる。」","マッピー「眠るんじゃない。次は朝を見に行こう。」"],()=>{let title="HUMAN END",text="戦いの果てに、七人は朝日を見た。";if(sacrifices>=2){title="SACRIFICE END";text="誰かの命が、みんなの朝を守った。"}else if(berserk>0){title="CHAOS END";text="鬼の力は勝利と引き換えに、静かな傷を残した。"}else if(perfects>=6&&deaths===0){title="HERO END";text="六人は誰も倒れず、力で夜を越えた。"}finish(title,text)})}
 function finish(title,text){scene="end";document.getElementById("endTitle").textContent=title;document.getElementById("endText").textContent=text+"\\nSCORE "+score+"\\n会話 "+talkCount+"回 / 犠牲 "+sacrifices+"回";document.getElementById("end").classList.remove("hidden")}
@@ -253,9 +375,19 @@ bossFx.transform=Math.max(0,bossFx.transform-dt);bossFx.attack=Math.max(0,bossFx
 bossFx.blink+=dt;bossFx.wing+=dt*(boss.phase===3?8:boss.phase===2?6:4);bossFx.hover+=dt*(boss.phase===3?2.4:1.5);
 bossFx.tilt*=Math.pow(.06,dt);bossFx.core=Math.max(0,bossFx.core-dt);
 bgStars.forEach(s=>{s.y+=s.v*dt;if(s.y>960){s.y=-4;s.x=Math.random()*540}});
-particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=420*dt;p.l-=dt});particles=particles.filter(p=>p.l>0);damagePop.forEach(d=>{d.y+=d.v*dt;d.v*=.94;d.l-=dt});damagePop=damagePop.filter(d=>d.l>0);trails.forEach(t=>t.l-=dt);trails=trails.filter(t=>t.l>0);if(scene==="attack"){attackX+=attackDir*dt*430;if(attackX>470){attackX=470;attackDir=-1}if(attackX<70){attackX=70;attackDir=1}}if(scene==="defense")updateDefense(dt)}
+particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=420*dt;p.l-=dt});particles=particles.filter(p=>p.l>0);damagePop.forEach(d=>{d.y+=d.v*dt;d.v*=.94;d.l-=dt});damagePop=damagePop.filter(d=>d.l>0);trails.forEach(t=>t.l-=dt);trails=trails.filter(t=>t.l>0);if(scene==="attack"){attackTime-=dt;attackX+=attackDir*dt*(430+attackHits*34);if(attackX>470){attackX=470;attackDir=-1}if(attackX<70){attackX=70;attackDir=1}if(attackTime<=0&&!attackEnded)finishComboAttack()}
+if(scene==="skillgame"&&skillGame){skillGame.timer-=dt;if(skillGame.timer<=0)resolveSkill()}
+if(scene==="defense")updateDefense(dt);
+if(scene==="platform")updatePlatform(dt);
+if(scene==="beam")updateBeam(dt);
+if(scene==="seal")updateSeal(dt)}
 function R(x,y,w,h,c){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
 function T(s,x,y,z=18,c="#fff",a="left"){g.fillStyle=c;g.font=`900 ${z}px monospace`;g.textAlign=a;g.fillText(s,x,y)}
+function wrapped(s,x,y,maxW,lineH=24,size=16){
+g.font=`900 ${size}px monospace`;g.textAlign="center";const chars=[...String(s)];let line="",lines=[];
+for(const ch of chars){const test=line+ch;if(g.measureText(test).width>maxW&&line){lines.push(line);line=ch}else line=test}
+if(line)lines.push(line);lines.slice(0,4).forEach((v,i)=>T(v,x,y+i*lineH,size,"#fff","center"));
+}
 function drawBoss(){
 const hover=Math.sin(bossFx.hover)*7;
 const flap=Math.sin(bossFx.wing)*10;
@@ -351,13 +483,51 @@ if(scene==="defense"){
 if(bossFx.charge>0){g.save();g.globalAlpha=bossFx.charge/.9;T("CHARGING...",270,285,20,boss.phase===3?"#ff5070":"#7fd8ff","center");g.restore()}
 R(arena.x,arena.y,arena.w,arena.h,"#020205");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);for(const b of bullets){if(b.warn>0){g.globalAlpha=.3;R(b.x-2,b.y-18,4,36,"#ff3344");g.globalAlpha=1;continue}if(foresight){g.globalAlpha=.18;R(b.x+b.vx*.28,b.y+b.vy*.28,b.r*2,b.r*2,"#4fc8ff");g.globalAlpha=1}R(b.x-b.r,b.y-b.r,b.r*2,b.r*2,b.fake?"#506070":b.c)}drawHeart();T(`回避 ${defT.toFixed(1)}`,270,292,14,"#ffd84e","center")}
 else{R(30,745,480,145,"#020205");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(30,745,480,145);
-if(sub==="dialog"){T(dialogue[di]||"",270,810,16,"#fff","center");T("画面をタップ",495,875,11,"#aaa","right")}
+if(sub==="dialog"){}
 else if(scene==="menu"){actions.forEach((a,i)=>{const rx=45+(i%2)*230,ry=760+Math.floor(i/2)*42,rw=220,rh=36;menuRects.push({x:rx,y:ry,w:rw,h:rh,type:"action",i});R(rx,ry,rw,rh,i===sel?"#2a2108":"#090b10");T(a,rx+rw/2,ry+24,17,i===sel?"#ffd84e":"#fff","center")});T(`${current().name} / ${current().skill}`,270,915,14,current().c,"center")}
 else if(scene==="skill"){menuRects.push({x:50,y:775,w:440,h:78,type:"skill",i:0});R(50,775,440,78,"#17120a");T(current().skill,270,805,22,"#ffd84e","center");T(current().quote,270,838,13,"#ddd","center")}
 else if(scene==="item"){const n=[`やくそう ×${items.herb}`,`しずく ×${items.dew}`,`せかいじゅのは ×${items.leaf}`,`まほうのせいすい ×${items.ether}`];n.forEach((a,i)=>{const rx=45+(i%2)*230,ry=760+Math.floor(i/2)*45;menuRects.push({x:rx,y:ry,w:220,h:38,type:"item",i});R(rx,ry,220,38,"#0b0d13");T(a,rx+110,ry+25,15,"#fff","center")})}
 else if(scene==="switch"){party.forEach((p,i)=>{const rx=45+(i%2)*230,ry=755+Math.floor(i/2)*40;menuRects.push({x:rx,y:ry,w:220,h:34,type:"switch",i});R(rx,ry,220,34,"#0b0d13");T(`${p.name} HP ${p.hp}`,rx+110,ry+23,14,p.hp>0?"#fff":"#666","center")})}
-else if(scene==="attack"){R(70,810,400,12,"#555");R(260,795,20,42,"#ffd84e");R(attackX-5,791,10,50,Math.sin(performance.now()/80)>0?"#fff":"#7fd8ff");T("中央に来た瞬間をタップ！",270,780,16,"#fff","center")}}
-if(scene!=="defense"){
+else if(scene==="attack"){
+R(70,810,400,12,"#555");
+for(let i=0;i<5;i++)R(110+i*80,805,4,22,i===2?"#ffd84e":"#777");
+R(260,792,20,48,"#ffd84e");
+R(attackX-6,788,12,56,Math.sin(performance.now()/70)>0?"#fff":"#7fd8ff");
+T("連続タップ攻撃：最大7HIT",270,773,16,"#fff","center");
+T(`TIME ${attackTime.toFixed(1)}  HIT ${attackHits}  TOTAL ${attackTotal}`,270,865,13,"#ffd84e","center");
+}}
+
+if(scene==="skillgame"&&skillGame){
+R(35,300,470,430,"#05040bdd");g.strokeStyle=skillFx.color;g.lineWidth=4;g.strokeRect(35,300,470,430);
+T("SPECIAL GIMMICK",270,330,18,"#ffd84e","center");
+T("番号を順番にタップして威力を上げろ",270,360,14,"#fff","center");
+for(const t of skillGame.targets){g.globalAlpha=t.hit?.18:1;g.fillStyle=t.hit?"#555":skillFx.color;g.beginPath();g.arc(t.x,t.y,t.r,0,Math.PI*2);g.fill();T(t.n,t.x,t.y+7,20,"#fff","center");g.globalAlpha=1}
+T(`BONUS ${skillGame.hits}/4  ${skillGame.timer.toFixed(1)}`,270,710,15,"#fff","center");
+}
+if(scene==="platform"){
+R(arena.x,arena.y,arena.w,arena.h,"#10192b");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
+const cam=platform.camera;
+for(let x=0;x<1800;x+=40){let hole=(x>310&&x<410)||(x>710&&x<825)||(x>1090&&x<1195);if(!hole)R(arena.x+x-cam,680,42,30,"#77583c")}
+const pls=[[180,620,120],[480,570,150],[860,605,120],[1260,550,170]];
+for(const p of pls)R(arena.x+p[0]-cam,p[1],p[2],18,"#c89443");
+for(let i=0;i<12;i++){let ex=230+i*115-cam;R(arena.x+ex,650-(i%3)*55,20,20,"#ff6b55")}
+R(arena.x+platform.goal-cam,500,16,180,"#fff");R(arena.x+platform.goal+16-cam,500,60,35,"#ffd84e");
+R(arena.x+platform.x-12,platform.y-22,24,24,"#ff3658");
+T("左半分=左　右半分=右　上をタップ=ジャンプ",270,745,13,"#fff","center");
+}
+if(scene==="beam"){
+R(arena.x,arena.y,arena.w,arena.h,"#090512");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
+g.save();g.translate(beam.bossX,beam.bossY);g.rotate(Math.sin(performance.now()/100)*.1);R(-48,-42,96,84,"#7c8896");R(-35,-30,70,60,"#151a22");g.restore();
+for(const c of beam.cores)if(c.hp>0){g.save();g.shadowColor="#ff4565";g.shadowBlur=20;g.fillStyle="#ff4565";g.beginPath();g.arc(c.x,c.y,15,0,Math.PI*2);g.fill();g.restore();T(c.hp,c.x,c.y+5,12,"#fff","center")}
+g.strokeStyle="#7fd8ff";g.lineWidth=2;g.beginPath();g.arc(beam.aimX,beam.aimY,24,0,Math.PI*2);g.stroke();g.beginPath();g.moveTo(beam.aimX-34,beam.aimY);g.lineTo(beam.aimX+34,beam.aimY);g.moveTo(beam.aimX,beam.aimY-34);g.lineTo(beam.aimX,beam.aimY+34);g.stroke();
+R(175,735,190,55,"#301008");g.strokeStyle="#ffd84e";g.strokeRect(175,735,190,55);T("FIRE",270,770,25,"#ffd84e","center");T(`残り ${beam.timer.toFixed(1)}`,270,815,15,"#fff","center");
+}
+if(scene==="seal"){
+R(arena.x,arena.y,arena.w,arena.h,"#090b18");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
+for(const n of seal.nodes){g.globalAlpha=n.hit?.15:1;g.strokeStyle=n.n===seal.index+1?"#ffd84e":"#59627a";g.lineWidth=5;g.beginPath();g.arc(n.x,n.y,n.r,0,Math.PI*2);g.stroke();T(n.n,n.x,n.y+7,20,n.n===seal.index+1?"#ffd84e":"#8992aa","center");g.globalAlpha=1}
+T("封印順序を見失うな",270,745,16,"#fff","center");T(`残り ${seal.timer.toFixed(1)}`,270,775,14,"#ffd84e","center");
+}
+if(!["defense","platform","beam","seal","skillgame"].includes(scene)){
 party.forEach((p,i)=>{const x=20+(i%2)*260,y=500+Math.floor(i/2)*70,w=240;
 const bob=i===active?Math.sin(performance.now()/160)*2:0;g.save();g.translate(0,bob);
 R(x,y,w,58,i===active?"#111827":"#0a0d14");
@@ -372,17 +542,46 @@ g.restore()});
 const p=current();R(18,82,205,48,"#0a0d14dd");g.strokeStyle="#ffd84e";g.lineWidth=2;g.strokeRect(18,82,205,48);
 R(28,94,16,16,p.c);T(p.name,52,107,13,"#fff");T(`HP ${p.hp}/${p.max}  MP ${p.mp}`,28,124,11,"#fff");
 }
-drawSkillFx();for(const d of damagePop){g.save();g.globalAlpha=Math.max(0,d.l);g.shadowColor=d.crit?"#ff3b4f":"#ffd84e";g.shadowBlur=d.crit?24:14;T((d.crit?"CRITICAL ":"")+d.n,d.x,d.y,d.crit?38:30,d.crit?"#fff":"#ffd84e","center");g.restore()}if(msgT>0){R(40,710,460,34,"#000e");T(msg,270,733,16,"#fff","center")}for(const p of particles)R(p.x,p.y,p.s,p.s,p.c);g.restore();if(flash>0){g.fillStyle=`rgba(255,255,255,${flash*4})`;g.fillRect(0,0,W,H)}
+if(sub==="dialog"){
+g.save();g.fillStyle="#05070df2";g.strokeStyle="#fff";g.lineWidth=4;
+g.beginPath();g.roundRect(45,360,450,170,18);g.fill();g.stroke();
+g.fillStyle="#05070df2";g.beginPath();g.moveTo(245,530);g.lineTo(270,555);g.lineTo(295,530);g.fill();
+wrapped(dialogue[di]||"",270,405,390,27,16);T("タップで進む",270,510,12,"#aaa","center");g.restore();
+}
+drawSkillFx();for(const d of damagePop){g.save();g.globalAlpha=Math.max(0,d.l);g.shadowColor=d.crit?"#ff3b4f":"#ffd84e";g.shadowBlur=d.crit?24:14;T((d.crit?"CRITICAL ":"")+d.n,d.x,d.y,d.crit?38:30,d.crit?"#fff":"#ffd84e","center");g.restore()}if(msgT>0){R(55,420,430,62,"#000f");g.strokeStyle="#ffd84e";g.lineWidth=2;g.strokeRect(55,420,430,62);wrapped(msg,270,445,390,22,15)}for(const p of particles)R(p.x,p.y,p.s,p.s,p.c);g.restore();if(flash>0){g.fillStyle=`rgba(255,255,255,${flash*4})`;g.fillRect(0,0,W,H)}
 }
 function canvasPos(e){const r=cv.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*W/r.width,y:(p.clientY-r.top)*H/r.height}}
 cv.addEventListener("pointerdown",e=>{e.preventDefault();ac();const p=canvasPos(e);
+if(scene==="skillgame"&&skillGame){
+const target=skillGame.targets.find(t=>!t.hit&&t.n===skillGame.hits+1&&Math.hypot(p.x-t.x,p.y-t.y)<=t.r+14);
+if(target){target.hit=true;skillGame.hits++;beep(300+skillGame.hits*90,.08,"square",.04);if(skillGame.hits>=4)resolveSkill()}
+return}
+if(scene==="platform"){
+if(p.y<520&&platform.vy===0)platform.vy=-430;
+else platform.vx=p.x<270?-205:205;
+return}
+if(scene==="beam"){
+if(p.y>720){beam.shots++;beep(520,.06,"square",.04);let hit=beam.cores.find(c=>c.hp>0&&Math.hypot(c.x-beam.aimX,c.y-beam.aimY)<35);if(hit){hit.hp--;particle(hit.x,hit.y,"#ff4565",10);if(beam.cores.every(c=>c.hp<=0))endGimmick(true)}}
+else {beam.drag=true;beam.aimX=p.x;beam.aimY=p.y}
+return}
+if(scene==="seal"){
+const n=seal.nodes.find(n=>!n.hit&&Math.hypot(p.x-n.x,p.y-n.y)<n.r+14);
+if(n){if(n.n===seal.index+1){n.hit=true;seal.index++;beep(260+seal.index*60,.08,"sine",.04);if(seal.index>=seal.nodes.length)endGimmick(true)}else{seal.timer-=1.2;shake=8}}
+return}
 if(scene==="defense"){heart.drag=true;heart.offX=heart.x-p.x;heart.offY=heart.y-p.y;heart.x=clamp(p.x+heart.offX,arena.x+12,arena.x+arena.w-12);heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12);return}
 if(sub==="dialog"){nextDialog();return}
 if(scene==="attack"){attackTap();return}
 for(const m of menuRects)if(p.x>=m.x&&p.x<=m.x+m.w&&p.y>=m.y&&p.y<=m.y+m.h){if(m.type==="action")chooseAction(m.i);if(m.type==="skill")useSkill();if(m.type==="item")useItem(m.i);if(m.type==="switch"){if(party[m.i].hp>0){active=m.i;scene="menu";sub="choose";toast(party[m.i].name+"に交代")}}return}
 });
-cv.addEventListener("pointermove",e=>{if(!heart.drag||scene!=="defense")return;e.preventDefault();const p=canvasPos(e);heart.x=clamp(p.x+heart.offX,arena.x+12,arena.x+arena.w-12);heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12)});
-["pointerup","pointercancel","pointerout"].forEach(n=>cv.addEventListener(n,()=>heart.drag=false));
+cv.addEventListener("pointermove",e=>{
+const p=canvasPos(e);
+if(scene==="beam"&&beam.drag){beam.aimX=clamp(p.x,arena.x,arena.x+arena.w);beam.aimY=clamp(p.y,arena.y,arena.y+arena.h);return}
+if(!heart.drag||scene!=="defense")return;
+e.preventDefault();
+heart.x=clamp(p.x+heart.offX,arena.x+12,arena.x+arena.w-12);
+heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12)
+});
+["pointerup","pointercancel","pointerout"].forEach(n=>cv.addEventListener(n,()=>{heart.drag=false;beam.drag=false;if(scene==="platform")platform.vx=0}));
 function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(scene!=="end")update(dt);draw();requestAnimationFrame(loop)}
 document.getElementById("go").onclick=()=>{ac();music();document.getElementById("start").classList.add("hidden");reset()};
 document.getElementById("again").onclick=()=>{document.getElementById("end").classList.add("hidden");reset()};
