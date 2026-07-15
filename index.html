@@ -24,7 +24,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-acti
 <div id="wrap">
 <canvas id="game" width="540" height="960"></canvas>
 <div id="start"><div class="card">
-<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK IXI</b></div>
+<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK IX.1I</b></div>
 <p>縦画面・敵ターン／必殺技 完全修正版</p>
 <button id="go">物語を始める</button>
 <p class="small">スマホ縦画面専用。メニューは直接タップ、弾幕中はハートを指でドラッグ。<br>ハートには強い縁取り・光・残像を付け、弾幕の中でも見失いにくくしています。</p>
@@ -45,7 +45,6 @@ let skillFx={t:0,type:"",name:"",color:"#fff"};let damagePop=[];
 let attackTime=0,attackHits=0,attackTotal=0,attackEnded=false,attackLastQuality=0;
 let skillGame=null;let memoryGame={timer:0,phase:0,progress:0,choice:-1,targets:[],held:false};
 let platform={x:70,y:640,vx:0,vy:0,ground:690,camera:0,goal:1040,dead:false,coins:0,falls:0,checkpoint:70,won:false,tutorialPage:0,ready:false,moveHold:0,moveDir:0,inv:0};
-visualTime=0;transitionFx=0;transitionLabel="";
 let beam={timer:0,aimX:270,aimY:500,shots:0,cores:[],bossX:270,bossY:450,drag:false,tutorialPage:0,ready:false,selected:-1};
 let seal={timer:0,index:0,nodes:[]};
 let gimmickLock=false;
@@ -81,7 +80,7 @@ party.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(boss,{hp:boss.max,phase:1
 scene="opening";sub="dialog";active=turn=sel=bond=score=shake=flash=0;deaths=sacrifices=talkCount=perfects=0;skillFx={t:0,type:"",name:"",color:"#fff"};damagePop=[];
 bossFx={hit:0,charge:0,roar:0,transform:0,blink:0,tilt:0,wing:0,hover:0,core:0,attack:0};
 attackTime=attackHits=attackTotal=attackLastQuality=0;attackEnded=false;skillGame=null;memoryGame={timer:0,phase:0,progress:0,choice:-1,targets:[],held:false};gimmickLock=false;
-platform={x:55,y:660,vx:0,vy:0,ground:680,camera:0,goal:1550,dead:false,coins:0};
+platform={x:70,y:640,vx:0,vy:0,ground:690,camera:0,goal:1040,dead:false,coins:0,falls:0,checkpoint:70,won:false,tutorialPage:0,ready:false,moveHold:0,moveDir:0,inv:0};
 beam={timer:0,aimX:270,aimY:500,shots:0,cores:[],bossX:270,bossY:450,drag:false,tutorialPage:0,ready:false,selected:-1};
 seal={timer:0,index:0,nodes:[]};bullets=[];particles=[];trails=[];freeze=0;foresight=guard=false;berserk=0;musicMood="quiet";
 say(["――空から、壊れた神が落ちてきた。","その翼は祈りではなく、命令で動いていた。","機械天使「私は、終わらせるために作られた。」","トシユキ「じゃあ俺たちは、始めるために来た。」"],()=>{scene="menu";sub="choose";toast("六人の物語が始まる。",1.4)})
@@ -808,8 +807,27 @@ heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12)
 });
 ["pointerup","pointercancel","pointerout"].forEach(n=>cv.addEventListener(n,()=>{heart.drag=false;beam.drag=false}));
 function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(scene!=="end")update(dt);draw();requestAnimationFrame(loop)}
-document.getElementById("go").onclick=()=>{ac();music();document.getElementById("start").classList.add("hidden");reset()};
+document.getElementById("go").onclick=()=>{
+try{
+ ac();music();reset();
+ document.getElementById("start").classList.add("hidden");
+}catch(err){
+ console.error(err);
+ const card=document.querySelector("#start .card");
+ if(card){
+  const old=document.getElementById("bootError");
+  if(old)old.remove();
+  const p=document.createElement("p");
+  p.id="bootError";
+  p.style.color="#ff6b7d";
+  p.style.fontSize="13px";
+  p.textContent="起動エラーが発生しました。ページを再読み込みしてください。";
+  card.appendChild(p);
+ }
+}
+};
 document.getElementById("again").onclick=()=>{document.getElementById("end").classList.add("hidden");reset()};
+window.addEventListener("error",e=>console.error("DAYBREAK IX.1 runtime:",e.error||e.message));
 reset();requestAnimationFrame(loop);
 })();</script>
 </div>
