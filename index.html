@@ -24,7 +24,7 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-acti
 <div id="wrap">
 <canvas id="game" width="540" height="960"></canvas>
 <div id="start"><div class="card">
-<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XI</b></div>
+<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK X.1I</b></div>
 <p>縦画面・敵ターン／必殺技 完全修正版</p>
 <button id="go">物語を始める</button>
 <p class="small">スマホ縦画面専用。メニューは直接タップ、弾幕中はハートを指でドラッグ。<br>ハートには強い縁取り・光・残像を付け、弾幕の中でも見失いにくくしています。</p>
@@ -198,22 +198,37 @@ function applySkill(success){
 if(scene!=="skillResolve")return;
 const p=current(),bonus=success?1.6:1.0;
 if(active===0){
+ const dmg=Math.floor(135*bonus);
+ damageBoss(dmg);freeze=2.2;
  party.forEach(a=>{if(a.hp<=0){a.hp=Math.ceil(a.max*.35);deaths=Math.max(0,deaths-1)}
- a.hp=Math.min(a.max,a.hp+Math.floor(20*bonus))});
+ a.hp=Math.min(a.max,a.hp+Math.floor(18*bonus))});
  bond=Math.min(100,bond+(success?24:14));
+ damagePop.push({x:270,y:250,v:-70,l:1.4,n:`TIME STOP ${dmg}`,crit:true});
+ if(boss.hp>0){
+  transition("TIME HAS STOPPED","#d8c8ff");
+  return say([
+   "世界から音が消えた。",
+   `止まった時間の中で、機械天使に${dmg}ダメージ。`,
+   "トシユキ「止めたのは時間だけだ。俺たちの想いは動いている。」"
+  ],nextTurn);
+ }
 }
 if(active===1){
  p.hp=Math.max(1,p.hp-Math.ceil(p.max*.18));sacrifices++;boss.armor=0;
  damageBoss(145*bonus);bond=Math.min(100,bond+(success?20:11));
 }
 if(active===2){
+ const dmg=Math.floor(82*bonus);damageBoss(dmg);
  party.forEach(a=>a.hp=Math.min(a.max,a.hp+Math.floor(40*bonus)));
  boss.resolve=Math.max(0,boss.resolve-(success?14:8));bond=Math.min(100,bond+(success?26:15));
+ damagePop.push({x:270,y:250,v:-65,l:1.2,n:`結界反射 ${dmg}`,crit:success});
 }
 if(active===3){
+ const dmg=Math.floor(96*bonus);damageBoss(dmg);
  party.forEach(a=>{if(a.hp<=0){a.hp=Math.ceil(a.max*.55);deaths=Math.max(0,deaths-1)}
  else a.hp=Math.min(a.max,a.hp+Math.floor(26*bonus))});
  p.hp=1;sacrifices++;bond=Math.min(100,bond+(success?30:17));
+ damagePop.push({x:270,y:250,v:-65,l:1.2,n:`鳳凰炎 ${dmg}`,crit:success});
 }
 if(active===4){
  berserk=3;damageBoss(110*bonus);bond=Math.min(100,bond+(success?18:10));
@@ -297,11 +312,13 @@ gimmickLock=false;
 if(success){
  bond=Math.min(100,bond+16);damageBoss(70+boss.phase*25);
  if(boss.hp<=0||scene==="end")return;
- say(["ギミックを突破した。","機械天使「あなたたちは、試練の中でも互いの声を聞いている。」"],nextTurn);
+ scene="gimmickResult";sub="choose";
+say(["ギミックを突破した。","機械天使「あなたたちは、試練の中でも互いの声を聞いている。」"],nextTurn);
 }else{
  hurt(24+boss.phase*6);
  if(boss.hp<=0||scene==="end")return;
- say(["試練を突破できなかった。","マッピー「失敗したって、次の手は残ってる。」"],nextTurn);
+ scene="gimmickResult";sub="choose";
+say(["試練を突破できなかった。","マッピー「失敗したって、次の手は残ってる。」"],nextTurn);
 }
 }
 function spawnPattern(id){
@@ -449,7 +466,7 @@ platform.y+=platform.vy*dt;
 
 const worldX=platform.x+platform.camera;
 /* 広めの穴2つだけ。端に安全床を残す */
-const holes=[[390,455],[780,845]];
+const holes=platform.falls>0?[]:[[405,450],[800,845]];
 let ground=690;
 for(const h of holes)if(worldX>h[0]&&worldX<h[1])ground=850;
 
@@ -465,7 +482,11 @@ if(platform.y>=ground-28){platform.y=ground-28;platform.vy=0}
 
 /* 自動チェックポイント */
 if(worldX>520&&platform.checkpoint<520){platform.checkpoint=520;toast("CHECKPOINT ― ここから再開",1.0)}
-if(worldX>platform.goal){platform.won=true;return endGimmick(true)}
+if(worldX>platform.goal){
+ platform.won=true;platform.vx=0;platform.moveHold=0;
+ transition("STAGE CLEAR","#ffd84e");
+ return endGimmick(true);
+}
 
 /* 落下はゲームオーバーではなくHPダメージ＋即復帰 */
 if(platform.y>820){
@@ -474,9 +495,9 @@ if(platform.y>820){
  p.hp=Math.max(1,p.hp-12);
  platform.camera=Math.max(0,platform.checkpoint-110);
  platform.x=platform.checkpoint-platform.camera;
- platform.y=620;platform.vx=0;platform.vy=0;platform.moveHold=0;platform.inv=1.2;
+ platform.y=610;platform.vx=0;platform.vy=0;platform.moveHold=0;platform.inv=1.5;
  shake=10;particle(arena.x+platform.x,platform.y,"#ff4d62",18);
- toast(`落下ダメージ -12　HP ${p.hp}/${p.max}`,1.2);
+ toast(`落下ダメージ -12　足場が修復された`,1.4);
 }
 
 /* カメラ追従 */
@@ -705,7 +726,21 @@ function draw(){
 }else if(scene==="skillResolve"){
  const c=current().c;
  panel(18,238,504,548,c,"#02030af6");
- g.save();g.translate(270,500);g.rotate(visualTime*.8);
+ if(active===0){
+  g.save();g.translate(270,500);
+  for(let i=0;i<9;i++){
+   g.strokeStyle=i%2?"#fff":"#b99cff";g.globalAlpha=.12+i*.055;g.lineWidth=3;
+   g.beginPath();g.arc(0,0,55+i*25,0,Math.PI*2);g.stroke();
+  }
+  g.globalAlpha=1;
+  g.strokeStyle="#fff";g.lineWidth=9;
+  g.beginPath();g.moveTo(0,0);g.lineTo(0,-125);g.stroke();
+  g.strokeStyle="#ffd84e";g.lineWidth=6;
+  g.beginPath();g.moveTo(0,0);g.lineTo(85,-30);g.stroke();
+  g.restore();
+  T("TIME STOP",270,405,34,"#fff","center");
+ }
+ g.save();g.translate(270,500);g.rotate(active===0?0:visualTime*.8);
  for(let i=0;i<12;i++){g.rotate(Math.PI/6);g.strokeStyle=i%2?c:"#fff";g.globalAlpha=.35;g.lineWidth=5;g.beginPath();g.moveTo(70,0);g.lineTo(205,0);g.stroke()}
  g.restore();g.globalAlpha=1;
  g.save();g.shadowColor=c;g.shadowBlur=55;g.fillStyle=c;g.beginPath();g.arc(270,500,90+Math.sin(visualTime*8)*12,0,Math.PI*2);g.fill();g.restore();
@@ -719,13 +754,19 @@ function draw(){
  }else if(scene==="platform"){
   R(arena.x,arena.y,arena.w,arena.h,"#72c9ff");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
   const cam=platform.camera,worldX=platform.x+cam;R(arena.x,650,arena.w,60,"#62c55d");
-  for(let x=0;x<1200;x+=40){const hole=(x>390&&x<455)||(x>780&&x<845);if(!hole){R(arena.x+x-cam,680,42,30,"#89572d");R(arena.x+x-cam,680,42,8,"#59c45b")}}
+  for(let x=0;x<1200;x+=40){
+ const hole=platform.falls===0&&((x>405&&x<450)||(x>800&&x<845));
+ if(!hole){
+  R(arena.x+x-cam,680,42,30,platform.falls>0?"#7354b3":"#89572d");
+  R(arena.x+x-cam,680,42,8,platform.falls>0?"#d8c6ff":"#59c45b");
+ }
+}
   for(const p of [[205,610,155],[495,565,185],[865,595,175]])R(arena.x+p[0]-cam,p[1],p[2],24,"#d39a43");
   R(arena.x+platform.goal-cam,472,12,208,"#fff");R(arena.x+platform.goal+12-cam,472,72,42,"#ffd84e");
   R(arena.x+platform.x-14,platform.y-28,28,28,"#ff3f55");R(arena.x+platform.x-9,platform.y-35,18,9,"#ffd84e");
   panel(24,735,492,170,"#dcecff","#02040aee");T(`HP ${current().hp}/${current().max}　落下 ${platform.falls}`,270,770,14,"#fff","center");
   T("◀",82,835,30,"#fff","center");T("▶",162,835,30,"#fff","center");T("A",425,835,32,"#ffd84e","center");
-  T("左右で移動　Aでジャンプ",270,892,13,"#fff","center");
+  T(platform.falls>0?"記憶の橋が出現：そのまま旗へ":"左右で移動　Aでジャンプ",270,892,13,"#fff","center");
  }else if(scene==="beamTutorial"||scene==="beam"){
   panel(24,260,492,550,"#ff667f","#080713f4");T(scene==="beamTutorial"?"追撃ビーム・操作説明":"CORE BREAK",270,310,23,"#ffd84e","center");
   if(scene==="beamTutorial"){wrapped("赤いコアをタップして照準を合わせ、そのあとFIREを押します。",270,400,420,30,17);T("タップして次へ",270,710,19,"#fff","center")}
@@ -766,6 +807,7 @@ function draw(){
 }
 function canvasPos(e){const r=cv.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*W/r.width,y:(p.clientY-r.top)*H/r.height}}
 cv.addEventListener("pointerdown",e=>{e.preventDefault();ac();const p=canvasPos(e);
+if(sub==="dialog"){nextDialog();return}
 if(scene==="platformIntro"){
  scene="platformTutorial";sub="play";return;
 }
@@ -814,7 +856,7 @@ if(platform.tutorialPage>=3){platform.ready=true;scene="platform";sub="play";toa
 return}
 if(scene==="platform"){
 if(p.y>742&&p.x>350){
- if(platform.vy===0){platform.vy=-405;beep(420,.06,"square",.025)}
+ if(Math.abs(platform.vy)<35||platform.y>620){platform.vy=-430;beep(420,.06,"square",.025)}
 }else if(p.y>742&&p.x<205){
  platform.moveDir=p.x<122?-1:1;
  platform.moveHold=.48; /* タップだけでも約0.5秒進む */
@@ -849,7 +891,6 @@ const n=seal.nodes.find(n=>!n.hit&&Math.hypot(p.x-n.x,p.y-n.y)<n.r+14);
 if(n){if(n.n===seal.index+1){n.hit=true;seal.index++;beep(260+seal.index*60,.08,"sine",.04);if(seal.index>=seal.nodes.length)endGimmick(true)}else{seal.timer-=1.2;shake=8}}
 return}
 if(scene==="defense"){heart.drag=true;heart.offX=heart.x-p.x;heart.offY=heart.y-p.y;heart.x=clamp(p.x+heart.offX,arena.x+12,arena.x+arena.w-12);heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12);return}
-if(sub==="dialog"){nextDialog();return}
 if(scene==="attack"){attackTap();return}
 for(const m of menuRects)if(p.x>=m.x&&p.x<=m.x+m.w&&p.y>=m.y&&p.y<=m.y+m.h){if(m.type==="action")chooseAction(m.i);if(m.type==="skill")useSkill();if(m.type==="item")useItem(m.i);if(m.type==="switch"){if(party[m.i].hp>0){active=m.i;scene="menu";sub="choose";toast(party[m.i].name+"に交代",.7)}}return}
 });
@@ -895,7 +936,7 @@ try{
 }
 };
 document.getElementById("again").onclick=()=>{document.getElementById("end").classList.add("hidden");reset()};
-window.addEventListener("error",e=>console.error("DAYBREAK X runtime:",e.error||e.message));
+window.addEventListener("error",e=>console.error("DAYBREAK X.1 runtime:",e.error||e.message));
 reset();requestAnimationFrame(loop);
 })();</script>
 </div>
