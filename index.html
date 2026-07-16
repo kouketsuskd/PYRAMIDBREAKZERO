@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#03050a">
-<title>PYRAMID BREAK ZERO - DAYBREAK v2</title>
+<meta name="theme-color" content="#02040a">
+<title>PYRAMID BREAK ZERO - DAYBREAK XII</title>
 <style>
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 body{display:grid;place-items:center}
 #wrap{position:relative;width:100vw;height:100dvh;background:#000}
 canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
-#start,#end{position:absolute;inset:0;z-index:20;background:radial-gradient(circle at 50% 35%,#273957,#070912 63%,#010103);display:grid;place-items:center;padding:22px}
-.card{width:min(92vw,780px);padding:26px;border:4px solid #fff;background:#020306f2;text-align:center;box-shadow:0 0 45px #000}
-.logo{font-size:clamp(34px,7vw,70px);font-weight:1000;line-height:.86;text-shadow:5px 5px 0 #203b67}.logo b{color:#ffd75a}
-.card button{margin-top:18px;padding:14px 28px;border:3px solid #fff;background:#05070d;color:#fff;font:900 20px monospace}
-.small{font-size:12px;line-height:1.7;color:#c7d1dd}.hidden{display:none!important}
+.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#243a62,#060811 62%,#010103)}
+.card{width:min(92vw,560px);padding:24px;border:4px solid #fff;background:#020306f2;text-align:center;box-shadow:0 0 40px #000}
+.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.9;text-shadow:5px 5px 0 #17355d}.logo b{color:#ffd75a}
+button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 19px monospace}
+.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}
 #rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}
 @media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}
 </style>
@@ -23,861 +23,359 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-acti
 <body>
 <div id="wrap">
 <canvas id="game" width="540" height="960"></canvas>
-<div id="start"><div class="card">
+<div id="start" class="overlay"><div class="card">
 <div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XII</b></div>
-<p>縦画面・敵ターン／必殺技 完全修正版</p>
+<p>超長期ボス戦・安定動作版</p>
 <button id="go">物語を始める</button>
-<p class="small">スマホ縦画面専用。メニューは直接タップ、弾幕中はハートを指でドラッグ。<br>ハートには強い縁取り・光・残像を付け、弾幕の中でも見失いにくくしています。</p>
+<p class="small">ボスHP 100,000／5段階変形／30系統の攻撃。<br>縦画面専用。敵ターンはハートを指でドラッグ。</p>
 </div></div>
-<div id="end" class="hidden"><div class="card"><div class="logo" id="endTitle">DAYBREAK</div><p id="endText"></p><button id="again">もう一度</button></div></div>
+<div id="end" class="overlay hidden"><div class="card">
+<div class="logo" id="endTitle">DAYBREAK</div><p id="endText"></p><button id="again">もう一度</button>
+</div></div>
 <div id="rotate">iPhoneを縦向きにしてください</div>
 </div>
 <script>
 (()=>{"use strict";
-const cv=document.getElementById("game"),g=cv.getContext("2d");g.imageSmoothingEnabled=false;
-const W=540,H=960,arena={x:40,y:300,w:460,h:430};
+const cv=document.getElementById("game"),g=cv.getContext("2d");
+g.imageSmoothingEnabled=false;
+const W=540,H=960,arena={x:34,y:305,w:472,h:405};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a);
-let scene="opening",sub="dialog",last=0,sel=0,active=0,turn=0,bond=0,score=0,shake=0,flash=0;
-let dialogue=[],di=0,after=null,msg="",msgT=0,bullets=[],particles=[],trails=[];
-let attackX=70,attackDir=1,defT=0,patternId=0,patternClock=0,freeze=0,foresight=false,guard=false,berserk=0;
-let deaths=0,sacrifices=0,talkCount=0,perfects=0;
-let skillFx={t:0,type:"",name:"",color:"#fff"};let damagePop=[];
-let attackTime=0,attackHits=0,attackTotal=0,attackEnded=false,attackLastQuality=0;
-let skillGame=null;let memoryGame={timer:0,phase:0,progress:0,choice:-1,targets:[],held:false,
-angle:0,hits:0,need:3,downX:0,downY:0,charge:0,correct:1,reveal:0,result:false,quote:""};
-let platform={x:70,y:640,vx:0,vy:0,ground:690,camera:0,goal:1040,dead:false,coins:0,falls:0,checkpoint:70,won:false,tutorialPage:0,ready:false,moveHold:0,moveDir:0,inv:0};
-let beam={timer:0,aimX:270,aimY:500,shots:0,cores:[],bossX:270,bossY:450,drag:false,tutorialPage:0,ready:false,selected:-1};
-let seal={timer:0,index:0,nodes:[]};
-let gimmickLock=false;
-let skillUsed=[false,false,false,false,false,false];
-let permanentDead=[false,false,false,false,false,false];
-let timeStopTurns=0,barrierTurns=0,critTurns=0,forecastTurns=0,oniTurns=0;
-let attackBoost=[1,1,1,1,1,1],stunTurns=[0,0,0,0,0,0];
-let lastPhase=1,bossMove={slam:0,charge:0,handL:0,handR:0,coreOpen:0};
-let visualTime=0,transitionFx=0,transitionLabel="",bossAura=[],screenLines=[];
-for(let i=0;i<38;i++)bossAura.push({a:Math.random()*Math.PI*2,r:55+Math.random()*150,s:.25+Math.random()*.7,z:1+Math.random()*3});
-for(let i=0;i<18;i++)screenLines.push({y:Math.random()*960,v:8+Math.random()*20,a:.02+Math.random()*.05});
-let bossFx={hit:0,charge:0,roar:0,transform:0,blink:0,tilt:0,wing:0,hover:0,core:0,attack:0};
-let bgStars=[];for(let i=0;i<70;i++)bgStars.push({x:Math.random()*540,y:Math.random()*960,s:Math.random()*2+1,v:Math.random()*18+8,a:Math.random()});
-let audio=null,musicTimer=null,musicMood="quiet",noteStep=0;
-const items={herb:1,dew:0,leaf:0,ether:0};
-const party=[
-{name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#6d5eb0",skill:"ザ・ワールド",quote:"時間は止められる。でも、想いまでは止められない。",pow:20,spd:1},
-{name:"カズアキ",max:190,hp:190,mp:48,mm:48,c:"#754a3e",skill:"ワールド・イズ・マイン",quote:"全部背負う。それが俺の役目だ。",pow:36,spd:.84},
-{name:"マッピー",max:115,hp:115,mp:90,mm:90,c:"#cda75e",skill:"ピラミッド・ハート",quote:"勝つんじゃない。みんなで帰るんだ。",pow:16,spd:1},
-{name:"ケイタ",max:125,hp:125,mp:75,mm:75,c:"#ed912f",skill:"鳳翼天翔",quote:"燃え尽きても、朝はまた来る。",pow:26,spd:1.2},
-{name:"イサジ",max:175,hp:175,mp:44,mm:44,c:"#ebc34e",skill:"領域展開・鬼",quote:"怖くても進む。それが俺たちだ。",pow:33,spd:.92},
-{name:"リョウゴ",max:130,hp:130,mp:80,mm:80,c:"#3f8bc7",skill:"虫の知らせ",quote:"未来は決まってない。だから見に行く。",pow:23,spd:1.32}
-];
-const boss={name:"機械天使 アルカ・セラフ 完全体",max:100000,hp:100000,phase:1,armor:280,resolve:120,mercy:0,weak:"none"};
-const heart={x:480,y:380,r:9,inv:0,mode:"red",vy:0,drag:false,offX:0,offY:0};
 const actions=["たたかう","わざ","どうぐ","まもる","はなす","こうたい"];
-const menuRects=[];
+
+let state="BOOT",sub="none",last=0,time=0,turn=0,active=0,selected=0,bond=0,score=0;
+let dialog=[],dialogIndex=0,dialogNext=null;
+let attackX=70,attackDir=1,attackTime=0,attackHits=0,attackTotal=0,attackEnded=false;
+let bullets=[],particles=[],damageText=[],trails=[],hitRects=[];
+let defenseTime=0,patternId=0,patternClock=0,dragging=false,shake=0,flash=0,message="",messageTime=0;
+let phaseShown=1,forecastTurns=0,timeStopTurns=0,barrierTurns=0,critTurns=0,oniTurns=0;
+let skillUsed=[false,false,false,false,false,false],permanentDead=[false,false,false,false,false,false];
+let attackBoost=[1,1,1,1,1,1],stunTurns=[0,0,0,0,0,0];
+let audio=null,musicTimer=null,musicStep=0;
+let bossFx={hover:0,wing:0,hit:0,roar:0,transform:0,handL:0,handR:0,charge:0,coreOpen:0};
+
+const party=[
+{name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#725fbd",skill:"ザ・ワールド",pow:22},
+{name:"カズアキ",max:195,hp:195,mp:50,mm:50,c:"#805044",skill:"ワールド・イズ・マイン",pow:39},
+{name:"マッピー",max:125,hp:125,mp:90,mm:90,c:"#d0aa60",skill:"ピラミッド・ハート",pow:18},
+{name:"ケイタ",max:135,hp:135,mp:78,mm:78,c:"#ef9432",skill:"鳳翼天翔",pow:29},
+{name:"イサジ",max:185,hp:185,mp:46,mm:46,c:"#edc650",skill:"領域展開・鬼",pow:36},
+{name:"リョウゴ",max:140,hp:140,mp:82,mm:82,c:"#438fca",skill:"虫の知らせ",pow:26}
+];
+const boss={name:"機械天使 アルカ・セラフ 完全体",max:100000,hp:100000,phase:1,armor:280};
+const items={herb:1};
+const heart={x:270,y:515,r:10,inv:0,ox:0,oy:0};
+
 function ac(){if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)}
 function beep(f=220,d=.08,t="sine",v=.025){if(!audio)return;const o=audio.createOscillator(),a=audio.createGain();o.type=t;o.frequency.value=f;a.gain.value=v;o.connect(a);a.connect(audio.destination);o.start();a.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+d);o.stop(audio.currentTime+d)}
-function music(){if(musicTimer)return;musicTimer=setInterval(()=>{const seq=musicMood==="quiet"?[220,277,330,392,330,277,247,220]:musicMood==="hope"?[196,247,294,392,440,392,330,294,220,277,330,440,494,440,392,330]:musicMood==="despair"?[82,98,110,123,110,98,73,82]:[110,147,165,196,220,247,220,196,123,165,185,247,277,247,220,185];const f=seq[noteStep++%seq.length];beep(f,.18,musicMood==="quiet"?"sine":"triangle",musicMood==="quiet"?.018:.016);if(noteStep%8===0)beep(f/2,.38,"sine",.012)},170)}
-function say(a,f=null){dialogue=Array.isArray(a)?a:[a];di=0;sub="dialog";after=f}
-function nextDialog(){di++;if(di>=dialogue.length){sub="choose";if(after){const f=after;after=null;f()}}}
-function toast(s,t=1.1){msg=s;msgT=t}
-function part(x,y,c,n=12,p=1){for(let i=0;i<n;i++)particles.push({x,y,vx:rnd(-190,190)*p,vy:rnd(-240,90)*p,l:rnd(.3,.8),c,s:rnd(2,7)})}
+function music(){if(musicTimer)return;const seq=[196,247,294,330,294,247,220,196,220,277,330,392,330,277,247,220];musicTimer=setInterval(()=>{if(state==="END")return;beep(seq[musicStep++%seq.length],.17,state==="DEFENSE"?"triangle":"sine",state==="DEFENSE"?.014:.018)},170)}
+function setState(s){state=s;selected=0}
+function say(lines,next){dialog=Array.isArray(lines)?lines:[lines];dialogIndex=0;dialogNext=next||null;sub="dialog"}
+function nextDialog(){dialogIndex++;if(dialogIndex>=dialog.length){const n=dialogNext;dialog=[];dialogNext=null;sub="none";if(n)n()}}
+function toast(s,t=1){message=s;messageTime=t}
 function current(){
-if(party[active].hp<=0||permanentDead[active]){
- const i=party.findIndex((p,j)=>p.hp>0&&!permanentDead[j]);
- active=i<0?0:i;
+ if(party[active].hp<=0||permanentDead[active]){
+  const i=party.findIndex((p,j)=>p.hp>0&&!permanentDead[j]);
+  active=i<0?0:i;
+ }
+ return party[active]
 }
-return party[active]
+function aliveCount(){return party.filter((p,i)=>p.hp>0&&!permanentDead[i]).length}
+function reset(){
+ party.forEach(p=>{p.hp=p.max;p.mp=p.mm});
+ Object.assign(boss,{hp:boss.max,phase:1,armor:280});
+ items.herb=1;turn=0;active=0;selected=0;bond=0;score=0;
+ skillUsed=[false,false,false,false,false,false];permanentDead=[false,false,false,false,false,false];
+ forecastTurns=timeStopTurns=barrierTurns=critTurns=oniTurns=0;attackBoost=[1,1,1,1,1,1];stunTurns=[0,0,0,0,0,0];
+ bullets=[];particles=[];damageText=[];trails=[];shake=flash=0;phaseShown=1;
+ bossFx={hover:0,wing:0,hit:0,roar:0,transform:0,handL:0,handR:0,charge:0,coreOpen:0};
+ setState("MENU");
+ say(["――空から、壊れた神が落ちてきた。","機械天使の生命値は100,000。共有のやくそうは、たった一つ。","復活アイテムはない。必殺技は全員一度だけ。","トシユキ「順番を間違えれば負ける。でも、考えれば届く。」"],()=>setState("MENU"));
 }
-
-const actionWords={
- attack:[
-  "トシユキ「一撃で終わらせようとするな。何度でも、届くまで打て。」",
-  "カズアキ「迷うな。中央に重なった瞬間だけ見ろ。」",
-  "マッピー「数字じゃない。今の一撃に、帰る理由を込めるんだ。」"
- ],
- enemy:[
-  "機械天使「防衛機構を展開。あなたたちの意志を測定します。」",
-  "リョウゴ「来る。軌道は見える。でも、未来は自分で避けろ。」",
-  "イサジ「ハートを見失うな。生き残ることも攻撃だ。」"
- ],
- item:[
-  "マッピー「道具は弱さじゃない。帰るための準備だ。」",
-  "ケイタ「回復できる時に回復しよう。倒れてからじゃ遅い。」"
- ],
- switch:[
-  "リョウゴ「役目を変える。逃げるんじゃない、つなぐんだ。」",
-  "トシユキ「次の一秒を、次の仲間へ渡す。」"
- ],
- guard:[
-  "カズアキ「傷は俺が受ける。お前たちは前を見ろ。」",
-  "機械天使「なぜ、他者の痛みを選ぶのですか？」"
- ],
- skill:[
-  "機械天使「特殊術式を検知。そこにある感情を解析します。」",
-  "マッピー「必殺技は強い技じゃない。何を選ぶかを見せる技だ。」"
- ]
-};
-function pickWords(key){const a=actionWords[key]||["六人は息を合わせた。"];return a[turn%a.length]}
-function startEnemyTurn(){
- const lines=[pickWords("enemy")];
- if(boss.phase===2)lines.push("機械天使「第二防衛層、解放。あなたたちの記憶を試します。」");
- if(boss.phase===3)lines.push("機械天使「最終防衛層。これ以上近づけば、私は私でなくなる。」");
- say(lines,beginDefenseNow);
+function particle(x,y,c,n=14,pow=1){for(let i=0;i<n;i++)particles.push({x,y,vx:rnd(-170,170)*pow,vy:rnd(-220,80)*pow,l:rnd(.3,.75),c,s:rnd(2,6)})}
+function damageBoss(raw){
+ const n=Math.max(1,Math.floor(raw-boss.armor));
+ boss.hp=Math.max(0,boss.hp-n);score+=n*10;bossFx.hit=.35;shake=12;flash=.08;
+ damageText.push({x:270,y:190,l:1.1,n,crit:n>=3000});particle(270,190,"#fff",22,1.2);beep(80,.15,"square",.06);
+ if(boss.hp<=0)finishBattle();
 }
-function beginDefenseNow(){
- if(boss.hp<=0||gimmickLock)return;
- transition("ENEMY PHASE",boss.phase===3?"#ff496c":"#65d6ff");bossFx.charge=.9;bossFx.attack=1.1;scene="defense";sub="play";
- defT=boss.phase===5?11.5:boss.phase===4?10.5:boss.phase===3?9.4:boss.phase===2?8.4:7.4;
- patternClock=0;bullets=[];trails=[];heart.x=270;heart.y=515;heart.inv=.6;heart.mode="red";heart.vy=0;
- patternId=(turn*5+boss.phase*7)%24;spawnPattern(patternId);
+function hurt(n){
+ if(barrierTurns>0)n=Math.ceil(n*.38);
+ const p=current();p.hp=Math.max(0,p.hp-n);
+ if(p.hp<=0){const next=party.findIndex((q,i)=>q.hp>0&&!permanentDead[i]);if(next<0)return gameOver();active=next}
 }
-
-function transition(label,color="#7fd8ff"){
- transitionFx=1;transitionLabel=label;flash=.12;shake=Math.max(shake,5);
- part(270,430,color,22,1.1);
-}
-function glowRect(x,y,w,h,c,blur=18){
- g.save();g.shadowColor=c;g.shadowBlur=blur;g.fillStyle=c;g.fillRect(x,y,w,h);g.restore();
-}
-function panel(x,y,w,h,edge="#8aa4c8",fill="#070b14e8"){
- g.save();g.fillStyle=fill;g.strokeStyle=edge;g.lineWidth=3;
- g.beginPath();g.roundRect(x,y,w,h,12);g.fill();g.stroke();
- g.globalAlpha=.25;g.strokeStyle="#fff";g.lineWidth=1;
- g.beginPath();g.moveTo(x+12,y+8);g.lineTo(x+w-12,y+8);g.stroke();g.restore();
-}
-function damageBoss(n){n=Math.max(1,Math.floor(n-boss.armor));boss.hp-=n;score+=n*10;damagePop.push({x:270,y:220,v:-105,l:1.15,n:Math.floor(n),crit:n>=120});shake=12;flash=.08;part(270,220,"#fff",24,1.4);beep(80,.16,"square",.06);if(boss.hp<=0){boss.hp=0;combatEnd()}}
-function chooseAction(index){
-sel=index;
-if(index===0){
- transition("PLAYER ATTACK","#ffd84e");
- scene="attack";attackX=70;attackDir=1;attackTime=3.6;attackHits=0;attackTotal=0;attackEnded=false;sub="play";
-}
-if(index===1){transition("SPECIAL","#d8b8ff");scene="skill";sub="choose"}
-if(index===2){scene="item";sub="choose"}
-if(index===3){guard=true;bond=Math.min(100,bond+13);toast(current().name+"は身を固めた",.8);beginDefense()}
-if(index===4)talk();
-if(index===5){scene="switch";sub="choose"}
+function chooseAction(i){
+ if(sub==="dialog")return;
+ if(i===0){setState("ATTACK");attackX=70;attackDir=1;attackTime=3.6;attackHits=0;attackTotal=0;attackEnded=false}
+ if(i===1)setState("SKILL");
+ if(i===2)setState("ITEM");
+ if(i===3){bond=Math.min(100,bond+10);toast("防御態勢：次の被ダメージ軽減",.9);barrierTurns=Math.max(barrierTurns,1);beginDefense()}
+ if(i===4)talk();
+ if(i===5)setState("SWITCH");
 }
 function useSkill(){
-const p=current(),i=active;
-if(skillUsed[i]){scene="menu";sub="choose";toast("この必殺技はもう使えない",1.0);return}
-skillUsed[i]=true;skillFx={t:2.1,type:["clock","slash","pyramid","phoenix","oni","future"][i],name:p.skill,color:p.c};
-scene="skillResolve";sub="play";flash=.18;shake=14;transition(p.skill,p.c);
-
-if(i===0){
- p.mp=0;timeStopTurns=2;damageBoss(6500);
- party.forEach((a,j)=>{if(!permanentDead[j])a.hp=Math.min(a.max,a.hp+35)});
- damagePop.push({x:270,y:240,v:-75,l:1.5,n:"TIME STOP 6500",crit:true});
- return say(["時間が止まった。","トシユキ「敵の二回の攻撃を消す。だが、もう二度と止められない。」"],nextTurn);
+ const p=current(),i=active;
+ if(skillUsed[i]){toast("この必殺技はもう使えない",1);setState("MENU");return}
+ skillUsed[i]=true;flash=.18;shake=15;
+ if(i===0){
+  damageBoss(6780);timeStopTurns=2;p.mp=0;
+  party.forEach((a,j)=>{if(!permanentDead[j])a.hp=Math.min(a.max,a.hp+35)});
+  say(["時間が止まった。","トシユキ「敵の二回の攻撃を消す。だが、もう二度と止められない。」"],nextTurn);return;
+ }
+ if(i===1){
+  p.hp=1;boss.armor=0;critTurns=3;stunTurns[i]=2;damageBoss(11280);
+  say(["カズアキは世界の境界を斬った。","三ターン、防御を無視する。カズアキは二ターン行動不能。"],beginDefense);return;
+ }
+ if(i===2){
+  barrierTurns=3;party.forEach((a,j)=>{if(!permanentDead[j])a.hp=Math.min(a.max,a.hp+25)});damageBoss(3780);
+  say(["巨大なピラミッドが六人を覆った。","三回の敵攻撃を大幅に軽減する。"],beginDefense);return;
+ }
+ if(i===3){
+  damageBoss(5280);party.forEach((a,j)=>{if(j!==i&&!permanentDead[j])a.hp=a.max});
+  p.hp=0;permanentDead[i]=true;
+  say(["仲間全員の傷が消えた。","ケイタ「これで、みんな帰れる。」","鳳凰のあとに、ケイタの場所だけが空いていた。"],nextTurn);return;
+ }
+ if(i===4){
+  p.hp=1;oniTurns=4;attackBoost[i]=6;damageBoss(7780);
+  say(["イサジは命を一滴だけ残した。","四ターン、攻撃力六倍。鬼化中は回復できない。"],beginDefense);return;
+ }
+ if(i===5){
+  forecastTurns=4;p.mp=0;damageBoss(4480);
+  say(["次の四回の攻撃が青い予告線として見える。","弾幕速度も低下する。"],beginDefense);return;
+ }
 }
-if(i===1){
- p.hp=1;critTurns=3;boss.armor=0;stunTurns[i]=2;damageBoss(11000);
- damagePop.push({x:270,y:240,v:-75,l:1.5,n:"WORLD IS MINE 11000",crit:true});
- return say(["カズアキは世界の境界を斬った。","三ターン、全員の攻撃が防御を無視する。カズアキは二ターン動けない。"],beginDefense);
-}
-if(i===2){
- barrierTurns=3;p.mp=0;damageBoss(3500);
- party.forEach((a,j)=>{if(!permanentDead[j])a.hp=Math.min(a.max,a.hp+25)});
- return say(["巨大なピラミッドが六人を覆った。","三回の敵攻撃を大幅に軽減する。"],beginDefense);
-}
-if(i===3){
- damageBoss(5000);
- party.forEach((a,j)=>{if(j!==i&&!permanentDead[j])a.hp=a.max});
- p.hp=0;permanentDead[i]=true;sacrifices++;
- damagePop.push({x:270,y:240,v:-75,l:1.5,n:"PHOENIX 5000",crit:true});
- return say(["仲間全員の傷が消えた。","ケイタ「これで、みんな帰れる。」","鳳凰が消えたあと、ケイタの場所だけが空いていた。"],nextTurn);
-}
-if(i===4){
- p.hp=1;oniTurns=4;attackBoost[i]=6;damageBoss(7500);
- return say(["イサジは自分の命を一滴だけ残した。","四ターンだけ攻撃力が六倍になる。鬼化中は回復できない。"],beginDefense);
-}
-if(i===5){
- forecastTurns=4;p.mp=0;damageBoss(4200);
- return say(["次の四回の攻撃が青い予告線として見える。","弾幕速度も下がる。未来視は一度しか使えない。"],beginDefense);
-}
-}
-function useItem(i){
-if(i!==0){toast("使える道具は共有のやくそう1個だけ",1.0);return}
-if(items.herb<=0){toast("やくそうはもうない",.9);return}
-const p=current();
-if(active===4&&oniTurns>0){toast("鬼化中のイサジには回復が届かない",1.1);return}
-items.herb--;p.hp=Math.min(p.max,p.hp+80);bond=Math.min(100,bond+8);
-toast(`${p.name}のHPが80回復　やくそう残り0`,1.2);
-beginDefense();
+function useItem(){
+ if(items.herb<=0){toast("やくそうはもうない",.9);setState("MENU");return}
+ if(active===4&&oniTurns>0){toast("鬼化中のイサジには回復が届かない",1.1);setState("MENU");return}
+ items.herb--;const p=current();p.hp=Math.min(p.max,p.hp+80);toast(`${p.name} HP+80　残り0`,1.2);beginDefense();
 }
 function talk(){
-talkCount++;const q=[
-["マッピー「あなたは、誰かに止めてほしいんじゃないのか？」","機械天使「……命令に、願いは必要ない。」"],
-["リョウゴ「未来には、君が泣いている姿が見える。」","機械天使「私は、泣く機能を持たない。」"],
-["ケイタ「機能じゃなくても、痛いものは痛い。」","翼の一枚が、わずかに震えた。"],
-["トシユキ「帰りたい気持ちを選べ。」","機械天使「帰る場所など、私にはない。」"],
-["イサジ「なら作ればいい。俺たちもそうしてきた。」","機械天使の瞳から、光が一滴こぼれた。"],
-["カズアキ「帰る場所は、誰かと一緒に作るものだ。」","機械天使「……私にも、できますか？」"],["マッピー「君が壊したものより、これから守れるものを数えよう。」","機械天使「私は……守る側になれますか？」"],["トシユキ「過去は変えられない。でも、次の一秒は選べる。」","機械天使「次の一秒を……私にください。」"],
-["機械天使「私は、壊した数しか覚えていない。」","マッピー「じゃあ今日から、守れた数を一緒に数えよう。」"],
-["機械天使「朝は、私のようなものにも来ますか？」","リョウゴ「朝は誰かを選ばない。だから俺たちも君を選ぶ。」"]
-];const i=Math.min(q.length-1,Math.floor(boss.mercy/20));boss.mercy+=20;boss.resolve=Math.max(0,boss.resolve-20);bond=Math.min(100,bond+16);say(q[i],()=>{if(boss.resolve<=0&&bond>=75)peaceEnd();else beginDefense()})
+ const lines=[
+ ["マッピー「君は、誰かに止めてほしいんじゃないのか？」","機械天使「命令に、願いは必要ない。」"],
+ ["リョウゴ「未来には、君が泣いている姿が見える。」","機械天使「私は、泣く機能を持たない。」"],
+ ["ケイタ「機能じゃなくても、痛いものは痛い。」","機械天使の翼が、わずかに下がった。"]
+ ][turn%3];
+ bond=Math.min(100,bond+14);say(lines,beginDefense);
 }
 function attackTap(){
-if(attackEnded||scene!=="attack")return;
-const q=1-Math.abs(270-attackX)/200;
-const quality=clamp(q,0,1);
-attackLastQuality=quality;
-let mult=32*attackBoost[active];
-if(critTurns>0)mult*=1.75;
-if(bossMove.coreOpen>0)mult*=1.5;
-const hit=Math.floor(current().pow*(.34+quality*.95)*(1+attackHits*.10)*mult);
-attackHits++;attackTotal+=hit;
-damageBoss(hit);
-if(quality>.9){perfects++;bond=Math.min(100,bond+3);toast("PERFECT CHAIN ×"+attackHits,.45)}
-else if(quality>.58)toast("GOOD ×"+attackHits,.4);
-else toast("RUSH ×"+attackHits,.35);
-attackDir*=-1;
-attackX=clamp(attackX+(Math.random()<.5?-35:35),70,470);
-if(attackHits>=7)finishComboAttack();
+ if(state!=="ATTACK"||attackEnded)return;
+ const q=1-Math.abs(270-attackX)/200;
+ let mult=32*attackBoost[active];if(critTurns>0)mult*=1.75;if(bossFx.coreOpen>0)mult*=1.5;
+ const hit=Math.floor(current().pow*(.34+clamp(q,0,1)*.95)*(1+attackHits*.10)*mult);
+ attackHits++;attackTotal+=hit;damageBoss(hit);attackDir*=-1;attackX=clamp(attackX+(Math.random()<.5?-28:28),70,470);
+ toast(q>.9?`PERFECT ×${attackHits}`:`HIT ×${attackHits}`,.35);
+ if(attackHits>=7)finishAttack();
 }
-function finishComboAttack(){
-if(attackEnded)return;
-attackEnded=true;
-const finisher=Math.floor(attackTotal*(attackHits>=5?.35:.15));
-if(finisher>0)damageBoss(finisher);
-damagePop.push({x:270,y:260,v:-80,l:1.25,n:"COMBO "+attackHits,crit:attackHits>=6});
-if(boss.hp>0)setTimeout(beginDefense,520);
+function finishAttack(){
+ if(attackEnded)return;attackEnded=true;
+ const fin=Math.floor(attackTotal*(attackHits>=5?.35:.15));if(fin>0)damageBoss(fin);
+ if(boss.hp>0)setTimeout(beginDefense,450);
 }
 function sixLink(){
-bond=0;musicMood="hope";flash=.35;shake=20;
-say(["六人の想いが、一つの朝へ重なった。","六人連携奥義――『DAYBREAK』"],()=>{
- damageBoss(18000);
- damagePop.push({x:270,y:230,v:-80,l:1.6,n:"DAYBREAK 18000",crit:true});
- if(boss.hp>0)beginDefense();
-})
+ bond=0;say(["六人の想いが、一つの朝へ重なった。","六人連携奥義――『DAYBREAK』"],()=>{damageBoss(18280);if(boss.hp>0)beginDefense()})
 }
 function beginDefense(){
-if(boss.hp<=0)return;
-if(bond>=100)return sixLink();
-if(timeStopTurns>0){
- timeStopTurns--;transition("TIME STOP","#d8c8ff");
- toast(`敵ターン消滅　残り${timeStopTurns}`,1.0);
- return setTimeout(nextTurn,700);
+ if(boss.hp<=0)return;
+ if(bond>=100)return sixLink();
+ if(timeStopTurns>0){timeStopTurns--;toast(`敵ターン停止　残り${timeStopTurns}`,1);return setTimeout(nextTurn,700)}
+ setState("DEFENSE");defenseTime=[0,7.4,8.4,9.4,10.5,11.5][boss.phase];
+ patternClock=0;bullets=[];trails=[];heart.x=270;heart.y=515;heart.inv=.5;
+ patternId=(turn*5+boss.phase*7)%30;spawnPattern(patternId);
 }
-beginDefenseNow();
-}
-function beginPlatform(){
-transition("MEMORY WORLD","#ffd84e");gimmickLock=true;scene="platformIntro";sub="play";
-platform={x:70,y:640,vx:0,vy:0,ground:690,camera:0,goal:1040,dead:false,coins:0,falls:0,checkpoint:70,won:false,tutorialPage:0,ready:false,moveHold:0,moveDir:0,inv:0};
-visualTime=0;transitionFx=0;transitionLabel="";
-}
-function beginBeam(){
-transition("CORE BREAK","#ff5974");gimmickLock=true;scene="beamTutorial";sub="play";
-beam={timer:14.0,aimX:270,aimY:500,shots:0,bossX:270,bossY:430,drag:false,tutorialPage:0,ready:false,selected:-1,cores:[
-{x:160,y:420,hp:2},{x:380,y:470,hp:2},{x:270,y:350,hp:3}]};
-}
-function beginSeal(){
-transition("SEAL PROTOCOL","#7fd8ff");gimmickLock=true;scene="sealIntro";sub="play";
-seal={timer:8.5,index:0,nodes:[]};
-for(let i=0;i<7;i++)seal.nodes.push({x:rnd(80,460),y:rnd(340,690),r:25,n:i+1,hit:false});
-toast("光る番号を順番に封印せよ",1.4);
-}
-function endGimmick(success){
-if(!gimmickLock)return;
-gimmickLock=false;
-if(success){
- bond=Math.min(100,bond+16);damageBoss(70+boss.phase*25);
- if(boss.hp<=0||scene==="end")return;
- scene="gimmickResult";sub="choose";
-say(["ギミックを突破した。","機械天使「あなたたちは、試練の中でも互いの声を聞いている。」"],nextTurn);
-}else{
- hurt(24+boss.phase*6);
- if(boss.hp<=0||scene==="end")return;
- scene="gimmickResult";sub="choose";
-say(["試練を突破できなかった。","マッピー「失敗したって、次の手は残ってる。」"],nextTurn);
-}
-}
+function add(x,y,vx,vy,r,c,k,extra={}){bullets.push({x,y,vx,vy,r,c,k,...extra})}
 function spawnPattern(id){
-const A=arena,cx=270,cy=510;
-bossMove.slam=bossMove.charge=bossMove.handL=bossMove.handR=0;
-id=id%24;
-if(id===0){bossMove.handL=1;for(let i=0;i<7;i++)bullets.push({x:A.x-45,y:A.y+35+i*52,vx:255,vy:0,r:22,c:"#dce9f6",k:"hand",warn:.55})}
-if(id===1){bossMove.handR=1;for(let i=0;i<7;i++)bullets.push({x:A.x+A.w+45,y:A.y+35+i*52,vx:-255,vy:0,r:22,c:"#dce9f6",k:"hand",warn:.55})}
-if(id===2){bossMove.handL=bossMove.handR=1;for(let i=0;i<6;i++){bullets.push({x:A.x-40,y:A.y+45+i*62,vx:230,vy:0,r:20,c:"#fff",k:"clap",warn:.8});bullets.push({x:A.x+A.w+40,y:A.y+45+i*62,vx:-230,vy:0,r:20,c:"#fff",k:"clap",warn:.8})}}
-if(id===3){bossMove.slam=1;for(let i=0;i<5;i++)bullets.push({x:A.x+55+i*90,y:A.y-100,vx:0,vy:320,r:32,c:"#b8c5d3",k:"slam",warn:.65})}
-if(id===4){bossMove.charge=1;bullets.push({x:A.x-120,y:cy,vx:520,vy:0,r:58,c:"#e9f5ff",k:"body",warn:.9})}
-if(id===5){bossMove.charge=-1;bullets.push({x:A.x+A.w+120,y:cy,vx:-520,vy:0,r:58,c:"#e9f5ff",k:"body",warn:.9})}
-if(id===6){for(let i=0;i<18;i++){const a=i*Math.PI*2/18;bullets.push({x:cx,y:cy,vx:Math.cos(a)*210,vy:Math.sin(a)*210,r:8,c:"#ffd657",k:"ring"})}}
-if(id===7){for(let i=0;i<22;i++){const a=i*.55;bullets.push({x:cx,y:cy,vx:Math.cos(a)*125,vy:Math.sin(a)*125,r:7,c:i%2?"#fff":"#ff7190",k:"spiral",spin:i%2?.9:-.9})}}
-if(id===8){for(let i=0;i<15;i++)bullets.push({x:rnd(A.x,A.x+A.w),y:A.y-30-rnd(0,180),vx:rnd(-25,25),vy:190+rnd(0,110),r:7,c:"#eef7ff",k:"feather"})}
-if(id===9){for(let i=0;i<11;i++)bullets.push({x:i%2?A.x+A.w:A.x,y:A.y+24+(i%6)*70,vx:i%2?-180:180,vy:0,r:11,c:"#ff844f",k:"homing"})}
-if(id===10){for(let i=0;i<7;i++)bullets.push({x:A.x+45+i*65,y:A.y-25,vx:0,vy:235,r:14,c:"#b6dcff",k:"blade",wave:i})}
-if(id===11){bossMove.coreOpen=3;for(let i=0;i<12;i++)bullets.push({x:rnd(A.x,A.x+A.w),y:rnd(A.y,A.y+A.h),vx:rnd(-55,55),vy:rnd(-55,55),r:8,c:"#ff4f73",k:"core"})}
-if(id===12){bullets.push({x:cx,y:cy,vx:0,vy:0,r:35,c:"#14152a",k:"gravity"});for(let i=0;i<13;i++)bullets.push({x:rnd(A.x,A.x+A.w),y:rnd(A.y,A.y+A.h),vx:rnd(-130,130),vy:rnd(-130,130),r:6,c:"#fff",k:"star"})}
-if(id===13){for(let i=0;i<12;i++){const a=i*Math.PI*2/12;bullets.push({x:cx+Math.cos(a)*220,y:cy+Math.sin(a)*180,vx:-Math.cos(a)*180,vy:-Math.sin(a)*180,r:9,c:"#c578ff",k:"orbit"})}}
-if(id===14){for(let i=0;i<20;i++)bullets.push({x:rnd(A.x,A.x+A.w),y:rnd(A.y,A.y+A.h),vx:0,vy:0,r:7,c:i%3?"#fff":"#55d8ff",k:"fake",fake:i%4===0})}
-if(id===15){for(let i=0;i<9;i++)bullets.push({x:i%2?A.x+A.w:A.x,y:A.y+40+i*45,vx:i%2?-260:260,vy:Math.sin(i)*100,r:8,c:"#ff5f82",k:"sweep"})}
-if(id===16){for(let i=0;i<8;i++)bullets.push({x:rnd(A.x,A.x+A.w),y:rnd(A.y,A.y+A.h),vx:0,vy:0,r:12,c:"#ffe05e",k:"mine",timer:rnd(.6,1.3)})}
-if(id===17){for(let i=0;i<16;i++){const a=i*Math.PI*2/16;bullets.push({x:cx+Math.cos(a)*260,y:cy+Math.sin(a)*220,vx:-Math.cos(a)*240,vy:-Math.sin(a)*240,r:i%4===0?13:7,c:i%4===0?"#ff3d5d":"#fff",k:"judgement"})}}
-if(id===18){bossMove.handL=1;for(let i=0;i<10;i++)bullets.push({x:A.x-40,y:A.y+30+i*39,vx:210,vy:Math.sin(i)*95,r:16,c:"#d8e5f1",k:"grab"})}
-if(id===19){bossMove.handR=1;for(let i=0;i<10;i++)bullets.push({x:A.x+A.w+40,y:A.y+30+i*39,vx:-210,vy:Math.sin(i)*95,r:16,c:"#d8e5f1",k:"grab"})}
-if(id===20){for(let i=0;i<6;i++)bullets.push({x:A.x+50+i*75,y:A.y-30,vx:Math.sin(i)*80,vy:250,r:20,c:"#ffcc5a",k:"meteor"})}
-if(id===21){for(let i=0;i<24;i++){const a=i*Math.PI*2/24;bullets.push({x:cx,y:cy,vx:Math.cos(a)*(140+(i%3)*35),vy:Math.sin(a)*(140+(i%3)*35),r:6,c:i%3?"#fff":"#69d8ff",k:"burst"})}}
-if(id===22){bossMove.charge=1;for(let i=0;i<4;i++)bullets.push({x:A.x-100-i*80,y:A.y+90+i*75,vx:430,vy:0,r:40,c:"#eef7ff",k:"rush",warn:.65+i*.12})}
-if(id===23){bossMove.coreOpen=4;for(let i=0;i<18;i++)bullets.push({x:i%2?A.x+A.w:A.x,y:A.y+20+(i%9)*45,vx:i%2?-230:230,vy:0,r:7,c:i%3?"#fff":"#ff375d",k:"final"})}
+ const A=arena,cx=270,cy=510;bossFx.handL=bossFx.handR=bossFx.charge=0;bossFx.coreOpen=0;id%=30;
+ if(id===0){bossFx.handL=1;for(let i=0;i<7;i++)add(A.x-45,A.y+35+i*52,255,0,22,"#dce9f6","hand",{warn:.55})}
+ if(id===1){bossFx.handR=1;for(let i=0;i<7;i++)add(A.x+A.w+45,A.y+35+i*52,-255,0,22,"#dce9f6","hand",{warn:.55})}
+ if(id===2){bossFx.handL=bossFx.handR=1;for(let i=0;i<6;i++){add(A.x-40,A.y+45+i*62,230,0,20,"#fff","hand",{warn:.8});add(A.x+A.w+40,A.y+45+i*62,-230,0,20,"#fff","hand",{warn:.8})}}
+ if(id===3){for(let i=0;i<5;i++)add(A.x+55+i*90,A.y-100,0,320,32,"#b8c5d3","slam",{warn:.65})}
+ if(id===4){bossFx.charge=1;add(A.x-120,cy,520,0,58,"#e9f5ff","body",{warn:.9})}
+ if(id===5){bossFx.charge=-1;add(A.x+A.w+120,cy,-520,0,58,"#e9f5ff","body",{warn:.9})}
+ if(id===6)for(let i=0;i<18;i++){const a=i*Math.PI*2/18;add(cx,cy,Math.cos(a)*210,Math.sin(a)*210,8,"#ffd657","ring")}
+ if(id===7)for(let i=0;i<22;i++){const a=i*.55;add(cx,cy,Math.cos(a)*125,Math.sin(a)*125,7,i%2?"#fff":"#ff7190","spiral",{spin:i%2?.9:-.9})}
+ if(id===8)for(let i=0;i<15;i++)add(rnd(A.x,A.x+A.w),A.y-30-rnd(0,180),rnd(-25,25),190+rnd(0,110),7,"#eef7ff","feather")
+ if(id===9)for(let i=0;i<11;i++)add(i%2?A.x+A.w:A.x,A.y+24+(i%6)*70,i%2?-180:180,0,11,"#ff844f","homing")
+ if(id===10)for(let i=0;i<7;i++)add(A.x+45+i*65,A.y-25,0,235,14,"#b6dcff","blade",{wave:i})
+ if(id===11){bossFx.coreOpen=3;for(let i=0;i<12;i++)add(rnd(A.x,A.x+A.w),rnd(A.y,A.y+A.h),rnd(-55,55),rnd(-55,55),8,"#ff4f73","core")}
+ if(id===12){add(cx,cy,0,0,35,"#14152a","gravity");for(let i=0;i<13;i++)add(rnd(A.x,A.x+A.w),rnd(A.y,A.y+A.h),rnd(-130,130),rnd(-130,130),6,"#fff","star")}
+ if(id===13)for(let i=0;i<12;i++){const a=i*Math.PI*2/12;add(cx+Math.cos(a)*220,cy+Math.sin(a)*180,-Math.cos(a)*180,-Math.sin(a)*180,9,"#c578ff","orbit")}
+ if(id===14)for(let i=0;i<20;i++)add(rnd(A.x,A.x+A.w),rnd(A.y,A.y+A.h),0,0,7,i%3?"#fff":"#55d8ff","fake",{fake:i%4===0})
+ if(id===15)for(let i=0;i<9;i++)add(i%2?A.x+A.w:A.x,A.y+40+i*45,i%2?-260:260,Math.sin(i)*100,8,"#ff5f82","sweep")
+ if(id===16)for(let i=0;i<8;i++)add(rnd(A.x,A.x+A.w),rnd(A.y,A.y+A.h),0,0,12,"#ffe05e","mine",{timer:rnd(.6,1.3)})
+ if(id===17)for(let i=0;i<16;i++){const a=i*Math.PI*2/16;add(cx+Math.cos(a)*260,cy+Math.sin(a)*220,-Math.cos(a)*240,-Math.sin(a)*240,i%4===0?13:7,i%4===0?"#ff3d5d":"#fff","judgement")}
+ if(id===18){bossFx.handL=1;for(let i=0;i<10;i++)add(A.x-40,A.y+30+i*39,210,Math.sin(i)*95,16,"#d8e5f1","grab")}
+ if(id===19){bossFx.handR=1;for(let i=0;i<10;i++)add(A.x+A.w+40,A.y+30+i*39,-210,Math.sin(i)*95,16,"#d8e5f1","grab")}
+ if(id===20)for(let i=0;i<6;i++)add(A.x+50+i*75,A.y-30,Math.sin(i)*80,250,20,"#ffcc5a","meteor")
+ if(id===21)for(let i=0;i<24;i++){const a=i*Math.PI*2/24;add(cx,cy,Math.cos(a)*(140+(i%3)*35),Math.sin(a)*(140+(i%3)*35),6,i%3?"#fff":"#69d8ff","burst")}
+ if(id===22){bossFx.charge=1;for(let i=0;i<4;i++)add(A.x-100-i*80,A.y+90+i*75,430,0,40,"#eef7ff","body",{warn:.65+i*.12})}
+ if(id===23){bossFx.coreOpen=4;for(let i=0;i<18;i++)add(i%2?A.x+A.w:A.x,A.y+20+(i%9)*45,i%2?-230:230,0,7,i%3?"#fff":"#ff375d","final")}
+ if(id===24)for(let i=0;i<10;i++)add(A.x+25+i*48,A.y+A.h+30,Math.sin(i)*70,-240,13,"#7bdcff","geyser")
+ if(id===25)for(let i=0;i<8;i++)add(rnd(A.x,A.x+A.w),A.y-20,rnd(-80,80),210,18,"#f2f6ff","drill",{spin:rnd(-2,2)})
+ if(id===26)for(let i=0;i<14;i++)add(cx,cy,rnd(-260,260),rnd(-260,260),7,"#ff77c8","split",{life:1})
+ if(id===27)for(let i=0;i<12;i++)add(i%2?A.x+A.w:A.x,A.y+20+(i%6)*72,i%2?-210:210,0,10,"#ffd84e","zig",{phase:i})
+ if(id===28){bossFx.handL=bossFx.handR=1;for(let i=0;i<16;i++)add(rnd(A.x,A.x+A.w),rnd(A.y,A.y+A.h),rnd(-120,120),rnd(-120,120),9,"#d9e4ef","knuckle")}
+ if(id===29){bossFx.coreOpen=5;for(let i=0;i<30;i++){const a=i*Math.PI*2/30;add(cx,cy,Math.cos(a)*(170+(i%4)*25),Math.sin(a)*(170+(i%4)*25),i%5===0?12:6,i%5===0?"#ff3657":"#fff","finale")}}
 }
 function updateDefense(dt){
-patternClock+=dt;bossMove.coreOpen=Math.max(0,bossMove.coreOpen-dt);
-const speedScale=forecastTurns>0?.58:1;
-if(patternClock>3.0&&bullets.length<75){patternClock=0;spawnPattern((patternId+1+Math.floor(Math.random()*5))%24)}
-const pending=[];
-for(const b of bullets){
- if(b.warn>0){b.warn-=dt;continue}
- if(b.k==="homing"){const dx=heart.x-b.x,dy=heart.y-b.y,l=Math.hypot(dx,dy)||1;b.vx+=dx/l*85*dt;b.vy+=dy/l*85*dt}
- if(b.k==="spiral"){const a=b.spin*dt,ox=b.vx,oy=b.vy;b.vx=ox*Math.cos(a)-oy*Math.sin(a);b.vy=ox*Math.sin(a)+oy*Math.cos(a);b.vx*=1.003;b.vy*=1.003}
- if(b.k==="blade")b.vx=Math.sin(visualTime*5+b.wave)*90;
- if(b.k==="gravity"){const dx=b.x-heart.x,dy=b.y-heart.y,l=Math.hypot(dx,dy)||1;heart.x+=dx/l*85*dt;heart.y+=dy/l*85*dt}
- if(b.k==="mine"){b.timer-=dt;if(b.timer<0&&b.timer>-100){b.timer=-999;for(let j=0;j<8;j++){const a=j*Math.PI/4;pending.push({x:b.x,y:b.y,vx:Math.cos(a)*205,vy:Math.sin(a)*205,r:5,c:"#ffe05e",k:"piece",life:2.4})}}}
- if(b.life!==undefined)b.life-=dt;
- b.x+=b.vx*dt*speedScale;b.y+=b.vy*dt*speedScale;
- if(b.k==="feather"&&b.y>arena.y+arena.h){b.y=arena.y-20;b.x=rnd(arena.x,arena.x+arena.w)}
- if(b.k==="fake"&&b.fake)continue;
- if(Math.hypot(b.x-heart.x,b.y-heart.y)<b.r+heart.r&&heart.inv<=0){
-  let dmg=boss.phase===5?38:boss.phase===4?32:boss.phase===3?27:boss.phase===2?22:18;
-  if(barrierTurns>0)dmg=Math.ceil(dmg*.38);
-  hurt(dmg);heart.inv=.72;part(heart.x,heart.y,"#ff435d",14,1.2);shake=10;
+ patternClock+=dt;bossFx.coreOpen=Math.max(0,bossFx.coreOpen-dt);
+ const slow=forecastTurns>0?.58:1,pending=[];
+ if(patternClock>3&&bullets.length<75){patternClock=0;spawnPattern((patternId+1+Math.floor(Math.random()*5))%30)}
+ for(const b of bullets){
+  if(b.warn>0){b.warn-=dt;continue}
+  if(b.k==="homing"){const dx=heart.x-b.x,dy=heart.y-b.y,l=Math.hypot(dx,dy)||1;b.vx+=dx/l*85*dt;b.vy+=dy/l*85*dt}
+  if(b.k==="spiral"){const a=b.spin*dt,ox=b.vx,oy=b.vy;b.vx=ox*Math.cos(a)-oy*Math.sin(a);b.vy=ox*Math.sin(a)+oy*Math.cos(a)}
+  if(b.k==="blade")b.vx=Math.sin(time*5+b.wave)*90;
+  if(b.k==="gravity"){const dx=b.x-heart.x,dy=b.y-heart.y,l=Math.hypot(dx,dy)||1;heart.x+=dx/l*85*dt;heart.y+=dy/l*85*dt}
+  if(b.k==="mine"){b.timer-=dt;if(b.timer<0&&b.timer>-100){b.timer=-999;for(let j=0;j<8;j++){const a=j*Math.PI/4;pending.push({x:b.x,y:b.y,vx:Math.cos(a)*205,vy:Math.sin(a)*205,r:5,c:"#ffe05e",k:"piece",life:2.4})}}}
+  if(b.k==="split"){b.life-=dt;if(b.life<0&&b.life>-100){b.life=-999;for(let j=0;j<4;j++){const a=j*Math.PI/2;pending.push({x:b.x,y:b.y,vx:Math.cos(a)*190,vy:Math.sin(a)*190,r:5,c:"#ff9be0",k:"piece",life:2.2})}}}
+  if(b.k==="zig")b.vy=Math.sin(time*7+b.phase)*125;
+  if(b.k==="drill"){const a=b.spin*dt,ox=b.vx,oy=b.vy;b.vx=ox*Math.cos(a)-oy*Math.sin(a);b.vy=ox*Math.sin(a)+oy*Math.cos(a)}
+  if(b.life!==undefined)b.life-=dt;
+  b.x+=b.vx*dt*slow;b.y+=b.vy*dt*slow;
+  if(b.k==="feather"&&b.y>arena.y+arena.h){b.y=arena.y-20;b.x=rnd(arena.x,arena.x+arena.w)}
+  if(b.k==="fake"&&b.fake)continue;
+  if(Math.hypot(b.x-heart.x,b.y-heart.y)<b.r+heart.r&&heart.inv<=0){
+   const dmg=[0,18,22,27,32,38][boss.phase];hurt(dmg);heart.inv=.72;particle(heart.x,heart.y,"#ff435d",14,1.2);shake=9;
+  }
  }
+ bullets.push(...pending.slice(0,Math.max(0,110-bullets.length)));
+ bullets=bullets.filter(b=>b&&(b.life===undefined||b.life>0)&&b.x>arena.x-160&&b.x<arena.x+arena.w+160&&b.y>arena.y-160&&b.y<arena.y+arena.h+160);
+ if(bullets.length>110)bullets.length=110;
+ heart.x=clamp(heart.x,arena.x+14,arena.x+arena.w-14);heart.y=clamp(heart.y,arena.y+14,arena.y+arena.h-14);heart.inv=Math.max(0,heart.inv-dt);
+ defenseTime-=dt;
+ if(defenseTime<=0){if(barrierTurns>0)barrierTurns--;if(forecastTurns>0)forecastTurns--;if(critTurns>0)critTurns--;nextTurn()}
 }
-bullets.push(...pending.slice(0,Math.max(0,110-bullets.length)));
-bullets=bullets.filter(b=>b&&(b.life===undefined||b.life>0)&&b.x>arena.x-160&&b.x<arena.x+arena.w+160&&b.y>arena.y-160&&b.y<arena.y+arena.h+160);
-if(bullets.length>110)bullets.length=110;
-heart.x=clamp(heart.x,arena.x+14,arena.x+arena.w-14);heart.y=clamp(heart.y,arena.y+14,arena.y+arena.h-14);heart.inv=Math.max(0,heart.inv-dt);
-defT-=dt;
-if(defT<=0){
- if(barrierTurns>0)barrierTurns--;
- if(forecastTurns>0)forecastTurns--;
- if(critTurns>0)critTurns--;
- nextTurn();
-}
-}
-function updatePlatform(dt){
-if(!platform.ready)return;
-platform.inv=Math.max(0,platform.inv-dt);
-if(platform.moveHold>0){
- platform.moveHold-=dt;
- platform.vx=platform.moveDir*205;
-}else{
- platform.vx*=Math.pow(.025,dt);
- if(Math.abs(platform.vx)<4)platform.vx=0;
-}
-platform.vy+=760*dt;
-platform.x+=platform.vx*dt;
-platform.y+=platform.vy*dt;
-
-const worldX=platform.x+platform.camera;
-/* 広めの穴2つだけ。端に安全床を残す */
-const holes=platform.falls>0?[]:[[405,450],[800,845]];
-let ground=690;
-for(const h of holes)if(worldX>h[0]&&worldX<h[1])ground=850;
-
-/* 大きく着地しやすい足場 */
-const floating=[[205,610,155],[495,565,185],[865,595,175]];
-for(const p of floating){
- const prevY=platform.y-platform.vy*dt;
- if(worldX>p[0]-10&&worldX<p[0]+p[2]+10&&prevY<=p[1]-20&&platform.y>=p[1]-28&&platform.vy>=0){
-   ground=Math.min(ground,p[1]);
- }
-}
-if(platform.y>=ground-28){platform.y=ground-28;platform.vy=0}
-
-/* 自動チェックポイント */
-if(worldX>520&&platform.checkpoint<520){platform.checkpoint=520;toast("CHECKPOINT ― ここから再開",1.0)}
-if(worldX>platform.goal){
- platform.won=true;platform.vx=0;platform.moveHold=0;
- transition("STAGE CLEAR","#ffd84e");
- return endGimmick(true);
-}
-
-/* 落下はゲームオーバーではなくHPダメージ＋即復帰 */
-if(platform.y>820){
- platform.falls++;
- const p=current();
- p.hp=Math.max(1,p.hp-12);
- platform.camera=Math.max(0,platform.checkpoint-110);
- platform.x=platform.checkpoint-platform.camera;
- platform.y=610;platform.vx=0;platform.vy=0;platform.moveHold=0;platform.inv=1.5;
- shake=10;particle(arena.x+platform.x,platform.y,"#ff4d62",18);
- toast(`落下ダメージ -12　足場が修復された`,1.4);
-}
-
-/* カメラ追従 */
-if(platform.x>350){platform.camera+=platform.x-350;platform.x=350}
-platform.x=clamp(platform.x,55,350);
-}function updateBeam(dt){
-if(!beam.ready)return;
-beam.timer-=dt;beam.bossX=270+Math.sin(performance.now()/330)*150;beam.bossY=430+Math.cos(performance.now()/470)*70;
-if(beam.timer<=0)endGimmick(beam.cores.every(c=>c.hp<=0));
-}
-function updateSeal(dt){
-seal.timer-=dt;
-if(seal.timer<=0)endGimmick(false);
-if(seal.index>=seal.nodes.length)endGimmick(true);
-}
-function hurt(n){if(guard){n=Math.ceil(n*.55);bond=Math.min(100,bond+5)}const p=current();p.hp-=n;if(p.hp<=0){p.hp=0;deaths++;const a=party.filter(x=>x.hp>0);if(!a.length)return gameOver();active=party.indexOf(a[0])}}
 function nextTurn(){
-turn++;
-const ratio=boss.hp/boss.max;
-boss.phase=ratio<=.12?5:ratio<=.32?4:ratio<=.55?3:ratio<=.78?2:1;
-boss.armor=boss.phase===1?280:boss.phase===2?220:boss.phase===3?160:boss.phase===4?90:20;
-if(oniTurns>0){oniTurns--;party[4].hp=Math.max(1,party[4].hp-22);if(oniTurns===0)attackBoost[4]=1}
-for(let i=0;i<stunTurns.length;i++)if(stunTurns[i]>0)stunTurns[i]--;
-
-active=(active+1)%party.length;
-for(let k=0;k<party.length;k++){
- if(party[active].hp>0&&!permanentDead[active]&&stunTurns[active]===0)break;
+ turn++;
+ const r=boss.hp/boss.max;
+ boss.phase=r<=.12?5:r<=.32?4:r<=.55?3:r<=.78?2:1;
+ boss.armor=[0,280,220,160,90,20][boss.phase];
+ if(oniTurns>0){oniTurns--;party[4].hp=Math.max(1,party[4].hp-22);if(oniTurns===0)attackBoost[4]=1}
+ for(let i=0;i<stunTurns.length;i++)if(stunTurns[i]>0)stunTurns[i]--;
  active=(active+1)%party.length;
+ for(let k=0;k<party.length;k++){if(party[active].hp>0&&!permanentDead[active]&&stunTurns[active]===0)break;active=(active+1)%party.length}
+ if(aliveCount()===0)return gameOver();
+ if(boss.phase>phaseShown){
+  phaseShown=boss.phase;bossFx.transform=1.8;bossFx.roar=1.2;flash=.18;shake=16;
+  const lines=[
+   ["機械天使「観測を終了。戦闘人格を起動します。」","翼の関節が逆方向へ開いた。"],
+   ["機械天使「まだ半分以上残っている。なぜ立っている。」","巨大な腕が画面の外へ伸びていく。"],
+   ["機械天使「痛みを理解しました。だから、あなたたちにも与えます。」","コアが赤く脈打ち始めた。"],
+   ["機械天使「人間とは、こんなにも諦めが悪いものだったか。」","最後の防衛機構が解放された。"]
+  ][boss.phase-2];
+  return say(lines,()=>setState("MENU"));
+ }
+ setState("MENU");toast(current().name+"のターン",.7);
 }
-if(!party.some((p,i)=>p.hp>0&&!permanentDead[i]))return gameOver();
+function finishBattle(){
+ say(["機械天使のコアが静かに砕けた。","機械天使「……100,000の痛みより、最後の一歩の方が重かった。」","トシユキ「朝は、諦めなかった奴のところに来る。」"],()=>endScreen("DAYBREAK END","六人は、壊れた神と朝日を見た。"))
+}
+function gameOver(){endScreen("NIGHT END","それでも、物語はここで終わらない。")}
+function endScreen(title,text){setState("END");document.getElementById("endTitle").textContent=title;document.getElementById("endText").textContent=text+"\nSCORE "+score+"\nやくそう残り "+items.herb;document.getElementById("end").classList.remove("hidden")}
 
-if(boss.phase>lastPhase){
- lastPhase=boss.phase;bossFx.transform=2.4;bossFx.roar=1.5;flash=.2;shake=18;
- const lines=[
-  ["機械天使「観測を終了。戦闘人格を起動します。」","翼の関節が逆方向へ開いた。"],
-  ["機械天使「まだ半分以上残っている。なぜ立っている。」","巨大な腕が画面の外へ伸びていく。"],
-  ["機械天使「痛みを理解しました。だから、あなたたちにも与えます。」","コアが赤く脈打ち始めた。"],
-  ["機械天使「人間とは、こんなにも諦めが悪いものだったか。」","最後の防衛機構が解放された。"]
- ][boss.phase-2];
- return say(lines,()=>{scene="menu";sub="choose";toast(current().name+"のターン",.8)});
+function update(dt){
+ time+=dt;messageTime=Math.max(0,messageTime-dt);shake*=.86;flash=Math.max(0,flash-dt);
+ bossFx.hover+=dt*1.5;bossFx.wing+=dt*(3+boss.phase);bossFx.hit=Math.max(0,bossFx.hit-dt);bossFx.roar=Math.max(0,bossFx.roar-dt);bossFx.transform=Math.max(0,bossFx.transform-dt);
+ particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=400*dt;p.l-=dt});particles=particles.filter(p=>p.l>0);
+ damageText.forEach(d=>{d.y-=75*dt;d.l-=dt});damageText=damageText.filter(d=>d.l>0);
+ trails.forEach(t=>t.l-=dt);trails=trails.filter(t=>t.l>0);
+ if(state==="ATTACK"){attackTime-=dt;attackX+=attackDir*(430+attackHits*35)*dt;if(attackX>470){attackX=470;attackDir=-1}if(attackX<70){attackX=70;attackDir=1}if(attackTime<=0&&!attackEnded)finishAttack()}
+ if(state==="DEFENSE")updateDefense(dt);
 }
-scene="menu";sub="choose";toast(current().name+"のターン",.7);
-}
-function peaceEnd(){scene="ending";musicMood="hope";say(["機械天使は、武器を降ろした。","機械天使「私も、朝を見てもいいのですか？」","六人「もちろん。」","翼から外れた歯車は、花びらのように舞った。","トシユキ「今日は、いい日になりそうだ。」"],()=>finish("TRUE DAYBREAK","誰も倒れず、機械天使を救った。"))}
-function combatEnd(){scene="ending";musicMood="hope";say(["最後の一撃が、機械天使の胸を貫いた。","けれど誰も、勝ったとは思わなかった。","機械天使「ありがとう……ようやく眠れる。」","マッピー「眠るんじゃない。次は朝を見に行こう。」"],()=>{let title="HUMAN END",text="戦いの果てに、七人は朝日を見た。";if(sacrifices>=2){title="SACRIFICE END";text="誰かの命が、みんなの朝を守った。"}else if(berserk>0){title="CHAOS END";text="鬼の力は勝利と引き換えに、静かな傷を残した。"}else if(perfects>=6&&deaths===0){title="HERO END";text="六人は誰も倒れず、力で夜を越えた。"}finish(title,text)})}
-function finish(title,text){scene="end";document.getElementById("endTitle").textContent=title;document.getElementById("endText").textContent=text+"\\nSCORE "+score+"\\n会話 "+talkCount+"回 / 犠牲 "+sacrifices+"回";document.getElementById("end").classList.remove("hidden")}
-function gameOver(){scene="end";document.getElementById("endTitle").textContent="NIGHT END";document.getElementById("endText").textContent="それでも、物語はここで終わらない。";document.getElementById("end").classList.remove("hidden")}
-
 function R(x,y,w,h,c){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
 function T(s,x,y,z=18,c="#fff",a="left"){g.fillStyle=c;g.font=`900 ${z}px monospace`;g.textAlign=a;g.fillText(String(s),x,y)}
-function wrapped(s,x,y,maxW,lineH=24,size=16){
- g.font=`900 ${size}px monospace`;g.textAlign="center";
- let line="",lines=[];
- for(const ch of [...String(s)]){
-  const test=line+ch;
-  if(g.measureText(test).width>maxW&&line){lines.push(line);line=ch}else line=test;
- }
- if(line)lines.push(line);
- lines.slice(0,4).forEach((v,i)=>T(v,x,y+i*lineH,size,"#fff","center"));
-}
+function wrapped(s,x,y,maxW,lineH=24,size=16){g.font=`900 ${size}px monospace`;g.textAlign="center";let line="",lines=[];for(const ch of [...String(s)]){const t=line+ch;if(g.measureText(t).width>maxW&&line){lines.push(line);line=ch}else line=t}if(line)lines.push(line);lines.slice(0,4).forEach((v,i)=>T(v,x,y+i*lineH,size,"#fff","center"))}
+function panel(x,y,w,h,edge="#8aa4c8",fill="#070b14e8"){g.fillStyle=fill;g.strokeStyle=edge;g.lineWidth=3;g.beginPath();g.roundRect(x,y,w,h,12);g.fill();g.stroke()}
 function drawBoss(){
- const hover=Math.sin(bossFx.hover)*7;
- const recoil=bossFx.hit>0?Math.sin(bossFx.hit*70)*10:0;
- const tilt=bossFx.tilt+Math.sin(bossFx.attack*20)*.025;
- const scale=.88+(bossFx.transform>0?Math.sin(bossFx.transform*18)*.06:0);
- g.save();
- for(let i=0;i<bossAura.length;i++){
-  const q=bossAura[i],a=q.a+visualTime*q.s*(boss.phase===3?2:1);
-  g.globalAlpha=boss.phase===3?.22:.12;
-  g.fillStyle=boss.phase===3?(i%2?"#ff365c":"#fff"):(i%2?"#62d6ff":"#fff");
-  g.fillRect(270+Math.cos(a)*q.r-q.z,205+Math.sin(a)*q.r*.52-q.z,q.z*2,q.z*2);
- }
- g.globalAlpha=1;
- g.translate(270+recoil,205+hover);g.rotate(tilt);g.scale(scale,scale);
- for(const side of[-1,1]){
-  g.save();g.scale(side,1);
-  const count=boss.phase===1?5:boss.phase===2?7:9;
-  for(let i=0;i<count;i++){
-   const flap=Math.sin(bossFx.wing+i*.7)*10;
-   g.save();g.globalAlpha=.16;g.strokeStyle=boss.phase===3?"#ff4265":"#69d9ff";g.lineWidth=12-i*.4;
-   g.beginPath();g.moveTo(36,3);g.quadraticCurveTo(82+i*13,-48+i*10,150+i*14+flap,-38+i*12);g.stroke();g.restore();
-   g.strokeStyle=boss.phase===3&&i%2?"#ff7890":"#eef8ff";g.lineWidth=7-i*.25;
-   g.beginPath();g.moveTo(42,0);g.quadraticCurveTo(82+i*13,-58+i*11,150+i*14+flap*.35,-42+i*12);g.stroke();
-  }
-  g.restore();
- }
- let bg=g.createLinearGradient(-65,-50,65,68);bg.addColorStop(0,bossFx.hit>0?"#eef7ff":"#c4d1df");bg.addColorStop(.45,"#788493");bg.addColorStop(1,"#303844");
- g.fillStyle=bg;g.fillRect(-65,-50,130,118);
- let ig=g.createRadialGradient(0,5,4,0,5,70);ig.addColorStop(0,boss.phase===3?"#67152d":"#17405f");ig.addColorStop(1,boss.phase===3?"#16060e":"#0b1018");
- g.fillStyle=ig;g.fillRect(-51,-37,102,90);
- g.fillStyle=boss.phase===3?"#ff6d7e":"#d8b967";g.beginPath();g.moveTo(0,-105);g.lineTo(-50,-30);g.lineTo(50,-30);g.fill();
- R(-19,-63,38,17,"#f4fbff");
- const ex=Math.sin(visualTime*.9)*6;R(-8+ex,-60,16,12,boss.phase===3?"#ff4c6c":"#56bdff");R(-3+ex,-56,6,6,"#000");
- g.save();g.shadowColor=boss.phase===3?"#ff3157":"#55cfff";g.shadowBlur=25;g.fillStyle=boss.phase===3?"#ff3157":"#69d5ff";
- g.beginPath();g.arc(0,14,13+Math.sin(visualTime*7)*3,0,Math.PI*2);g.fill();g.restore();
- g.restore();
+ const hover=Math.sin(bossFx.hover)*7,recoil=bossFx.hit?Math.sin(bossFx.hit*70)*10:0,scale=.86+(bossFx.transform?Math.sin(bossFx.transform*18)*.05:0);
+ g.save();g.translate(270+recoil,205+hover);g.scale(scale,scale);
+ for(const side of[-1,1]){g.save();g.scale(side,1);const count=5+boss.phase;for(let i=0;i<count;i++){const flap=Math.sin(bossFx.wing+i*.7)*10;g.strokeStyle=boss.phase>=4&&i%2?"#ff6d88":"#eef8ff";g.lineWidth=7-i*.22;g.beginPath();g.moveTo(42,0);g.quadraticCurveTo(82+i*13,-58+i*11,150+i*14+flap*.35,-42+i*12);g.stroke()}g.restore()}
+ const bg=g.createLinearGradient(-65,-50,65,68);bg.addColorStop(0,"#c4d1df");bg.addColorStop(.45,"#788493");bg.addColorStop(1,"#303844");g.fillStyle=bg;g.fillRect(-65,-50,130,118);
+ R(-51,-37,102,90,boss.phase>=4?"#220812":"#0b1018");g.fillStyle=boss.phase>=4?"#ff6d7e":"#d8b967";g.beginPath();g.moveTo(0,-105);g.lineTo(-50,-30);g.lineTo(50,-30);g.fill();
+ R(-19,-63,38,17,"#f4fbff");const ex=Math.sin(time*.9)*6;R(-8+ex,-60,16,12,boss.phase>=4?"#ff4c6c":"#56bdff");R(-3+ex,-56,6,6,"#000");
+ g.save();g.shadowColor=boss.phase>=4?"#ff3157":"#55cfff";g.shadowBlur=25;g.fillStyle=boss.phase>=4?"#ff3157":"#69d5ff";g.beginPath();g.arc(0,14,13+Math.sin(time*7)*3,0,Math.PI*2);g.fill();g.restore();g.restore();
 }
 function drawHeart(){
- for(const t of trails){g.globalAlpha=Math.max(0,t.l/.3)*.35;g.fillStyle="#fff";g.beginPath();g.arc(t.x,t.y,15,0,Math.PI*2);g.fill()}
- g.globalAlpha=1;g.save();g.shadowColor="#ff3658";g.shadowBlur=24;g.strokeStyle="#fff";g.lineWidth=6;
- let hg=g.createRadialGradient(heart.x-4,heart.y-6,2,heart.x,heart.y,22);hg.addColorStop(0,"#fff");hg.addColorStop(.25,"#ff8296");hg.addColorStop(1,"#e60035");g.fillStyle=hg;
+ for(const t of trails){g.globalAlpha=Math.max(0,t.l/.3)*.35;g.fillStyle="#fff";g.beginPath();g.arc(t.x,t.y,15,0,Math.PI*2);g.fill()}g.globalAlpha=1;
+ g.save();g.shadowColor="#ff3658";g.shadowBlur=24;g.strokeStyle="#fff";g.lineWidth=6;g.fillStyle=heart.inv>0&&Math.floor(heart.inv*14)%2?"#fff":"#ff2649";
  g.beginPath();g.moveTo(heart.x,heart.y+11);g.bezierCurveTo(heart.x-20,heart.y-1,heart.x-13,heart.y-19,heart.x,heart.y-9);g.bezierCurveTo(heart.x+13,heart.y-19,heart.x+20,heart.y-1,heart.x,heart.y+11);g.closePath();g.fill();g.stroke();g.restore();
 }
 function drawParty(){
- party.forEach((p,i)=>{
-  const x=20+(i%2)*260,y=500+Math.floor(i/2)*70,w=240;
-  panel(x,y,w,58,i===active?"#ffd84e":"#47556c",i===active?"#141b2be8":"#080b12e8");
-  R(x+8,y+8,18,18,p.c);T(p.name,x+32,y+22,13,p.hp>0?"#fff":"#666");
-  T(`HP ${p.hp}/${p.max}`,x+8,y+43,11);T(`MP ${p.mp}`,x+174,y+22,10,"#9ad0ff");
-  R(x+95,y+35,132,8,"#242933");
-  const ratio=Math.max(0,p.hp/p.max),grad=g.createLinearGradient(x+95,y,x+227,y);
-  grad.addColorStop(0,ratio>.35?"#41e087":"#ff435e");grad.addColorStop(1,ratio>.35?"#baff70":"#ff9b67");
-  g.fillStyle=grad;g.fillRect(x+95,y+35,132*ratio,8);
- })
+ party.forEach((p,i)=>{const x=20+(i%2)*260,y=500+Math.floor(i/2)*70,w=240;panel(x,y,w,58,i===active?"#ffd84e":"#47556c",i===active?"#141b2be8":"#080b12e8");R(x+8,y+8,18,18,p.c);T(p.name,x+32,y+22,13,p.hp>0?"#fff":"#666");T(`HP ${p.hp}/${p.max}`,x+8,y+43,11);T(`MP ${p.mp}`,x+174,y+22,10,"#9ad0ff");R(x+95,y+35,132,8,"#242933");R(x+95,y+35,132*Math.max(0,p.hp/p.max),8,p.hp/p.max>.35?"#4ee16b":"#ff4e61");if(permanentDead[i])T("LOST",x+205,y+22,10,"#ff6575","center")})
 }
 function drawDialogue(){
- if(sub!=="dialog")return;
- g.save();let dg=g.createLinearGradient(45,360,495,530);dg.addColorStop(0,"#10182af5");dg.addColorStop(1,"#03050bf5");
- g.fillStyle=dg;g.strokeStyle=boss.phase===3?"#ff607c":"#dcecff";g.lineWidth=4;g.shadowColor=boss.phase===3?"#ff3157":"#62cfff";g.shadowBlur=18;
- g.beginPath();g.roundRect(45,360,450,170,18);g.fill();g.stroke();g.shadowBlur=0;
- wrapped(dialogue[di]||"",270,405,390,27,16);T("タップで進む",270,510,12,"#aaa","center");g.restore();
+ if(sub!=="dialog")return;panel(45,360,450,170,boss.phase>=4?"#ff607c":"#dcecff","#070b14f4");wrapped(dialog[dialogIndex]||"",270,405,390,27,16);T("タップで進む",270,510,12,"#aaa","center");
 }
-function update(dt){
- visualTime+=dt;transitionFx=Math.max(0,transitionFx-dt*1.7);
- screenLines.forEach(l=>{l.y+=l.v*dt;if(l.y>960)l.y=-5});
- msgT=Math.max(0,msgT-dt);shake*=.86;flash=Math.max(0,flash-dt);skillFx.t=Math.max(0,skillFx.t-dt);
- bossFx.hit=Math.max(0,bossFx.hit-dt);bossFx.charge=Math.max(0,bossFx.charge-dt);bossFx.roar=Math.max(0,bossFx.roar-dt);bossFx.transform=Math.max(0,bossFx.transform-dt);bossFx.attack=Math.max(0,bossFx.attack-dt);
- bossFx.blink+=dt;bossFx.wing+=dt*(boss.phase===3?8:boss.phase===2?6:4);bossFx.hover+=dt*(boss.phase===3?2.4:1.5);bossFx.tilt*=Math.pow(.06,dt);bossFx.core=Math.max(0,bossFx.core-dt);
- bgStars.forEach(s=>{s.y+=s.v*dt;if(s.y>960){s.y=-4;s.x=Math.random()*540}});
- particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=420*dt;p.l-=dt});particles=particles.filter(p=>p.l>0);
- damagePop.forEach(d=>{d.y+=d.v*dt;d.v*=.94;d.l-=dt});damagePop=damagePop.filter(d=>d.l>0);
- trails.forEach(t=>t.l-=dt);trails=trails.filter(t=>t.l>0);
- if(scene==="attack"){attackTime-=dt;attackX+=attackDir*dt*(430+attackHits*34);if(attackX>470){attackX=470;attackDir=-1}if(attackX<70){attackX=70;attackDir=1}if(attackTime<=0&&!attackEnded)finishComboAttack()}
- if(scene==="skillstory"){
- memoryGame.timer-=dt;
- if(active===0)memoryGame.angle+=dt*(2.2+memoryGame.hits*.45);
- if(active===4&&memoryGame.held){
-  memoryGame.charge=Math.min(1,memoryGame.charge+dt/1.8);
-  if(memoryGame.charge>=1)finishSkill(true);
+function drawBullets(){
+ for(const b of bullets){
+  if(b.warn>0){g.globalAlpha=.4;g.strokeStyle=forecastTurns>0?"#5ed9ff":"#ff304f";g.lineWidth=3;g.beginPath();g.arc(b.x,b.y,b.r+12,0,Math.PI*2);g.stroke();g.globalAlpha=1;continue}
+  if(b.fake)g.globalAlpha=.3;
+  if(["hand","grab"].includes(b.k)){g.save();g.translate(b.x,b.y);g.fillStyle=b.c;g.strokeStyle="#8090a1";g.lineWidth=4;g.beginPath();g.roundRect(-b.r*1.5,-b.r*.65,b.r*3,b.r*1.3,12);g.fill();g.stroke();g.restore()}
+  else if(b.k==="body"){g.save();g.shadowColor="#fff";g.shadowBlur=22;g.fillStyle=b.c;g.beginPath();g.arc(b.x,b.y,b.r,0,Math.PI*2);g.fill();g.fillStyle="#17202b";g.beginPath();g.arc(b.x,b.y,b.r*.62,0,Math.PI*2);g.fill();g.restore()}
+  else {g.save();g.shadowColor=b.c;g.shadowBlur=b.r>10?10:4;R(b.x-b.r,b.y-b.r,b.r*2,b.r*2,b.c);g.restore()}
+  g.globalAlpha=1;
  }
- if(active===5&&memoryGame.reveal>0)memoryGame.reveal-=dt;
- if(memoryGame.timer<=0)finishSkill(false);
-}
- if(scene==="defense")updateDefense(dt);
-
 }
 function draw(){
- const sx=shake?rnd(-shake,shake):0,sy=shake?rnd(-shake,shake):0;
- g.save();g.translate(sx,sy);
- let bg=g.createRadialGradient(270,210,20,270,210,560);bg.addColorStop(0,boss.phase===3?"#40101d":"#123a5e");bg.addColorStop(.55,"#07111f");bg.addColorStop(1,"#010207");g.fillStyle=bg;g.fillRect(0,0,W,H);
- for(const s of bgStars)R(s.x,s.y,s.s,s.s,s.c);
- drawBoss();
-if(scene==="defense"){
- g.save();g.globalAlpha=.72;
- if(bossMove.handL){g.fillStyle="#c7d3df";g.fillRect(-25,255,130,76);g.fillStyle="#eef7ff";for(let i=0;i<4;i++)g.fillRect(48+i*24,243,16,42)}
- if(bossMove.handR){g.fillStyle="#c7d3df";g.fillRect(435,255,130,76);g.fillStyle="#eef7ff";for(let i=0;i<4;i++)g.fillRect(458-i*24,243,16,42)}
- if(bossMove.charge){g.strokeStyle="#ff5b73";g.lineWidth=5;g.strokeRect(18,172,504,118)}
- g.restore();
-}
- T(boss.name,270,30,18,"#fff","center");R(70,43,400,14,"#252a35");R(70,43,400*Math.max(0,boss.hp/boss.max),14,boss.phase===3?"#ff365c":"#ff4c5c");T(`${Math.max(0,boss.hp).toLocaleString()}/${boss.max.toLocaleString()}`,270,80,13,"#fff","center");
-T(`PHASE ${boss.phase}/5`,70,108,12,boss.phase>=4?"#ff6a82":"#9bdcff","left");
- T(`絆 ${bond}%`,465,106,14,bond>=100?"#ffd84e":"#a8c9ff","right");R(390,116,90,8,"#222");R(390,116,90*bond/100,8,"#ffd84e");
- menuRects.length=0;
-
- if(scene==="defense"){
-  let ag=g.createRadialGradient(270,515,20,270,515,320);ag.addColorStop(0,boss.phase===3?"#230713":"#081728");ag.addColorStop(1,"#010205");g.fillStyle=ag;g.fillRect(arena.x,arena.y,arena.w,arena.h);
-  g.strokeStyle=boss.phase===3?"#ff5a78":"#dff5ff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
-  for(const b of bullets){
- if(b.warn>0){
-  g.globalAlpha=.38;g.strokeStyle="#ff304f";g.lineWidth=3;
-  if(["body","rush"].includes(b.k))g.strokeRect(arena.x,b.y-b.r,arena.w,b.r*2);
-  else {g.beginPath();g.arc(b.x,b.y,b.r+12,0,Math.PI*2);g.stroke()}
-  g.globalAlpha=1;continue;
- }
- if(b.fake)g.globalAlpha=.3;
- if(["hand","clap","grab"].includes(b.k)){
-  g.save();g.translate(b.x,b.y);g.fillStyle=b.c;g.strokeStyle="#8090a1";g.lineWidth=4;
-  g.beginPath();g.roundRect(-b.r*1.5,-b.r*.65,b.r*3,b.r*1.3,12);g.fill();g.stroke();
-  for(let f=-1;f<=1;f++)R(b.r*(f*.7)-5,-b.r,10,b.r*.55,"#dce9f6");g.restore();
- }else if(["body","rush"].includes(b.k)){
-  g.save();g.shadowColor="#fff";g.shadowBlur=24;g.fillStyle=b.c;g.beginPath();g.arc(b.x,b.y,b.r,0,Math.PI*2);g.fill();g.fillStyle="#17202b";g.beginPath();g.arc(b.x,b.y,b.r*.62,0,Math.PI*2);g.fill();g.restore();
- }else if(b.k==="slam"){
-  R(b.x-b.r,b.y-b.r,b.r*2,b.r*2,b.c);R(b.x-b.r*.65,b.y-b.r*1.8,b.r*1.3,b.r*1.1,"#e7f1fa");
+ const sx=shake?rnd(-shake,shake):0,sy=shake?rnd(-shake,shake):0;g.save();g.translate(sx,sy);
+ const bg=g.createRadialGradient(270,210,20,270,210,560);bg.addColorStop(0,boss.phase>=4?"#40101d":"#123a5e");bg.addColorStop(.55,"#07111f");bg.addColorStop(1,"#010207");g.fillStyle=bg;g.fillRect(0,0,W,H);
+ drawBoss();T(boss.name,270,30,17,"#fff","center");R(55,43,430,14,"#252a35");R(55,43,430*(boss.hp/boss.max),14,boss.phase>=4?"#ff365c":"#ff4c5c");T(`${boss.hp.toLocaleString()}/${boss.max.toLocaleString()}`,270,80,13,"#fff","center");T(`PHASE ${boss.phase}/5`,55,108,12,boss.phase>=4?"#ff6a82":"#9bdcff");
+ T(`絆 ${bond}%`,475,108,13,bond>=100?"#ffd84e":"#a8c9ff","right");
+ hitRects=[];
+ if(state==="DEFENSE"){
+  R(arena.x,arena.y,arena.w,arena.h,boss.phase>=4?"#18040d":"#030812");g.strokeStyle=boss.phase>=4?"#ff5a78":"#dff5ff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
+  drawBullets();drawHeart();T(`回避 ${Math.max(0,defenseTime).toFixed(1)}`,270,292,14,"#ffd84e","center");const p=current();panel(18,84,215,48,"#ffd84e","#080b12df");T(`${p.name} HP ${p.hp}/${p.max}`,30,114,12);
  }else{
-  g.save();g.shadowColor=b.c||"#fff";g.shadowBlur=b.r>10?12:5;R(b.x-b.r,b.y-b.r,b.r*2,b.r*2,b.c||"#fff");g.restore();
- }
- g.globalAlpha=1
-}
-  drawHeart();T(`回避 ${Math.max(0,defT).toFixed(1)}`,270,292,14,"#ffd84e","center");
-  const p=current();panel(18,84,210,48,"#ffd84e","#080b12df");R(28,96,16,16,p.c);T(p.name,52,109,13);T(`HP ${p.hp}/${p.max}  MP ${p.mp}`,28,126,11);
- }else if(scene==="skillstory"){
- const c=current().c,t=visualTime;
- panel(18,238,504,548,c,"#03040bf4");
- g.save();g.translate(270,485);
- for(let i=0;i<7;i++){
-  g.globalAlpha=.08+i*.025;g.strokeStyle=c;g.lineWidth=2;
-  g.beginPath();g.arc(0,0,75+i*34+Math.sin(t*2+i)*5,0,Math.PI*2);g.stroke();
- }
- g.globalAlpha=1;g.restore();
- T(current().skill,270,285,27,"#ffd84e","center");
- T(memoryGame.quote,270,326,13,"#dfe7f4","center");
-
- if(active===0){
-  T("時計の針が12時に重なった瞬間を3回タップ",270,365,15,"#fff","center");
-  g.save();g.translate(270,515);g.shadowColor=c;g.shadowBlur=24;
-  g.strokeStyle="#d8c8ff";g.lineWidth=6;g.beginPath();g.arc(0,0,125,0,Math.PI*2);g.stroke();
-  for(let i=0;i<12;i++){const a=i*Math.PI/6-Math.PI/2;g.beginPath();g.moveTo(Math.cos(a)*104,Math.sin(a)*104);g.lineTo(Math.cos(a)*120,Math.sin(a)*120);g.stroke()}
-  g.strokeStyle="#ffd84e";g.lineWidth=12;g.beginPath();g.moveTo(0,-102);g.lineTo(0,-125);g.stroke();
-  g.rotate(memoryGame.angle);g.strokeStyle="#fff";g.lineWidth=8;g.beginPath();g.moveTo(0,0);g.lineTo(0,-94);g.stroke();
-  g.fillStyle=c;g.beginPath();g.arc(0,0,14,0,Math.PI*2);g.fill();g.restore();
-  T(`成功 ${memoryGame.hits}/3`,270,684,18,"#ffd84e","center");
- }
- if(active===1){
-  T("画面を左から右へ、大きく3回スワイプ",270,365,15,"#fff","center");
-  for(let i=0;i<3;i++){
-   const y=435+i*95,done=i<memoryGame.hits;
-   g.save();g.globalAlpha=done?1:.25;g.strokeStyle=done?"#fff":c;g.lineWidth=done?12:6;g.shadowColor=c;g.shadowBlur=done?24:8;
-   g.beginPath();g.moveTo(90,y+25);g.lineTo(450,y-25);g.stroke();g.restore();
-  }
-  T(`斬撃 ${memoryGame.hits}/3`,270,700,18,"#ffd84e","center");
- }
- if(active===2){
-  T("光る頂点を 1 → 2 → 3 の順にタップ",270,365,15,"#fff","center");
-  g.strokeStyle="#e9c85e";g.lineWidth=5;g.beginPath();g.moveTo(270,390);g.lineTo(150,575);g.lineTo(390,575);g.closePath();g.stroke();
-  for(const n of memoryGame.targets){
-   g.save();g.shadowColor=n.hit?"#fff":"#ffd84e";g.shadowBlur=n.hit?28:16;g.fillStyle=n.hit?"#fff":"#8d6b19";
-   g.beginPath();g.arc(n.x,n.y,n.r,0,Math.PI*2);g.fill();T(n.n,n.x,n.y+7,20,n.hit?"#111":"#fff","center");g.restore();
-  }
- }
- if(active===3){
-  T("舞い上がる火の粉を5つタップして命をつなぐ",270,365,15,"#fff","center");
-  g.save();g.translate(270,535);g.fillStyle="#ff6b32";g.shadowColor="#ffb52e";g.shadowBlur=32;
-  g.beginPath();g.moveTo(0,-90);g.bezierCurveTo(75,-25,55,75,0,105);g.bezierCurveTo(-55,75,-75,-25,0,-90);g.fill();g.restore();
-  for(const e of memoryGame.targets)if(!e.hit){
-   const yy=e.y-Math.sin(t*2+e.x)*18;
-   g.save();g.shadowColor="#ffd84e";g.shadowBlur=20;g.fillStyle="#ff8a2e";g.beginPath();g.arc(e.x,yy,e.r,0,Math.PI*2);g.fill();g.restore();
-  }
-  T(`火の粉 ${memoryGame.hits}/5`,270,700,18,"#ffd84e","center");
- }
- if(active===4){
-  T("中央の『鬼』を長押しして、力を制御する",270,365,15,"#fff","center");
-  g.save();g.translate(270,520);g.shadowColor="#ff3f42";g.shadowBlur=30+memoryGame.charge*45;
-  g.fillStyle="#240508";g.strokeStyle="#ff5a45";g.lineWidth=8;g.beginPath();g.arc(0,0,120,0,Math.PI*2);g.fill();g.stroke();
-  T("鬼",0,25,78,memoryGame.held?"#fff":"#ff604d","center");g.restore();
-  R(105,680,330,14,"#292029");R(105,680,330*memoryGame.charge,14,"#ff5047");
-  T(memoryGame.held?"そのまま押し続ける":"円の中央を長押し",270,724,16,"#ffd84e","center");
- }
- if(active===5){
-  T(memoryGame.reveal>0?"光っている未来を覚える":"覚えた未来をタップ",270,365,15,"#fff","center");
-  const labels=["左の未来","中央の未来","右の未来"];
-  for(let i=0;i<3;i++){
-   const x=105+i*165,show=memoryGame.reveal>0&&i===memoryGame.correct;
-   panel(x-62,425,124,210,show?"#7fd8ff":"#354050",show?"#153651e8":"#0a0d14e8");
-   g.save();g.globalAlpha=show?1:.3;g.fillStyle=show?"#7fd8ff":"#485266";
-   g.beginPath();g.moveTo(x,455);g.lineTo(x-38,570);g.lineTo(x+38,570);g.closePath();g.fill();g.restore();
-   T(labels[i],x,615,12,show?"#fff":"#8992a4","center");
-  }
- }
- R(80,742,380,9,"#222834");R(80,742,380*clamp(memoryGame.timer/9,0,1),9,c);
-}else if(scene==="skillResolve"){
- const c=current().c;
- panel(18,238,504,548,c,"#02030af6");
- if(active===0){
-  g.save();g.translate(270,500);
-  for(let i=0;i<9;i++){
-   g.strokeStyle=i%2?"#fff":"#b99cff";g.globalAlpha=.12+i*.055;g.lineWidth=3;
-   g.beginPath();g.arc(0,0,55+i*25,0,Math.PI*2);g.stroke();
-  }
-  g.globalAlpha=1;
-  g.strokeStyle="#fff";g.lineWidth=9;
-  g.beginPath();g.moveTo(0,0);g.lineTo(0,-125);g.stroke();
-  g.strokeStyle="#ffd84e";g.lineWidth=6;
-  g.beginPath();g.moveTo(0,0);g.lineTo(85,-30);g.stroke();
-  g.restore();
-  T("TIME STOP",270,405,34,"#fff","center");
- }
- g.save();g.translate(270,500);g.rotate(active===0?0:visualTime*.8);
- for(let i=0;i<12;i++){g.rotate(Math.PI/6);g.strokeStyle=i%2?c:"#fff";g.globalAlpha=.35;g.lineWidth=5;g.beginPath();g.moveTo(70,0);g.lineTo(205,0);g.stroke()}
- g.restore();g.globalAlpha=1;
- g.save();g.shadowColor=c;g.shadowBlur=55;g.fillStyle=c;g.beginPath();g.arc(270,500,90+Math.sin(visualTime*8)*12,0,Math.PI*2);g.fill();g.restore();
- T(current().skill,270,330,31,"#ffd84e","center");
- T(memoryGame.result?"SUCCESS":"IMPERFECT",270,515,25,memoryGame.result?"#fff":"#ff8c9b","center");
- T(memoryGame.quote,270,665,14,"#fff","center");
-}else if(scene==="platformIntro"||scene==="platformTutorial"){
-  panel(25,270,490,500,"#ffd84e","#07101eee");T(scene==="platformIntro"?"断片世界が開いた":"断片世界・操作説明",270,320,24,"#ffd84e","center");
-  const text=scene==="platformIntro"?"このあと、タップ式の説明が始まります。落ちてもHPダメージだけで復帰できます。":["赤い旅人を操作します。","左右で移動。Aでジャンプ。","旗まで行けばクリア。"][platform.tutorialPage]||"タップして開始";
-  wrapped(text,270,405,410,28,17);T("画面をタップして進む",270,700,18,"#fff","center");
- }else if(scene==="platform"){
-  R(arena.x,arena.y,arena.w,arena.h,"#72c9ff");g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
-  const cam=platform.camera,worldX=platform.x+cam;R(arena.x,650,arena.w,60,"#62c55d");
-  for(let x=0;x<1200;x+=40){
- const hole=platform.falls===0&&((x>405&&x<450)||(x>800&&x<845));
- if(!hole){
-  R(arena.x+x-cam,680,42,30,platform.falls>0?"#7354b3":"#89572d");
-  R(arena.x+x-cam,680,42,8,platform.falls>0?"#d8c6ff":"#59c45b");
- }
-}
-  for(const p of [[205,610,155],[495,565,185],[865,595,175]])R(arena.x+p[0]-cam,p[1],p[2],24,"#d39a43");
-  R(arena.x+platform.goal-cam,472,12,208,"#fff");R(arena.x+platform.goal+12-cam,472,72,42,"#ffd84e");
-  R(arena.x+platform.x-14,platform.y-28,28,28,"#ff3f55");R(arena.x+platform.x-9,platform.y-35,18,9,"#ffd84e");
-  panel(24,735,492,170,"#dcecff","#02040aee");T(`HP ${current().hp}/${current().max}　落下 ${platform.falls}`,270,770,14,"#fff","center");
-  T("◀",82,835,30,"#fff","center");T("▶",162,835,30,"#fff","center");T("A",425,835,32,"#ffd84e","center");
-  T(platform.falls>0?"記憶の橋が出現：そのまま旗へ":"左右で移動　Aでジャンプ",270,892,13,"#fff","center");
- }else if(scene==="beamTutorial"||scene==="beam"){
-  panel(24,260,492,550,"#ff667f","#080713f4");T(scene==="beamTutorial"?"追撃ビーム・操作説明":"CORE BREAK",270,310,23,"#ffd84e","center");
-  if(scene==="beamTutorial"){wrapped("赤いコアをタップして照準を合わせ、そのあとFIREを押します。",270,400,420,30,17);T("タップして次へ",270,710,19,"#fff","center")}
-  else{
-   for(const c of beam.cores)if(c.hp>0){g.fillStyle="#ff4565";g.beginPath();g.arc(c.x,c.y,17,0,Math.PI*2);g.fill();T(c.hp,c.x,c.y+5,13,"#fff","center")}
-   g.strokeStyle="#ffd84e";g.lineWidth=3;g.beginPath();g.arc(beam.aimX,beam.aimY,27,0,Math.PI*2);g.stroke();
-   panel(130,780,280,78,beam.selected>=0?"#ffd84e":"#596270",beam.selected>=0?"#32100ee8":"#11141be8");T("FIRE",270,829,30,beam.selected>=0?"#ffd84e":"#777","center");
-  }
- }else if(scene==="sealIntro"||scene==="seal"){
-  panel(30,280,480,470,"#7fd8ff","#090b18ee");T(scene==="sealIntro"?"番号封印が始まる":"番号を1から順にタップ",270,330,22,"#ffd84e","center");
-  if(scene==="seal")for(const n of seal.nodes){g.strokeStyle=n.n===seal.index+1?"#ffd84e":"#59627a";g.lineWidth=5;g.beginPath();g.arc(n.x,n.y,n.r,0,Math.PI*2);g.stroke();T(n.n,n.x,n.y+7,20,n.n===seal.index+1?"#ffd84e":"#8992aa","center")}
-  else T("画面をタップして開始",270,690,18,"#fff","center");
- }else{
-  drawParty();
-  panel(30,735,480,155,"#dcecff","#020205e8");
-  if(scene==="menu"&&sub!=="dialog"){
-   actions.forEach((a,i)=>{const x=45+(i%2)*230,y=752+Math.floor(i/2)*42,w=220,h=36;menuRects.push({x,y,w,h,type:"action",i});R(x,y,w,h,"#0b0d13");T(a,x+w/2,y+24,17,"#fff","center")});
-   T(`${current().name} / ${current().skill}`,270,920,14,current().c,"center");
-  }else if(scene==="skill"&&sub!=="dialog"){
-   menuRects.push({x:50,y:770,w:440,h:80,type:"skill",i:0});R(50,770,440,80,"#17120a");T(current().skill,270,800,22,skillUsed[active]?"#666":"#ffd84e","center");
-const desc=["敵2ターン停止＋回復","11000ダメージ・防御無視","3回軽減＋回復","全員全回復／永久離脱","HP1・4ターン攻撃6倍","4回予告＋弾速低下"][active];
-T(desc,270,830,13,"#ddd","center");T(skillUsed[active]?"使用済み":"一度だけ使用可能",270,854,12,skillUsed[active]?"#ff6677":"#fff","center");
-  }else if(scene==="item"&&sub!=="dialog"){
-   const names=[`共有やくそう ×${items.herb}`,"使用不可","使用不可","使用不可"];
-   names.forEach((a,i)=>{const x=45+(i%2)*230,y=760+Math.floor(i/2)*45,w=220,h=38;menuRects.push({x,y,w,h,type:"item",i});R(x,y,w,h,"#0b0d13");T(a,x+110,y+25,15,"#fff","center")});
-  }else if(scene==="switch"&&sub!=="dialog"){
-   party.forEach((p,i)=>{const x=45+(i%2)*230,y=750+Math.floor(i/2)*42,w=220,h=36;menuRects.push({x,y,w,h,type:"switch",i});R(x,y,w,h,"#0b0d13");T(`${p.name} HP ${p.hp}`,x+110,y+24,14,p.hp>0?"#fff":"#666","center")});
-  }else if(scene==="attack"){
-   R(70,810,400,12,"#303644");R(260,792,20,48,"#ffd84e");g.save();g.shadowColor="#fff";g.shadowBlur=20;R(attackX-6,788,12,56,"#fff");g.restore();T(`連撃 ${attackHits}　残り ${Math.max(0,attackTime).toFixed(1)}`,270,775,16,"#fff","center");
-  }
+  drawParty();panel(30,735,480,155,"#dcecff","#020205e8");
+  if(state==="MENU"&&sub!=="dialog"){actions.forEach((a,i)=>{const x=45+(i%2)*230,y=752+Math.floor(i/2)*42,w=220,h=36;hitRects.push({x,y,w,h,type:"action",i});R(x,y,w,h,"#0b0d13");T(a,x+w/2,y+24,17,"#fff","center")});T(`${current().name} / ${current().skill}`,270,920,14,current().c,"center")}
+  if(state==="SKILL"&&sub!=="dialog"){hitRects.push({x:50,y:760,w:440,h:100,type:"skill",i:0});R(50,760,440,100,"#17120a");T(current().skill,270,790,22,skillUsed[active]?"#666":"#ffd84e","center");const d=["6500＋回復＋敵2ターン停止","11000＋防御無視／HP1・2ターン停止","3500＋回復＋敵攻撃3回軽減","5000＋全員全回復／永久離脱","7500＋HP1・4ターン攻撃6倍","4200＋4回予告・弾速低下"][active];T(d,270,820,13,"#ddd","center");T(skillUsed[active]?"使用済み":"一度だけ使用可能",270,848,12,skillUsed[active]?"#ff6677":"#fff","center")}
+  if(state==="ITEM"&&sub!=="dialog"){hitRects.push({x:50,y:775,w:440,h:70,type:"item",i:0});R(50,775,440,70,"#0b0d13");T(`共有やくそう ×${items.herb}`,270,817,18,"#fff","center")}
+  if(state==="SWITCH"&&sub!=="dialog"){party.forEach((p,i)=>{const x=45+(i%2)*230,y=750+Math.floor(i/2)*42,w=220,h=36;hitRects.push({x,y,w,h,type:"switch",i});R(x,y,w,h,"#0b0d13");T(`${p.name} HP ${p.hp}`,x+110,y+24,14,p.hp>0&&!permanentDead[i]?"#fff":"#666","center")})}
+  if(state==="ATTACK"){R(70,810,400,12,"#303644");R(260,792,20,48,"#ffd84e");R(attackX-6,788,12,56,"#fff");T(`連撃 ${attackHits}　残り ${Math.max(0,attackTime).toFixed(1)}`,270,775,16,"#fff","center")}
  }
  drawDialogue();
- for(const d of damagePop){g.save();g.globalAlpha=Math.max(0,d.l);g.shadowColor="#ffd84e";g.shadowBlur=16;T(d.n,d.x,d.y,d.crit?38:30,d.crit?"#fff":"#ffd84e","center");g.restore()}
- if(msgT>0){panel(55,420,430,62,"#ffd84e","#000f");wrapped(msg,270,445,390,22,15)}
+ for(const d of damageText){g.globalAlpha=Math.max(0,d.l);T(d.n,d.x,d.y,d.crit?38:30,d.crit?"#fff":"#ffd84e","center");g.globalAlpha=1}
+ if(messageTime>0){panel(55,420,430,62,"#ffd84e","#000f");wrapped(message,270,445,390,22,15)}
  for(const p of particles)R(p.x,p.y,p.s,p.s,p.c);
- g.restore();
- g.save();g.globalAlpha=.035;g.fillStyle="#fff";for(const l of screenLines)g.fillRect(0,l.y,W,1);g.restore();
- if(transitionFx>0){g.save();g.globalAlpha=Math.min(1,transitionFx*2);g.fillStyle="rgba(0,0,0,.65)";g.fillRect(0,0,W,H);T(transitionLabel,270,490,34,"#fff","center");g.restore()}
- if(flash>0){g.fillStyle=`rgba(255,255,255,${flash*4})`;g.fillRect(0,0,W,H)}
+ g.restore();if(flash>0){g.fillStyle=`rgba(255,255,255,${flash*4})`;g.fillRect(0,0,W,H)}
 }
-function canvasPos(e){const r=cv.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*W/r.width,y:(p.clientY-r.top)*H/r.height}}
-cv.addEventListener("pointerdown",e=>{e.preventDefault();ac();const p=canvasPos(e);
-if(sub==="dialog"){nextDialog();return}
-if(scene==="platformIntro"){
- scene="platformTutorial";sub="play";return;
-}
-if(scene==="beamTutorial"){
- beam.tutorialPage++;
- if(beam.tutorialPage>=3){
-  beam.ready=true;scene="beam";sub="play";
-  say(["ケイタ「赤いコアを押してから、FIREだ。順番はそれだけ。」","機械天使「照準入力を待機します。」"],()=>{scene="beam";sub="play"});
+function pos(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+cv.addEventListener("pointerdown",e=>{e.preventDefault();ac();const p=pos(e);
+ if(sub==="dialog"){nextDialog();return}
+ if(state==="DEFENSE"){dragging=true;heart.ox=heart.x-p.x;heart.oy=heart.y-p.y;return}
+ if(state==="ATTACK"){attackTap();return}
+ for(const r of hitRects)if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h){
+  if(r.type==="action")chooseAction(r.i);
+  if(r.type==="skill")useSkill();
+  if(r.type==="item")useItem();
+  if(r.type==="switch"&&party[r.i].hp>0&&!permanentDead[r.i]){active=r.i;setState("MENU");toast(party[r.i].name+"に交代",.7)}
+  return;
  }
- return;
-}
-if(scene==="sealIntro"){
- scene="seal";sub="play";
- say(["リョウゴ「光る数字を1から追え。先の数字に惑わされるな。」"],()=>{scene="seal";sub="play"});
- return;
-}
-if(scene==="skillstory"){
- if(active===0){
-  let a=((memoryGame.angle%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
-  const dist=Math.min(a,Math.PI*2-a);
-  if(dist<.30){memoryGame.hits++;beep(620,.09,"sine",.05);flash=.08;if(memoryGame.hits>=3)finishSkill(true)}
-  else {memoryGame.timer-=.7;shake=5;beep(110,.08,"square",.03)}
- }
- if(active===1){memoryGame.downX=p.x;memoryGame.downY=p.y;memoryGame.held=true}
- if(active===2){
-  const next=memoryGame.targets.find(n=>!n.hit);
-  if(next&&Math.hypot(p.x-next.x,p.y-next.y)<next.r+24){
-   next.hit=true;memoryGame.hits++;beep(330+memoryGame.hits*110,.08,"sine",.04);
-   if(memoryGame.hits>=3)finishSkill(true)
-  }else{memoryGame.timer-=.8;shake=5}
- }
- if(active===3){
-  const e=memoryGame.targets.find(e=>!e.hit&&Math.hypot(p.x-e.x,p.y-(e.y-Math.sin(visualTime*2+e.x)*18))<e.r+25);
-  if(e){e.hit=true;memoryGame.hits++;beep(400+memoryGame.hits*60,.06,"sine",.035);part(e.x,e.y,"#ff9f31",10,1);if(memoryGame.hits>=5)finishSkill(true)}
- }
- if(active===4&&Math.hypot(p.x-270,p.y-520)<145){memoryGame.held=true;beep(90,.1,"sawtooth",.025)}
- if(active===5&&memoryGame.reveal<=0){
-  const lane=Math.max(0,Math.min(2,Math.floor((p.x-22)/165)));
-  finishSkill(lane===memoryGame.correct);
- }
- return;
-}
-if(scene==="platformTutorial"){
-platform.tutorialPage++;
-if(platform.tutorialPage>=3){platform.ready=true;scene="platform";sub="play";toast("旗まで行こう。落ちても戻れる。",1.2)}
-return}
-if(scene==="platform"){
-if(p.y>742&&p.x>350){
- if(Math.abs(platform.vy)<35||platform.y>620){platform.vy=-430;beep(420,.06,"square",.025)}
-}else if(p.y>742&&p.x<205){
- platform.moveDir=p.x<122?-1:1;
- platform.moveHold=.48; /* タップだけでも約0.5秒進む */
- beep(platform.moveDir>0?240:190,.04,"square",.018);
-}
-return}
-if(scene==="beam"){
-/* コアを直接タップして選択 */
-let ci=beam.cores.findIndex(c=>c.hp>0&&Math.hypot(p.x-c.x,p.y-c.y)<42);
-if(ci>=0){
- beam.selected=ci;beam.aimX=beam.cores[ci].x;beam.aimY=beam.cores[ci].y;
- toast("照準セット。次にFIREをタップ",.8);beep(360,.07,"sine",.035);return;
-}
-/* FIREボタン */
-if(p.y>=770&&p.y<=870&&p.x>=115&&p.x<=425){
- if(beam.selected<0){toast("先に赤いコアをタップしてください",1.0);beep(100,.1,"square",.04);return}
- const c=beam.cores[beam.selected];
- if(!c||c.hp<=0){beam.selected=-1;toast("次の赤いコアを選んでください",.9);return}
- beam.shots++;c.hp--;flash=.08;shake=8;particle(c.x,c.y,"#ff4565",16);beep(560,.08,"square",.05);
- if(c.hp<=0){
-  toast("CORE BREAK!",.8);beam.selected=-1;
-  if(beam.cores.every(x=>x.hp<=0)){
-   return say(["ケイタ「全部壊した！」","機械天使「追撃機構、停止……あなたたちは、私を壊すより止めようとした。」"],()=>endGimmick(true))
-  }
- }else toast(`命中！ あと${c.hp}発`,.65);
- return;
-}
-toast("赤いコアをタップしてください",.8);
-return}
-if(scene==="seal"){
-const n=seal.nodes.find(n=>!n.hit&&Math.hypot(p.x-n.x,p.y-n.y)<n.r+14);
-if(n){if(n.n===seal.index+1){n.hit=true;seal.index++;beep(260+seal.index*60,.08,"sine",.04);if(seal.index>=seal.nodes.length)endGimmick(true)}else{seal.timer-=1.2;shake=8}}
-return}
-if(scene==="defense"){heart.drag=true;heart.offX=heart.x-p.x;heart.offY=heart.y-p.y;heart.x=clamp(p.x+heart.offX,arena.x+12,arena.x+arena.w-12);heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12);return}
-if(scene==="attack"){attackTap();return}
-for(const m of menuRects)if(p.x>=m.x&&p.x<=m.x+m.w&&p.y>=m.y&&p.y<=m.y+m.h){if(m.type==="action")chooseAction(m.i);if(m.type==="skill")useSkill();if(m.type==="item")useItem(m.i);if(m.type==="switch"){if(party[m.i].hp>0){active=m.i;scene="menu";sub="choose";toast(party[m.i].name+"に交代",.7)}}return}
 });
-cv.addEventListener("pointermove",e=>{
-const p=canvasPos(e);
-if(scene==="beam"&&beam.drag){beam.aimX=clamp(p.x,arena.x,arena.x+arena.w);beam.aimY=clamp(p.y,arena.y,arena.y+arena.h);return}
-if(!heart.drag||scene!=="defense")return;
-e.preventDefault();
-heart.x=clamp(p.x+heart.offX,arena.x+12,arena.x+arena.w-12);
-heart.y=clamp(p.y+heart.offY,arena.y+12,arena.y+arena.h-12)
-});
-["pointerup","pointercancel","pointerout"].forEach(n=>cv.addEventListener(n,e=>{
- heart.drag=false;beam.drag=false;
- if(scene==="skillstory"&&active===1&&memoryGame.held){
-  const p=e.clientX!==undefined?canvasPos(e):{x:memoryGame.downX,y:memoryGame.downY};
-  if(p.x-memoryGame.downX>120&&Math.abs(p.y-memoryGame.downY)<150){
-   memoryGame.hits++;beep(180+memoryGame.hits*90,.08,"sawtooth",.05);shake=8;flash=.06;
-   if(memoryGame.hits>=3)finishSkill(true)
-  }else memoryGame.timer-=.5;
-  memoryGame.held=false;
- }
- if(scene==="skillstory"&&active===4)memoryGame.held=false;
-}));
-function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(scene!=="end")update(dt);draw();requestAnimationFrame(loop)}
-document.getElementById("go").onclick=()=>{
-try{
- ac();music();
- document.getElementById("start").classList.add("hidden");
- reset();
-}catch(err){
- console.error(err);
- const card=document.querySelector("#start .card");
- if(card){
-  const old=document.getElementById("bootError");
-  if(old)old.remove();
-  const p=document.createElement("p");
-  p.id="bootError";
-  p.style.color="#ff6b7d";
-  p.style.fontSize="13px";
-  p.textContent="起動エラーが発生しました。ページを再読み込みしてください。";
-  card.appendChild(p);
- }
-}
-};
+cv.addEventListener("pointermove",e=>{if(!dragging||state!=="DEFENSE")return;e.preventDefault();const p=pos(e);heart.x=clamp(p.x+heart.ox,arena.x+14,arena.x+arena.w-14);heart.y=clamp(p.y+heart.oy,arena.y+14,arena.y+arena.h-14);trails.push({x:heart.x,y:heart.y,l:.3});if(trails.length>16)trails.shift()});
+["pointerup","pointercancel","pointerout"].forEach(n=>cv.addEventListener(n,()=>dragging=false));
+function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(state!=="END")update(dt);draw();requestAnimationFrame(loop)}
+document.getElementById("go").onclick=()=>{try{ac();music();document.getElementById("start").classList.add("hidden");reset()}catch(err){console.error(err);alert("起動エラー: "+err.message)}};
 document.getElementById("again").onclick=()=>{document.getElementById("end").classList.add("hidden");reset()};
-window.addEventListener("error",e=>console.error("DAYBREAK XI runtime:",e.error||e.message));
-reset();requestAnimationFrame(loop);
+requestAnimationFrame(loop);
 })();</script>
 </div>
-</body></html>
+
+<!--
+DAYBREAK XII DESIGN NOTES
+The battle is intentionally built as one continuous boss encounter.
+The thirty enemy patterns are selected by turn and boss phase.
+Patterns include left-hand sweep, right-hand sweep, double-hand clamp,
+vertical slam, left charge, right charge, radial burst, spiral burst,
+feather rain, homing missiles, falling blades, exposed core, gravity well,
+converging orbit, false bullets, horizontal sweep, mines, judgement ring,
+left grab, right grab, meteors, layered burst, repeated body rush,
+core frenzy, ground geysers, rotating drills, split shots, zigzag walls,
+knuckle storm, and final-phase core eruption.
+The shared herb, permanent Phoenix sacrifice, one-use ultimates,
+phase armor, temporary defense bypass, time-stop turns, barrier turns,
+future-sight slowdown, and Oni attack multiplier are designed to force
+resource planning instead of allowing repetitive healing.
+-->
+
+</body>
+</html>
