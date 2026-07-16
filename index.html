@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#02040a">
-<title>PYRAMID BREAK ZERO - DAYBREAK XII</title>
+<title>PYRAMID BREAK ZERO - DAYBREAK XIII</title>
 <style>
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
@@ -24,10 +24,10 @@ button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070
 <div id="wrap">
 <canvas id="game" width="540" height="960"></canvas>
 <div id="start" class="overlay"><div class="card">
-<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XII</b></div>
-<p>超長期ボス戦・安定動作版</p>
+<div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XIII</b></div>
+<p>超長期ボス戦・シネマティック版</p>
 <button id="go">物語を始める</button>
-<p class="small">ボスHP 100,000／5段階変形／30系統の攻撃。<br>縦画面専用。敵ターンはハートを指でドラッグ。</p>
+<p class="small">ボスHP 300,000／5段階変形／30系統の攻撃。<br>縦画面専用。敵ターンはハートを指でドラッグ。</p>
 </div></div>
 <div id="end" class="overlay hidden"><div class="card">
 <div class="logo" id="endTitle">DAYBREAK</div><p id="endText"></p><button id="again">もう一度</button>
@@ -48,10 +48,10 @@ let attackX=70,attackDir=1,attackTime=0,attackHits=0,attackTotal=0,attackEnded=f
 let bullets=[],particles=[],damageText=[],trails=[],hitRects=[];
 let defenseTime=0,patternId=0,patternClock=0,dragging=false,shake=0,flash=0,message="",messageTime=0;
 let phaseShown=1,forecastTurns=0,timeStopTurns=0,barrierTurns=0,critTurns=0,oniTurns=0;
-let skillUsed=[false,false,false,false,false,false],permanentDead=[false,false,false,false,false,false];
+let skillUsed=[0,0,0,0,0,0],permanentDead=[false,false,false,false,false,false];
 let attackBoost=[1,1,1,1,1,1],stunTurns=[0,0,0,0,0,0];
 let audio=null,musicTimer=null,musicStep=0;
-let bossFx={hover:0,wing:0,hit:0,roar:0,transform:0,handL:0,handR:0,charge:0,coreOpen:0};
+let bossFx={hover:0,wing:0,hit:0,roar:0,transform:0,handL:0,handR:0,charge:0,coreOpen:0,dash:0,reach:0,cinema:0,cinemaType:"",cinemaName:"",cinemaQuote:"",cinemaColor:"#fff"};
 
 const party=[
 {name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#725fbd",skill:"ザ・ワールド",pow:22},
@@ -61,7 +61,7 @@ const party=[
 {name:"イサジ",max:185,hp:185,mp:46,mm:46,c:"#edc650",skill:"領域展開・鬼",pow:36},
 {name:"リョウゴ",max:140,hp:140,mp:82,mm:82,c:"#438fca",skill:"虫の知らせ",pow:26}
 ];
-const boss={name:"機械天使 アルカ・セラフ 完全体",max:100000,hp:100000,phase:1,armor:280};
+const boss={name:"機械天使 アルカ・セラフ 完全体",max:300000,hp:300000,phase:1,armor:420};
 const items={herb:1};
 const heart={x:270,y:515,r:10,inv:0,ox:0,oy:0};
 
@@ -82,16 +82,22 @@ function current(){
 function aliveCount(){return party.filter((p,i)=>p.hp>0&&!permanentDead[i]).length}
 function reset(){
  party.forEach(p=>{p.hp=p.max;p.mp=p.mm});
- Object.assign(boss,{hp:boss.max,phase:1,armor:280});
+ Object.assign(boss,{hp:boss.max,phase:1,armor:420});
  items.herb=1;turn=0;active=0;selected=0;bond=0;score=0;
- skillUsed=[false,false,false,false,false,false];permanentDead=[false,false,false,false,false,false];
+ skillUsed=[0,0,0,0,0,0];permanentDead=[false,false,false,false,false,false];
  forecastTurns=timeStopTurns=barrierTurns=critTurns=oniTurns=0;attackBoost=[1,1,1,1,1,1];stunTurns=[0,0,0,0,0,0];
  bullets=[];particles=[];damageText=[];trails=[];shake=flash=0;phaseShown=1;
- bossFx={hover:0,wing:0,hit:0,roar:0,transform:0,handL:0,handR:0,charge:0,coreOpen:0};
+ bossFx={hover:0,wing:0,hit:0,roar:0,transform:0,handL:0,handR:0,charge:0,coreOpen:0,dash:0,reach:0,cinema:0,cinemaType:"",cinemaName:"",cinemaQuote:"",cinemaColor:"#fff"};
  setState("MENU");
- say(["――空から、壊れた神が落ちてきた。","機械天使の生命値は100,000。共有のやくそうは、たった一つ。","復活アイテムはない。必殺技は全員一度だけ。","トシユキ「順番を間違えれば負ける。でも、考えれば届く。」"],()=>setState("MENU"));
+ say(["――空から、壊れた神が落ちてきた。","機械天使の生命値は300,000。共有のやくそうは、たった一つ。","復活アイテムはない。必殺技は全員一度だけ。","トシユキ「順番を間違えれば負ける。でも、考えれば届く。」"],()=>setState("MENU"));
 }
 function particle(x,y,c,n=14,pow=1){for(let i=0;i<n;i++)particles.push({x,y,vx:rnd(-170,170)*pow,vy:rnd(-220,80)*pow,l:rnd(.3,.75),c,s:rnd(2,6)})}
+
+function startCinematic(type,name,quote,color){
+ bossFx.cinema=2.2;bossFx.cinemaType=type;bossFx.cinemaName=name;bossFx.cinemaQuote=quote;bossFx.cinemaColor=color;
+ flash=.18;shake=18;particle(270,470,color,38,1.5);
+}
+function skillLimit(i){return i===5?3:1}
 function damageBoss(raw){
  const n=Math.max(1,Math.floor(raw-boss.armor));
  boss.hp=Math.max(0,boss.hp-n);score+=n*10;bossFx.hit=.35;shake=12;flash=.08;
@@ -113,37 +119,49 @@ function chooseAction(i){
  if(i===5)setState("SWITCH");
 }
 function useSkill(){
- const p=current(),i=active;
- if(skillUsed[i]){toast("この必殺技はもう使えない",1);setState("MENU");return}
- skillUsed[i]=true;flash=.18;shake=15;
- if(i===0){
-  damageBoss(6780);timeStopTurns=2;p.mp=0;
-  party.forEach((a,j)=>{if(!permanentDead[j])a.hp=Math.min(a.max,a.hp+35)});
-  say(["時間が止まった。","トシユキ「敵の二回の攻撃を消す。だが、もう二度と止められない。」"],nextTurn);return;
- }
- if(i===1){
-  p.hp=1;boss.armor=0;critTurns=3;stunTurns[i]=2;damageBoss(11280);
-  say(["カズアキは世界の境界を斬った。","三ターン、防御を無視する。カズアキは二ターン行動不能。"],beginDefense);return;
- }
- if(i===2){
-  barrierTurns=3;party.forEach((a,j)=>{if(!permanentDead[j])a.hp=Math.min(a.max,a.hp+25)});damageBoss(3780);
-  say(["巨大なピラミッドが六人を覆った。","三回の敵攻撃を大幅に軽減する。"],beginDefense);return;
- }
- if(i===3){
-  damageBoss(5280);party.forEach((a,j)=>{if(j!==i&&!permanentDead[j])a.hp=a.max});
-  p.hp=0;permanentDead[i]=true;
-  say(["仲間全員の傷が消えた。","ケイタ「これで、みんな帰れる。」","鳳凰のあとに、ケイタの場所だけが空いていた。"],nextTurn);return;
- }
- if(i===4){
-  p.hp=1;oniTurns=4;attackBoost[i]=6;damageBoss(7780);
-  say(["イサジは命を一滴だけ残した。","四ターン、攻撃力六倍。鬼化中は回復できない。"],beginDefense);return;
- }
- if(i===5){
-  forecastTurns=4;p.mp=0;damageBoss(4480);
-  say(["次の四回の攻撃が青い予告線として見える。","弾幕速度も低下する。"],beginDefense);return;
- }
-}
-function useItem(){
+ const p=current(),i=active,limit=skillLimit(i);
+ if(skillUsed[i]>=limit){toast("この必殺技はもう使えない",1);setState("MENU");return}
+ skillUsed[i]++;
+ const names=["ザ・ワールド","ワールド・イズ・マイン","ピラミッド・ハート","鳳翼天翔","領域展開・鬼","虫の知らせ"];
+ const quotes=[
+  "止まれ。世界。――仲間の鼓動だけは、進め。",
+  "俺が世界を奪う。みんなが帰る時間を作るために。",
+  "勝つためじゃない。全員で帰る場所を守る。",
+  "この命は終わらない。みんなの朝に変わる。",
+  "怒りじゃない。守りたいものが、俺を鬼にする。",
+  "未来は決まっていない。見えた絶望を、選び直す。"
+ ];
+ startCinematic(["clock","slash","pyramid","phoenix","oni","future"][i],names[i],quotes[i],p.c);
+ setState("SKILL_CINEMA");
+ setTimeout(()=>{
+  if(i===0){
+   damageBoss(12920);timeStopTurns=6;p.mp=0;
+   party.forEach((a,j)=>{if(!permanentDead[j])a.hp=Math.min(a.max,a.hp+45)});
+   say(["世界から音が消えた。","トシユキ「六回の敵攻撃を消す。時間は止まっても、俺たちは止まらない。」"],nextTurn);return;
+  }
+  if(i===1){
+   p.hp=1;boss.armor=0;critTurns=3;stunTurns[i]=2;damageBoss(22420);
+   say(["カズアキは世界の境界を斬った。","三ターン、防御を無視する。カズアキは二ターン行動不能。"],beginDefense);return;
+  }
+  if(i===2){
+   barrierTurns=3;party.forEach((a,j)=>{if(!permanentDead[j])a.hp=Math.min(a.max,a.hp+35)});damageBoss(7920);
+   say(["巨大なピラミッドが六人を覆った。","三回の敵攻撃を大幅に軽減する。"],beginDefense);return;
+  }
+  if(i===3){
+   damageBoss(10920);party.forEach((a,j)=>{if(j!==i&&!permanentDead[j])a.hp=a.max});
+   p.hp=0;permanentDead[i]=true;
+   say(["仲間全員の傷が消えた。","ケイタ「これで、みんな帰れる。」","鳳凰のあとに、ケイタの場所だけが空いていた。"],nextTurn);return;
+  }
+  if(i===4){
+   p.hp=1;oniTurns=4;attackBoost[i]=6;damageBoss(15920);
+   say(["イサジは命を一滴だけ残した。","四ターン、攻撃力六倍。鬼化中は回復できない。"],beginDefense);return;
+  }
+  if(i===5){
+   forecastTurns=Math.max(forecastTurns,4);p.mp=0;damageBoss(8920);
+   say([`未来視 ${skillUsed[i]}/3 回目。`,"次の四回の攻撃が青い予告線として見え、弾幕速度が低下する。"],beginDefense);return;
+  }
+ },1450);
+}function useItem(){
  if(items.herb<=0){toast("やくそうはもうない",.9);setState("MENU");return}
  if(active===4&&oniTurns>0){toast("鬼化中のイサジには回復が届かない",1.1);setState("MENU");return}
  items.herb--;const p=current();p.hp=Math.min(p.max,p.hp+80);toast(`${p.name} HP+80　残り0`,1.2);beginDefense();
@@ -184,12 +202,12 @@ function beginDefense(){
 function add(x,y,vx,vy,r,c,k,extra={}){bullets.push({x,y,vx,vy,r,c,k,...extra})}
 function spawnPattern(id){
  const A=arena,cx=270,cy=510;bossFx.handL=bossFx.handR=bossFx.charge=0;bossFx.coreOpen=0;id%=30;
- if(id===0){bossFx.handL=1;for(let i=0;i<7;i++)add(A.x-45,A.y+35+i*52,255,0,22,"#dce9f6","hand",{warn:.55})}
- if(id===1){bossFx.handR=1;for(let i=0;i<7;i++)add(A.x+A.w+45,A.y+35+i*52,-255,0,22,"#dce9f6","hand",{warn:.55})}
- if(id===2){bossFx.handL=bossFx.handR=1;for(let i=0;i<6;i++){add(A.x-40,A.y+45+i*62,230,0,20,"#fff","hand",{warn:.8});add(A.x+A.w+40,A.y+45+i*62,-230,0,20,"#fff","hand",{warn:.8})}}
+ if(id===0){bossFx.handL=1;bossFx.reach=1.2;for(let i=0;i<7;i++)add(A.x-45,A.y+35+i*52,255,0,22,"#dce9f6","hand",{warn:.55})}
+ if(id===1){bossFx.handR=1;bossFx.reach=1.2;for(let i=0;i<7;i++)add(A.x+A.w+45,A.y+35+i*52,-255,0,22,"#dce9f6","hand",{warn:.55})}
+ if(id===2){bossFx.handL=bossFx.handR=1;bossFx.reach=1.3;for(let i=0;i<6;i++){add(A.x-40,A.y+45+i*62,230,0,20,"#fff","hand",{warn:.8});add(A.x+A.w+40,A.y+45+i*62,-230,0,20,"#fff","hand",{warn:.8})}}
  if(id===3){for(let i=0;i<5;i++)add(A.x+55+i*90,A.y-100,0,320,32,"#b8c5d3","slam",{warn:.65})}
- if(id===4){bossFx.charge=1;add(A.x-120,cy,520,0,58,"#e9f5ff","body",{warn:.9})}
- if(id===5){bossFx.charge=-1;add(A.x+A.w+120,cy,-520,0,58,"#e9f5ff","body",{warn:.9})}
+ if(id===4){bossFx.charge=1;bossFx.dash=1.2;add(A.x-120,cy,520,0,58,"#e9f5ff","body",{warn:.9})}
+ if(id===5){bossFx.charge=-1;bossFx.dash=1.2;add(A.x+A.w+120,cy,-520,0,58,"#e9f5ff","body",{warn:.9})}
  if(id===6)for(let i=0;i<18;i++){const a=i*Math.PI*2/18;add(cx,cy,Math.cos(a)*210,Math.sin(a)*210,8,"#ffd657","ring")}
  if(id===7)for(let i=0;i<22;i++){const a=i*.55;add(cx,cy,Math.cos(a)*125,Math.sin(a)*125,7,i%2?"#fff":"#ff7190","spiral",{spin:i%2?.9:-.9})}
  if(id===8)for(let i=0;i<15;i++)add(rnd(A.x,A.x+A.w),A.y-30-rnd(0,180),rnd(-25,25),190+rnd(0,110),7,"#eef7ff","feather")
@@ -206,13 +224,13 @@ function spawnPattern(id){
  if(id===19){bossFx.handR=1;for(let i=0;i<10;i++)add(A.x+A.w+40,A.y+30+i*39,-210,Math.sin(i)*95,16,"#d8e5f1","grab")}
  if(id===20)for(let i=0;i<6;i++)add(A.x+50+i*75,A.y-30,Math.sin(i)*80,250,20,"#ffcc5a","meteor")
  if(id===21)for(let i=0;i<24;i++){const a=i*Math.PI*2/24;add(cx,cy,Math.cos(a)*(140+(i%3)*35),Math.sin(a)*(140+(i%3)*35),6,i%3?"#fff":"#69d8ff","burst")}
- if(id===22){bossFx.charge=1;for(let i=0;i<4;i++)add(A.x-100-i*80,A.y+90+i*75,430,0,40,"#eef7ff","body",{warn:.65+i*.12})}
+ if(id===22){bossFx.charge=1;bossFx.dash=1.5;for(let i=0;i<4;i++)add(A.x-100-i*80,A.y+90+i*75,430,0,40,"#eef7ff","body",{warn:.65+i*.12})}
  if(id===23){bossFx.coreOpen=4;for(let i=0;i<18;i++)add(i%2?A.x+A.w:A.x,A.y+20+(i%9)*45,i%2?-230:230,0,7,i%3?"#fff":"#ff375d","final")}
  if(id===24)for(let i=0;i<10;i++)add(A.x+25+i*48,A.y+A.h+30,Math.sin(i)*70,-240,13,"#7bdcff","geyser")
  if(id===25)for(let i=0;i<8;i++)add(rnd(A.x,A.x+A.w),A.y-20,rnd(-80,80),210,18,"#f2f6ff","drill",{spin:rnd(-2,2)})
  if(id===26)for(let i=0;i<14;i++)add(cx,cy,rnd(-260,260),rnd(-260,260),7,"#ff77c8","split",{life:1})
  if(id===27)for(let i=0;i<12;i++)add(i%2?A.x+A.w:A.x,A.y+20+(i%6)*72,i%2?-210:210,0,10,"#ffd84e","zig",{phase:i})
- if(id===28){bossFx.handL=bossFx.handR=1;for(let i=0;i<16;i++)add(rnd(A.x,A.x+A.w),rnd(A.y,A.y+A.h),rnd(-120,120),rnd(-120,120),9,"#d9e4ef","knuckle")}
+ if(id===28){bossFx.handL=bossFx.handR=1;bossFx.reach=1.6;for(let i=0;i<16;i++)add(rnd(A.x,A.x+A.w),rnd(A.y,A.y+A.h),rnd(-120,120),rnd(-120,120),9,"#d9e4ef","knuckle")}
  if(id===29){bossFx.coreOpen=5;for(let i=0;i<30;i++){const a=i*Math.PI*2/30;add(cx,cy,Math.cos(a)*(170+(i%4)*25),Math.sin(a)*(170+(i%4)*25),i%5===0?12:6,i%5===0?"#ff3657":"#fff","finale")}}
 }
 function updateDefense(dt){
@@ -248,7 +266,7 @@ function nextTurn(){
  turn++;
  const r=boss.hp/boss.max;
  boss.phase=r<=.12?5:r<=.32?4:r<=.55?3:r<=.78?2:1;
- boss.armor=[0,280,220,160,90,20][boss.phase];
+ boss.armor=[0,420,320,230,130,30][boss.phase];
  if(oniTurns>0){oniTurns--;party[4].hp=Math.max(1,party[4].hp-22);if(oniTurns===0)attackBoost[4]=1}
  for(let i=0;i<stunTurns.length;i++)if(stunTurns[i]>0)stunTurns[i]--;
  active=(active+1)%party.length;
@@ -274,7 +292,7 @@ function endScreen(title,text){setState("END");document.getElementById("endTitle
 
 function update(dt){
  time+=dt;messageTime=Math.max(0,messageTime-dt);shake*=.86;flash=Math.max(0,flash-dt);
- bossFx.hover+=dt*1.5;bossFx.wing+=dt*(3+boss.phase);bossFx.hit=Math.max(0,bossFx.hit-dt);bossFx.roar=Math.max(0,bossFx.roar-dt);bossFx.transform=Math.max(0,bossFx.transform-dt);
+ bossFx.hover+=dt*1.5;bossFx.wing+=dt*(3+boss.phase);bossFx.hit=Math.max(0,bossFx.hit-dt);bossFx.roar=Math.max(0,bossFx.roar-dt);bossFx.transform=Math.max(0,bossFx.transform-dt);bossFx.cinema=Math.max(0,bossFx.cinema-dt);bossFx.dash=Math.max(0,bossFx.dash-dt);bossFx.reach=Math.max(0,bossFx.reach-dt);
  particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=400*dt;p.l-=dt});particles=particles.filter(p=>p.l>0);
  damageText.forEach(d=>{d.y-=75*dt;d.l-=dt});damageText=damageText.filter(d=>d.l>0);
  trails.forEach(t=>t.l-=dt);trails=trails.filter(t=>t.l>0);
@@ -286,8 +304,8 @@ function T(s,x,y,z=18,c="#fff",a="left"){g.fillStyle=c;g.font=`900 ${z}px monosp
 function wrapped(s,x,y,maxW,lineH=24,size=16){g.font=`900 ${size}px monospace`;g.textAlign="center";let line="",lines=[];for(const ch of [...String(s)]){const t=line+ch;if(g.measureText(t).width>maxW&&line){lines.push(line);line=ch}else line=t}if(line)lines.push(line);lines.slice(0,4).forEach((v,i)=>T(v,x,y+i*lineH,size,"#fff","center"))}
 function panel(x,y,w,h,edge="#8aa4c8",fill="#070b14e8"){g.fillStyle=fill;g.strokeStyle=edge;g.lineWidth=3;g.beginPath();g.roundRect(x,y,w,h,12);g.fill();g.stroke()}
 function drawBoss(){
- const hover=Math.sin(bossFx.hover)*7,recoil=bossFx.hit?Math.sin(bossFx.hit*70)*10:0,scale=.86+(bossFx.transform?Math.sin(bossFx.transform*18)*.05:0);
- g.save();g.translate(270+recoil,205+hover);g.scale(scale,scale);
+ const hover=Math.sin(bossFx.hover)*7,recoil=bossFx.hit?Math.sin(bossFx.hit*70)*10:0,dashX=bossFx.dash>0?Math.sin((1-bossFx.dash/1.5)*Math.PI)*95*(bossFx.charge||1):0,scale=.86+(bossFx.transform?Math.sin(bossFx.transform*18)*.05:0)+(bossFx.dash>0?.12:0);
+ g.save();g.translate(270+recoil+dashX,205+hover);g.scale(scale,scale);
  for(const side of[-1,1]){g.save();g.scale(side,1);const count=5+boss.phase;for(let i=0;i<count;i++){const flap=Math.sin(bossFx.wing+i*.7)*10;g.strokeStyle=boss.phase>=4&&i%2?"#ff6d88":"#eef8ff";g.lineWidth=7-i*.22;g.beginPath();g.moveTo(42,0);g.quadraticCurveTo(82+i*13,-58+i*11,150+i*14+flap*.35,-42+i*12);g.stroke()}g.restore()}
  const bg=g.createLinearGradient(-65,-50,65,68);bg.addColorStop(0,"#c4d1df");bg.addColorStop(.45,"#788493");bg.addColorStop(1,"#303844");g.fillStyle=bg;g.fillRect(-65,-50,130,118);
  R(-51,-37,102,90,boss.phase>=4?"#220812":"#0b1018");g.fillStyle=boss.phase>=4?"#ff6d7e":"#d8b967";g.beginPath();g.moveTo(0,-105);g.lineTo(-50,-30);g.lineTo(50,-30);g.fill();
@@ -323,20 +341,55 @@ function draw(){
  hitRects=[];
  if(state==="DEFENSE"){
   R(arena.x,arena.y,arena.w,arena.h,boss.phase>=4?"#18040d":"#030812");g.strokeStyle=boss.phase>=4?"#ff5a78":"#dff5ff";g.lineWidth=4;g.strokeRect(arena.x,arena.y,arena.w,arena.h);
+  if(bossFx.reach>0){
+   const reach=(1-bossFx.reach/1.6);
+   g.save();g.globalAlpha=.9;
+   if(bossFx.handL){g.fillStyle="#c5d0dc";g.fillRect(arena.x-15,heart.y-26,120+reach*170,52);R(arena.x+90+reach*170,heart.y-38,62,76,"#edf5fc")}
+   if(bossFx.handR){g.fillStyle="#c5d0dc";g.fillRect(arena.x+arena.w-105-reach*170,heart.y-26,120+reach*170,52);R(arena.x+arena.w-152-reach*170,heart.y-38,62,76,"#edf5fc")}
+   g.restore();
+  }
   drawBullets();drawHeart();T(`回避 ${Math.max(0,defenseTime).toFixed(1)}`,270,292,14,"#ffd84e","center");const p=current();panel(18,84,215,48,"#ffd84e","#080b12df");T(`${p.name} HP ${p.hp}/${p.max}`,30,114,12);
  }else{
   drawParty();panel(30,735,480,155,"#dcecff","#020205e8");
   if(state==="MENU"&&sub!=="dialog"){actions.forEach((a,i)=>{const x=45+(i%2)*230,y=752+Math.floor(i/2)*42,w=220,h=36;hitRects.push({x,y,w,h,type:"action",i});R(x,y,w,h,"#0b0d13");T(a,x+w/2,y+24,17,"#fff","center")});T(`${current().name} / ${current().skill}`,270,920,14,current().c,"center")}
-  if(state==="SKILL"&&sub!=="dialog"){hitRects.push({x:50,y:760,w:440,h:100,type:"skill",i:0});R(50,760,440,100,"#17120a");T(current().skill,270,790,22,skillUsed[active]?"#666":"#ffd84e","center");const d=["6500＋回復＋敵2ターン停止","11000＋防御無視／HP1・2ターン停止","3500＋回復＋敵攻撃3回軽減","5000＋全員全回復／永久離脱","7500＋HP1・4ターン攻撃6倍","4200＋4回予告・弾速低下"][active];T(d,270,820,13,"#ddd","center");T(skillUsed[active]?"使用済み":"一度だけ使用可能",270,848,12,skillUsed[active]?"#ff6677":"#fff","center")}
-  if(state==="ITEM"&&sub!=="dialog"){hitRects.push({x:50,y:775,w:440,h:70,type:"item",i:0});R(50,775,440,70,"#0b0d13");T(`共有やくそう ×${items.herb}`,270,817,18,"#fff","center")}
+  if(state==="SKILL"&&sub!=="dialog"){
+   hitRects.push({x:50,y:750,w:440,h:92,type:"skill",i:0});
+   hitRects.push({x:180,y:852,w:180,h:38,type:"back",i:0});
+   R(50,750,440,92,"#17120a");
+   const lim=skillLimit(active),used=skillUsed[active];
+   T(current().skill,270,780,22,used>=lim?"#666":"#ffd84e","center");
+   const d=["12500＋回復＋敵6ターン停止","22000＋防御無視／HP1・2ターン停止","7500＋回復＋敵攻撃3回軽減","10500＋全員全回復／永久離脱","15500＋HP1・4ターン攻撃6倍","8500＋4回予告・弾速低下"][active];
+   T(d,270,810,13,"#ddd","center");
+   T(`使用 ${used}/${lim}`,270,836,12,used>=lim?"#ff6677":"#fff","center");
+   R(180,852,180,38,"#10131a");T("← もどる",270,878,15,"#fff","center")
+  }
+  if(state==="ITEM"&&sub!=="dialog"){
+   hitRects.push({x:50,y:765,w:440,h:62,type:"item",i:0});
+   hitRects.push({x:180,y:842,w:180,h:38,type:"back",i:0});
+   R(50,765,440,62,"#0b0d13");T(`共有やくそう ×${items.herb}`,270,803,18,"#fff","center");
+   R(180,842,180,38,"#10131a");T("← もどる",270,868,15,"#fff","center")
+  }
   if(state==="SWITCH"&&sub!=="dialog"){party.forEach((p,i)=>{const x=45+(i%2)*230,y=750+Math.floor(i/2)*42,w=220,h=36;hitRects.push({x,y,w,h,type:"switch",i});R(x,y,w,h,"#0b0d13");T(`${p.name} HP ${p.hp}`,x+110,y+24,14,p.hp>0&&!permanentDead[i]?"#fff":"#666","center")})}
   if(state==="ATTACK"){R(70,810,400,12,"#303644");R(260,792,20,48,"#ffd84e");R(attackX-6,788,12,56,"#fff");T(`連撃 ${attackHits}　残り ${Math.max(0,attackTime).toFixed(1)}`,270,775,16,"#fff","center")}
  }
- drawDialogue();
+ if(state==="SKILL_CINEMA"||bossFx.cinema>0){
+   g.save();g.fillStyle="rgba(0,0,0,.78)";g.fillRect(0,0,W,H);
+   const ct=2.2-bossFx.cinema;g.translate(270,470);g.shadowColor=bossFx.cinemaColor;g.shadowBlur=45;
+   if(bossFx.cinemaType==="clock"){g.strokeStyle="#d8c8ff";g.lineWidth=6;for(let i=0;i<6;i++){g.beginPath();g.arc(0,0,60+i*32+ct*12,0,Math.PI*2);g.stroke()}g.beginPath();g.moveTo(0,0);g.lineTo(0,-150);g.stroke()}
+   else if(bossFx.cinemaType==="slash"){g.strokeStyle="#fff";g.lineWidth=18;g.beginPath();g.moveTo(-230,170);g.lineTo(230,-170);g.stroke();g.strokeStyle="#7fd8ff";g.lineWidth=5;g.stroke()}
+   else if(bossFx.cinemaType==="pyramid"){g.fillStyle="#d9b65d";g.beginPath();g.moveTo(0,-180);g.lineTo(-200,170);g.lineTo(200,170);g.closePath();g.fill();g.fillStyle="#6fd8ff";g.beginPath();g.ellipse(0,30,48,24,0,0,Math.PI*2);g.fill()}
+   else if(bossFx.cinemaType==="phoenix"){g.fillStyle="#ff7528";g.beginPath();g.moveTo(-230,130);g.quadraticCurveTo(-70,-190,0,70);g.quadraticCurveTo(70,-190,230,130);g.quadraticCurveTo(80,80,0,210);g.quadraticCurveTo(-80,80,-230,130);g.fill()}
+   else if(bossFx.cinemaType==="oni"){T("鬼",0,80,250,"#ff354f","center")}
+   else if(bossFx.cinemaType==="future"){for(let i=0;i<16;i++){g.strokeStyle=i%2?"#67d9ff":"#fff";g.lineWidth=3;g.beginPath();g.moveTo(-270,i*36-280);g.lineTo(270,i*36-250+Math.sin(i+ct*8)*35);g.stroke()}}
+   g.shadowBlur=25;T(bossFx.cinemaName,0,-260,32,"#ffd84e","center");wrapped(bossFx.cinemaQuote,0,245,450,25,14);g.restore();
+  }
+  drawDialogue();
  for(const d of damageText){g.globalAlpha=Math.max(0,d.l);T(d.n,d.x,d.y,d.crit?38:30,d.crit?"#fff":"#ffd84e","center");g.globalAlpha=1}
  if(messageTime>0){panel(55,420,430,62,"#ffd84e","#000f");wrapped(message,270,445,390,22,15)}
  for(const p of particles)R(p.x,p.y,p.s,p.s,p.c);
- g.restore();if(flash>0){g.fillStyle=`rgba(255,255,255,${flash*4})`;g.fillRect(0,0,W,H)}
+ g.restore();
+ g.save();const vg=g.createRadialGradient(270,470,260,270,470,650);vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,0,.72)");g.fillStyle=vg;g.fillRect(0,0,W,H);R(0,0,W,24,"#000");R(0,H-24,W,24,"#000");g.globalAlpha=.04;g.fillStyle="#fff";for(let y=0;y<H;y+=4)g.fillRect(0,y,W,1);g.restore();
+ if(flash>0){g.fillStyle=`rgba(255,255,255,${flash*4})`;g.fillRect(0,0,W,H)}
 }
 function pos(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
 cv.addEventListener("pointerdown",e=>{e.preventDefault();ac();const p=pos(e);
@@ -347,7 +400,7 @@ cv.addEventListener("pointerdown",e=>{e.preventDefault();ac();const p=pos(e);
   if(r.type==="action")chooseAction(r.i);
   if(r.type==="skill")useSkill();
   if(r.type==="item")useItem();
-  if(r.type==="switch"&&party[r.i].hp>0&&!permanentDead[r.i]){active=r.i;setState("MENU");toast(party[r.i].name+"に交代",.7)}
+  if(r.type==="switch"&&party[r.i].hp>0&&!permanentDead[r.i]){active=r.i;setState("MENU");toast(party[r.i].name+"に交代",.7)}if(r.type==="back"){setState("MENU");toast("コマンドに戻った",.5)}
   return;
  }
 });
@@ -361,7 +414,7 @@ requestAnimationFrame(loop);
 </div>
 
 <!--
-DAYBREAK XII DESIGN NOTES
+DAYBREAK XIII DESIGN NOTES
 The battle is intentionally built as one continuous boss encounter.
 The thirty enemy patterns are selected by turn and boss phase.
 Patterns include left-hand sweep, right-hand sweep, double-hand clamp,
