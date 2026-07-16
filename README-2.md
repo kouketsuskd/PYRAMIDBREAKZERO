@@ -1,10 +1,17 @@
-# PYRAMID BREAK ZERO - DAYBREAK XIII
+# DAYBREAK XIV modular
 
-- ボスHP 300,000
-- 必殺技・道具画面に「もどる」を追加
-- トシユキの時間停止は6ターン
-- リョウゴの未来視は3回使用可能
-- 6種類の必殺技専用カットイン
-- ボス本体の腕がハートへ伸びる直接攻撃
-- ボス本体の高速体当たり
-- レターボックス、ビネット、走査線、発光による映画的演出
+- HP 1,000,000
+- 5 phases
+- 40 boss attacks
+- 30 talks unlock True End
+- Talk route doubles enemy damage
+- No Guard command
+- One shared herb
+- Skills deal no direct damage
+- Toshiyuki: stop 6 turns
+- Kazuaki: guaranteed criticals 3 turns
+- Mappy: 2 uses, heal + barrier
+- Keita: full heal + permanent leave
+- Isaji: double attack count
+- Ryogo: 2 uses, slow enemy attacks
+- Modular JS files for easier editing
