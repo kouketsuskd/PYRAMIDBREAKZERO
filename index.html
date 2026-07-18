@@ -135,14 +135,26 @@ Game.startPhase2Music=function(){
  Game.ensureAudio();
  if(Game.phase2MusicStarted)return;
  Game.phase2MusicStarted=true;
- if(Game.bgm&&!Game.bgm.paused)Game.fadeTrack(Game.bgm,0,1.4,"_phase1Fade");
+
+ // Cancel every fade that could change the first BGM again.
+ clearInterval(Game._bgmFade);Game._bgmFade=null;
+ clearInterval(Game._phase1Fade);Game._phase1Fade=null;
+ clearInterval(Game._phase2Fade);Game._phase2Fade=null;
+
+ // Stop the first-half BGM completely before the second track starts.
+ if(Game.bgm){
+  Game.bgm.volume=0;
+  Game.bgm.pause();
+  Game.bgm.currentTime=0;
+ }
+
  if(Game.bgmPhase2){
   Game.bgmPhase2.pause();
   Game.bgmPhase2.currentTime=0;
   Game.bgmPhase2.volume=0;
   const p=Game.bgmPhase2.play();
   if(p&&p.catch)p.catch(()=>{});
-  Game.fadeTrack(Game.bgmPhase2,.16,2.2,"_phase2Fade");
+  Game.fadeTrack(Game.bgmPhase2,.16,1.8,"_phase2Fade");
  }
 };
 
@@ -164,12 +176,23 @@ Game.fadeOutMusic=function(duration=5){
  if(Game.bgmPhase2&&!Game.bgmPhase2.paused)Game.fadeTrack(Game.bgmPhase2,0,duration,"_phase2Fade");
 };
 Game.duckMusic=function(level=.28,duration=.6){
- const t=Game.phase2MusicStarted?Game.bgmPhase2:Game.bgm;
- if(t)Game.fadeTrack(t,level,duration,Game.phase2MusicStarted?"_phase2Fade":"_phase1Fade");
+ if(Game.phase2MusicStarted){
+  if(Game.bgm){Game.bgm.volume=0;Game.bgm.pause()}
+  if(Game.bgmPhase2)Game.fadeTrack(Game.bgmPhase2,level,duration,"_phase2Fade");
+ }else if(Game.bgm){
+  Game.fadeTrack(Game.bgm,level,duration,"_phase1Fade");
+ }
 };
 Game.restoreMusic=function(duration=.9){
- const t=Game.phase2MusicStarted?Game.bgmPhase2:Game.bgm;
- if(t)Game.fadeTrack(t,Game.phase2MusicStarted?.16:.12,duration,Game.phase2MusicStarted?"_phase2Fade":"_phase1Fade");
+ if(Game.phase2MusicStarted){
+  if(Game.bgm){
+   Game.bgm.volume=0;
+   Game.bgm.pause();
+  }
+  if(Game.bgmPhase2)Game.fadeTrack(Game.bgmPhase2,.16,duration,"_phase2Fade");
+ }else{
+  if(Game.bgm)Game.fadeTrack(Game.bgm,.12,duration,"_phase1Fade");
+ }
 };
 Game.sfxClock=function(){
  for(let i=0;i<8;i++){Game.tone(i%2?880:660,.035,"square",.022,i*.34,-120)}
@@ -214,7 +237,7 @@ Game.sfxSlash=function(){
  else Game.sfxSkill();Object.assign(Game.bossFx,{cinema:2.25,cinemaType:type,cinemaName:name,cinemaQuote:quote,cinemaColor:color});Game.flash=.18;Game.shake=18;Game.particle(270,470,color,40,1.4)};Game.damageBoss=function(raw){const n=Math.max(1,Math.floor(raw-Game.boss.armor));Game.boss.hp=Math.max(0,Game.boss.hp-n);Game.score+=n*10;Game.bossFx.hit=.35;Game.shake=12;Game.flash=.08;Game.damageText.push({x:270,y:205,l:1.25,n,crit:n>=12000,total:false});Game.particle(270,190,"#fff",22,1.1);Game.sfxAttack(n>=12000,false);if(Game.boss.hp<=0)Game.normalEnding()};Game.hurt=function(n){
  if(Game.barrierTurns>0)n=Math.ceil(n*.38);
  if(Game.talkRoute)n*=2;
- if(Game.boss.hp<=Game.boss.max/2)n*=1.25;
+ if(Game.boss.hp<=Game.boss.max/2)n*=1.25;n*=Game.talkAttackMultiplier();
  const p=Game.current();
  p.hp=Math.max(0,p.hp-Math.ceil(n));Game.sfxHurt();
  if(p.hp<=0){
@@ -225,6 +248,19 @@ Game.sfxSlash=function(){
 };Game.initSpace=function(){Game.stars=[];Game.nebulae=[];Game.meteors=[];for(let i=0;i<90;i++)Game.stars.push({x:Math.random()*540,y:Math.random()*960,z:1+Math.random()*3,v:8+Math.random()*28,a:.25+Math.random()*.75});for(let i=0;i<7;i++)Game.nebulae.push({x:Math.random()*540,y:Math.random()*750,r:80+Math.random()*180,v:2+Math.random()*8,h:190+Math.random()*120});for(let i=0;i<5;i++)Game.meteors.push({x:Math.random()*800-100,y:Math.random()*500,v:120+Math.random()*180})};
 "use strict";
 Game.addBullet=(x,y,vx,vy,r,c,k,extra={})=>Game.bullets.push({x,y,vx,vy,r,c,k,...extra});
+
+Game.effectivePhase=function(){
+ let p=Game.boss.phase;
+ if(Game.talkCount>=20)p=Math.max(p,5);
+ else if(Game.talkCount>=10)p=Math.max(p,3);
+ return p;
+};
+Game.talkAttackMultiplier=function(){
+ if(Game.talkCount>=20)return 1.55;
+ if(Game.talkCount>=10)return 1.25;
+ return 1;
+};
+
 Game.spawnPattern=function(id){
  const G=Game,A=G.arena,cx=270,cy=510,add=G.addBullet;
  const sid=id%40;
@@ -276,10 +312,22 @@ Game.spawnPattern=function(id){
  else if(id===37){G.bossFx.dash=1.5;radial(18,240,"#fff","burst")}
  else if(id===38){rain(24,"#ff89a7",230,7)}
  else {G.bossFx.coreOpen=6;G.bossFx.eyeBeam=1.8;for(let i=0;i<34;i++){const a=i*Math.PI*2/34;add(cx,cy,Math.cos(a)*(180+(i%4)*28),Math.sin(a)*(180+(i%4)*28),i%5===0?12:6,i%5===0?"#ff3657":"#fff","finale")}}
+ if(G.talkCount>=20&&Math.random()<.45){
+  const sid2=[0,2,6,8,14,21,28,32,36,38][Math.floor(Math.random()*10)];
+  setTimeout(()=>Game.state==="DEFENSE"&&Game.spawnPattern(sid2),420);
+ }else if(G.talkCount>=10&&Math.random()<.25){
+  const sid2=[6,8,14,19,28,34][Math.floor(Math.random()*6)];
+  setTimeout(()=>Game.state==="DEFENSE"&&Game.spawnPattern(sid2),650);
+ }
 };
 Game.updateBullets=function(dt){
- const G=Game,phaseSpeed=G.boss.phase===5?1.55:1,slow=(G.slowTurns>0?.58:1)*phaseSpeed,pending=[];G.patternClock+=dt;G.bossFx.coreOpen=Math.max(0,G.bossFx.coreOpen-dt);G.bossFx.eyeBeam=Math.max(0,G.bossFx.eyeBeam-dt);
- if(G.patternClock>3&&G.bullets.length<80){G.patternClock=0;G.spawnPattern((G.patternId+1+Math.floor(Math.random()*7))%40)}
+ const G=Game,ep=G.effectivePhase(),phaseSpeed=ep===5?1.55:ep>=3?1.25:1,slow=(G.slowTurns>0?.58:1)*phaseSpeed,pending=[];G.patternClock+=dt;G.bossFx.coreOpen=Math.max(0,G.bossFx.coreOpen-dt);G.bossFx.eyeBeam=Math.max(0,G.bossFx.eyeBeam-dt);
+ const cadence=G.introMode?1.25:(G.talkCount>=20?1.45:G.talkCount>=10?2.05:3);
+ if(G.patternClock>cadence&&G.bullets.length<(G.introMode?150:120)){
+  G.patternClock=0;
+  const extra=G.introMode?Math.floor(Math.random()*12):Math.floor(Math.random()*9);
+  G.spawnPattern((G.patternId+1+extra)%40);
+ }
  for(const b of G.bullets){
   if(b.warn>0){b.warn-=dt;continue}
   if(b.k==="homing"){const dx=G.heart.x-b.x,dy=G.heart.y-b.y,l=Math.hypot(dx,dy)||1;b.vx+=dx/l*90*dt;b.vy+=dy/l*90*dt}
@@ -294,7 +342,7 @@ Game.updateBullets=function(dt){
   if(b.k==="fake"&&b.fake)continue;
   if(Math.hypot(b.x-G.heart.x,b.y-G.heart.y)<b.r+G.heart.r&&G.heart.inv<=0){G.hurt([0,20,25,31,38,46][G.boss.phase]);G.heart.inv=.7;G.particle(G.heart.x,G.heart.y,"#ff435d",14,1.2);G.shake=9}
  }
- G.bullets.push(...pending.slice(0,Math.max(0,120-G.bullets.length)));G.bullets=G.bullets.filter(b=>b&&(b.life===undefined||b.life>0)&&b.x>G.arena.x-180&&b.x<G.arena.x+G.arena.w+180&&b.y>G.arena.y-180&&b.y<G.arena.y+G.arena.h+180);if(G.bullets.length>120)G.bullets.length=120;
+ G.bullets.push(...pending.slice(0,Math.max(0,120-G.bullets.length)));G.bullets=G.bullets.filter(b=>b&&(b.life===undefined||b.life>0)&&b.x>G.arena.x-180&&b.x<G.arena.x+G.arena.w+180&&b.y>G.arena.y-180&&b.y<G.arena.y+G.arena.h+180);if(G.bullets.length>(G.introMode?150:120))G.bullets.length=(G.introMode?150:120);
 };
 "use strict";
 Game.reset=function(){const G=Game;G.party.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(G.boss,{hp:G.boss.max,phase:1,armor:850});G.items.herb=1;G.turn=0;G.active=0;G.bond=0;G.score=0;G.talkCount=0;G.talkRoute=false;G.trueReady=false;G.skillUsed=[0,0,0,0,0,0];G.permanentDead=[false,false,false,false,false,false];G.timeStopTurns=G.barrierTurns=G.critTurns=G.slowTurns=G.oniTurns=0;G.attackBoost=[1,1,1,1,1,1];G.stunTurns=[0,0,0,0,0,0];G.bullets=[];G.particles=[];G.damageText=[];G.trails=[];G.shake=G.flash=0;G.initSpace();G.setState("MENU");G.say(["――空から、壊れた神が落ちてきた。","機械天使の生命値は1,000,000。共有のやくそうは一つ。","倒すこともできる。三十回、言葉を届けることもできる。","ただし言葉を選んだ瞬間から、敵の攻撃力は二倍になる。"],()=>G.setState("MENU"))};
@@ -313,9 +361,31 @@ Game.finishAttack=function(){
  }
  if(G.boss.hp>0)setTimeout(G.beginDefense,900)
 };
-Game.beginDefense=function(){const G=Game;if(G.boss.hp<=0)return;if(G.timeStopTurns>0){G.timeStopTurns--;G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);return setTimeout(G.nextTurn,650)}G.setState("DEFENSE");G.defenseTime=[0,7.5,8.5,9.5,10.5,11.5][G.boss.phase];G.patternClock=0;G.bullets=[];G.trails=[];G.heart.x=270;G.heart.y=515;G.heart.inv=.5;G.patternId=(G.turn*7+G.boss.phase*9)%40;G.spawnPattern(G.patternId)};
+Game.beginDefense=function(){const G=Game;if(G.boss.hp<=0)return;if(G.timeStopTurns>0){G.timeStopTurns--;G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);return setTimeout(G.nextTurn,650)}G.setState("DEFENSE");const ep=G.effectivePhase();G.defenseTime=[0,7.5,8.5,9.5,10.5,11.5][ep];G.patternClock=0;G.bullets=[];G.trails=[];G.heart.x=270;G.heart.y=515;G.heart.inv=.5;G.patternId=(G.turn*7+G.effectivePhase()*9+G.talkCount)%40;if(G.introMode){
+ G.spawnPattern(2);
+ setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(8),550);
+ setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(14),1200);
+ setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(28),1900);
+}else G.spawnPattern(G.patternId)};
 Game.nextTurn=function(){const G=Game;G.turn++;const r=G.boss.hp/G.boss.max;G.boss.phase=r<=.12?5:r<=.32?4:r<=.55?3:r<=.78?2:1;G.boss.armor=[0,850,650,450,250,80][G.boss.phase];if(G.oniTurns>0&&G.active===4){G.oniTurns--;if(G.oniTurns===0)G.attackBoost[4]=1}if(G.critTurns>0)G.critTurns--;if(G.slowTurns>0)G.slowTurns--;if(G.barrierTurns>0)G.barrierTurns--;for(let i=0;i<G.stunTurns.length;i++)if(G.stunTurns[i]>0)G.stunTurns[i]--;G.active=(G.active+1)%G.party.length;for(let k=0;k<G.party.length;k++){if(G.party[G.active].hp>0&&!G.permanentDead[G.active]&&G.stunTurns[G.active]===0)break;G.active=(G.active+1)%G.party.length}if(G.aliveCount()===0)return G.gameOver();G.setState("MENU");G.toast(G.current().name+"のターン",.7)};
-Game.trueEnding=function(){Game.setState("ENDING");Game.say(["六人は武器を下ろした。","機械天使「私は……初めて命令ではなく、誰かの言葉で止まれた。」","宇宙の向こうから、朝の光が差し込んだ。"],()=>Game.endScreen("TRUE DAYBREAK","七人は、戦わない朝を選んだ。"))};
+Game.trueEnding=function(){
+ const G=Game;
+ if(G.deathSequenceStarted)return;
+ G.deathSequenceStarted=true;G.deathCinema=4.4;
+ G.setState("BOSS_DEATH_CINEMA");G.sub="none";G.bullets=[];
+ G.fadeOutMusic(5);G.sfxCollapse();G.shake=25;G.flash=.18;
+ for(let i=0;i<80;i++)G.particle(270+G.rnd(-95,95),205+G.rnd(-90,90),i%3?"#eaf7ff":"#ff5a72",1,1.45);
+ setTimeout(()=>{
+  G.deathCinema=0;
+  G.say([
+   "アルカ・セラフの翼が、一枚ずつ光の粒へほどけていった。",
+   "けれど、その崩壊は敗北ではなかった。",
+   "機械天使「私は……初めて命令ではなく、誰かの言葉で止まれた。」",
+   "六人は武器を下ろした。",
+   "宇宙の向こうから、朝の光が差し込んだ。"
+  ],()=>G.endScreen("TRUE DAYBREAK","七人は、戦わない朝を選んだ。"));
+ },4400);
+};
 Game.normalEnding=function(){if(Game.trueReady||Game.deathSequenceStarted)return;Game.playBossDeathCinema()};
 Game.gameOver=()=>Game.endScreen("NIGHT END","言葉も刃も、朝へ届かなかった。");Game.endScreen=function(title,text){Game.fadeOutMusic(2);Game.setState("END");document.getElementById("endingTitle").textContent=title;document.getElementById("endingText").textContent=text+"\nTALK "+Game.talkCount+"/30\nSCORE "+Game.score;document.getElementById("ending").classList.remove("hidden")};
 Game.update=function(dt){const G=Game;G.time+=dt;G.messageTime=Math.max(0,G.messageTime-dt);G.shake*=.86;G.flash=Math.max(0,G.flash-dt);const f=G.bossFx;f.hover+=dt*1.5;f.wing+=dt*(3+G.boss.phase);f.hit=Math.max(0,f.hit-dt);f.transform=Math.max(0,f.transform-dt);f.cinema=Math.max(0,f.cinema-dt);f.dash=Math.max(0,f.dash-dt);f.reach=Math.max(0,f.reach-dt);G.stars.forEach(s=>{s.y+=s.v*dt;if(s.y>960){s.y=-4;s.x=Math.random()*540}});G.nebulae.forEach(n=>{n.x+=n.v*dt;if(n.x-n.r>540)n.x=-n.r});G.meteors.forEach(m=>{m.x+=m.v*dt;m.y+=m.v*.28*dt;if(m.x>650){m.x=-120;m.y=Math.random()*450}});G.particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=400*dt;p.l-=dt});G.particles=G.particles.filter(p=>p.l>0);G.damageText.forEach(d=>{d.y-=75*dt;d.l-=dt});G.damageText=G.damageText.filter(d=>d.l>0);G.trails.forEach(t=>t.l-=dt);G.trails=G.trails.filter(t=>t.l>0);if(G.state==="ATTACK"){G.attackTime-=dt;G.attackX+=G.attackDir*(430+G.attackHits*35)*dt;if(G.attackX>470){G.attackX=470;G.attackDir=-1}if(G.attackX<70){G.attackX=70;G.attackDir=1}if(G.attackTime<=0&&!G.attackEnded)G.finishAttack()}if(G.state==="DEFENSE"){G.updateBullets(dt);G.heart.x=G.clamp(G.heart.x,G.arena.x+14,G.arena.x+G.arena.w-14);G.heart.y=G.clamp(G.heart.y,G.arena.y+14,G.arena.y+G.arena.h-14);G.heart.inv=Math.max(0,G.heart.inv-dt);G.defenseTime-=dt;if(G.defenseTime<=0)G.nextTurn()}};
@@ -522,7 +592,7 @@ Game.draw=function(){
  _drawCinematicFinal();
  const G=Game,g=G.ctx;
 
- if(G.boss.hp<=G.boss.max/2&&G.boss.hp>0){
+ if((G.boss.hp<=G.boss.max/2||G.talkCount>=10)&&G.boss.hp>0){
   g.save();
   g.shadowColor="#ff3858";g.shadowBlur=14;
   G.T("ENEMY ATK ↑",48,148,11,"#ff667d","left");

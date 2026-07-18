@@ -1,9 +1,14 @@
-# DAYBREAK XIV REBIRTH 13 — 後半BGM切り替え
+# DAYBREAK XIV REBIRTH 15 — BGM SWITCH FIX
 
-- 前半: audio/pixel-heartbeat.mp3
-- ボスHP50%以下の時計モーション終了後:
-  audio/kudakebashi-no-ketto.mp3
-- 前半曲は1.4秒フェードアウト
-- 後半曲は2.2秒フェードイン
-- 後半曲もループ
-- 大音量効果音設定は維持
+修正内容:
+- 後半BGM開始時に前半BGMを完全停止
+- 前半BGMの音量を0にして pause
+- 前半BGMの再生位置も0へ戻す
+- 残っているフェード処理をすべて停止
+- 必殺技後の音量復帰処理でも前半BGMが復活しないよう修正
+- 後半BGMのみ1.8秒でフェードイン
+
+GitHubへ入れるもの:
+- index.html
+- audio/pixel-heartbeat.mp3
+- audio/kudakebashi-no-ketto.mp3
