@@ -62,7 +62,7 @@ Game.spawnPattern=function(id){
  else {G.bossFx.coreOpen=6;G.bossFx.eyeBeam=1.8;for(let i=0;i<34;i++){const a=i*Math.PI*2/34;add(cx,cy,Math.cos(a)*(180+(i%4)*28),Math.sin(a)*(180+(i%4)*28),i%5===0?12:6,i%5===0?"#ff3657":"#fff","finale")}}
 };
 Game.updateBullets=function(dt){
- const G=Game,slow=G.slowTurns>0?.58:1,pending=[];G.patternClock+=dt;G.bossFx.coreOpen=Math.max(0,G.bossFx.coreOpen-dt);G.bossFx.eyeBeam=Math.max(0,G.bossFx.eyeBeam-dt);
+ const G=Game,phaseSpeed=G.boss.phase===5?1.55:1,slow=(G.slowTurns>0?.58:1)*phaseSpeed,pending=[];G.patternClock+=dt;G.bossFx.coreOpen=Math.max(0,G.bossFx.coreOpen-dt);G.bossFx.eyeBeam=Math.max(0,G.bossFx.eyeBeam-dt);
  if(G.patternClock>3&&G.bullets.length<80){G.patternClock=0;G.spawnPattern((G.patternId+1+Math.floor(Math.random()*7))%40)}
  for(const b of G.bullets){
   if(b.warn>0){b.warn-=dt;continue}
@@ -92,13 +92,7 @@ Game.finishAttack=function(){
  const grand=G.attackTotal+fin;G.damageText.push({x:270,y:285,l:1.85,n:grand.toLocaleString(),crit:true,total:true});G.shake=22;G.flash=.16;
  if(G.boss.hp<=G.boss.max/2&&!G.worldUnlockedAnnounced){
   G.worldUnlockedAnnounced=true;
-  if(G.boss.hp>0)setTimeout(()=>G.say([
-   "アルカ・セラフの生命が、ついに半分を下回った。",
-   "砕けた翼の向こうで、宇宙の時計が一斉に震え始める。",
-   "トシユキは、仲間たちがここまで繋いだ時間を両手で受け止めた。",
-   "――トシユキは、いよいよ時間を停止することが可能になった。",
-   "トシユキ「今度は逃げるためじゃない。みんなの明日を進めるために、世界を止める。」"
-  ],G.beginDefense),900);
+  if(G.boss.hp>0)setTimeout(()=>G.playWorldUnlockCinema(),900);
   return;
  }
  if(G.boss.hp>0)setTimeout(G.beginDefense,900)
@@ -106,7 +100,7 @@ Game.finishAttack=function(){
 Game.beginDefense=function(){const G=Game;if(G.boss.hp<=0)return;if(G.timeStopTurns>0){G.timeStopTurns--;G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);return setTimeout(G.nextTurn,650)}G.setState("DEFENSE");G.defenseTime=[0,7.5,8.5,9.5,10.5,11.5][G.boss.phase];G.patternClock=0;G.bullets=[];G.trails=[];G.heart.x=270;G.heart.y=515;G.heart.inv=.5;G.patternId=(G.turn*7+G.boss.phase*9)%40;G.spawnPattern(G.patternId)};
 Game.nextTurn=function(){const G=Game;G.turn++;const r=G.boss.hp/G.boss.max;G.boss.phase=r<=.12?5:r<=.32?4:r<=.55?3:r<=.78?2:1;G.boss.armor=[0,850,650,450,250,80][G.boss.phase];if(G.oniTurns>0&&G.active===4){G.oniTurns--;if(G.oniTurns===0)G.attackBoost[4]=1}if(G.critTurns>0)G.critTurns--;if(G.slowTurns>0)G.slowTurns--;if(G.barrierTurns>0)G.barrierTurns--;for(let i=0;i<G.stunTurns.length;i++)if(G.stunTurns[i]>0)G.stunTurns[i]--;G.active=(G.active+1)%G.party.length;for(let k=0;k<G.party.length;k++){if(G.party[G.active].hp>0&&!G.permanentDead[G.active]&&G.stunTurns[G.active]===0)break;G.active=(G.active+1)%G.party.length}if(G.aliveCount()===0)return G.gameOver();G.setState("MENU");G.toast(G.current().name+"のターン",.7)};
 Game.trueEnding=function(){Game.setState("ENDING");Game.say(["六人は武器を下ろした。","機械天使「私は……初めて命令ではなく、誰かの言葉で止まれた。」","宇宙の向こうから、朝の光が差し込んだ。"],()=>Game.endScreen("TRUE DAYBREAK","七人は、戦わない朝を選んだ。"))};
-Game.normalEnding=function(){if(Game.trueReady)return;Game.say(["機械天使のコアが砕けた。","勝ったはずなのに、宇宙は静かなままだった。"],()=>Game.endScreen("NORMAL END","六人は朝へ帰った。機械天使の言葉だけが宇宙に残った。"))};
+Game.normalEnding=function(){if(Game.trueReady||Game.deathSequenceStarted)return;Game.playBossDeathCinema()};
 Game.gameOver=()=>Game.endScreen("NIGHT END","言葉も刃も、朝へ届かなかった。");Game.endScreen=function(title,text){Game.setState("END");document.getElementById("endingTitle").textContent=title;document.getElementById("endingText").textContent=text+"\nTALK "+Game.talkCount+"/30\nSCORE "+Game.score;document.getElementById("ending").classList.remove("hidden")};
 Game.update=function(dt){const G=Game;G.time+=dt;G.messageTime=Math.max(0,G.messageTime-dt);G.shake*=.86;G.flash=Math.max(0,G.flash-dt);const f=G.bossFx;f.hover+=dt*1.5;f.wing+=dt*(3+G.boss.phase);f.hit=Math.max(0,f.hit-dt);f.transform=Math.max(0,f.transform-dt);f.cinema=Math.max(0,f.cinema-dt);f.dash=Math.max(0,f.dash-dt);f.reach=Math.max(0,f.reach-dt);G.stars.forEach(s=>{s.y+=s.v*dt;if(s.y>960){s.y=-4;s.x=Math.random()*540}});G.nebulae.forEach(n=>{n.x+=n.v*dt;if(n.x-n.r>540)n.x=-n.r});G.meteors.forEach(m=>{m.x+=m.v*dt;m.y+=m.v*.28*dt;if(m.x>650){m.x=-120;m.y=Math.random()*450}});G.particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=400*dt;p.l-=dt});G.particles=G.particles.filter(p=>p.l>0);G.damageText.forEach(d=>{d.y-=75*dt;d.l-=dt});G.damageText=G.damageText.filter(d=>d.l>0);G.trails.forEach(t=>t.l-=dt);G.trails=G.trails.filter(t=>t.l>0);if(G.state==="ATTACK"){G.attackTime-=dt;G.attackX+=G.attackDir*(430+G.attackHits*35)*dt;if(G.attackX>470){G.attackX=470;G.attackDir=-1}if(G.attackX<70){G.attackX=70;G.attackDir=1}if(G.attackTime<=0&&!G.attackEnded)G.finishAttack()}if(G.state==="DEFENSE"){G.updateBullets(dt);G.heart.x=G.clamp(G.heart.x,G.arena.x+14,G.arena.x+G.arena.w-14);G.heart.y=G.clamp(G.heart.y,G.arena.y+14,G.arena.y+G.arena.h-14);G.heart.inv=Math.max(0,G.heart.inv-dt);G.defenseTime-=dt;if(G.defenseTime<=0)G.nextTurn()}};
 
@@ -133,13 +127,13 @@ Game.draw=function(){const G=Game,g=G.ctx,sx=G.shake?G.rnd(-G.shake,G.shake):0,s
 </script><script>
 "use strict";
 /* DAYBREAK XIV REBIRTH 3 REBIRTH gameplay overrides */
-Game.introMode=false;Game.safeSpawn=0;Game.itemTargetMode=false;Game.worldUnlockedAnnounced=false;
+Game.introMode=false;Game.safeSpawn=0;Game.itemTargetMode=false;Game.worldUnlockedAnnounced=false;Game.worldUnlockCinema=0;Game.deathCinema=0;Game.deathSequenceStarted=false;
 Game.skillLimit=i=>[1,1,1,1,1,2][i];
 Game.skillStatus=function(i){const G=Game;if(i===0&&G.timeStopTurns>0)return `時止 ${G.timeStopTurns}`;if(i===1&&G.critTurns>0)return `会心 ${G.critTurns}`;if(i===2&&G.barrierTurns>0)return `結界 ${G.barrierTurns}`;if(i===4&&G.oniTurns>0)return `鬼 ${G.oniTurns}`;if(i===5&&G.slowTurns>0)return `予感 ${G.slowTurns}`;return ""};
 
 Game.reset=function(){
  const G=Game;G.party.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(G.boss,{hp:G.boss.max,phase:1,armor:850});
- G.items.herb=3;G.turn=0;G.active=0;G.bond=0;G.score=0;G.talkCount=0;G.talkRoute=false;G.trueReady=false;G.worldUnlockedAnnounced=false;
+ G.items.herb=2;G.turn=0;G.active=0;G.bond=0;G.score=0;G.talkCount=0;G.talkRoute=false;G.trueReady=false;G.worldUnlockedAnnounced=false;G.worldUnlockCinema=0;G.deathCinema=0;G.deathSequenceStarted=false;
  G.skillUsed=[0,0,0,0,0,0];G.permanentDead=[false,false,false,false,false,false];G.timeStopTurns=G.barrierTurns=G.critTurns=G.slowTurns=G.oniTurns=0;
  G.attackBoost=[1,1,1,1,1,1];G.stunTurns=[0,0,0,0,0,0];G.bullets=[];G.particles=[];G.damageText=[];G.trails=[];G.shake=G.flash=0;G.initSpace();
  G.introMode=true;G.setState("MENU");
@@ -186,6 +180,46 @@ Game.useSkill=function(){
  },2500);
 };
 
+
+Game.playWorldUnlockCinema=function(){
+ const G=Game;
+ G.setState("WORLD_UNLOCK_CINEMA");
+ G.sub="none";G.bullets=[];G.worldUnlockCinema=3.8;
+ Object.assign(G.bossFx,{
+  cinema:3.8,cinemaType:"clock",cinemaName:"時が、目を覚ます",
+  cinemaQuote:"",cinemaColor:"#d8c8ff"
+ });
+ G.shake=8;G.flash=.08;
+ setTimeout(()=>{
+  G.bossFx.cinema=0;G.worldUnlockCinema=0;
+  G.say([
+   "アルカ・セラフの生命が、ついに半分を下回った。",
+   "砕けた翼の向こうで、宇宙の時計が一斉に震え始める。",
+   "トシユキは、仲間たちがここまで繋いだ時間を両手で受け止めた。",
+   "――トシユキは、いよいよ時間を停止することが可能になった。",
+   "トシユキ「今度は逃げるためじゃない。みんなの明日を進めるために、世界を止める。」"
+  ],G.beginDefense);
+ },3800);
+};
+
+Game.playBossDeathCinema=function(){
+ const G=Game;
+ if(G.deathSequenceStarted)return;
+ G.deathSequenceStarted=true;G.deathCinema=4.4;
+ G.setState("BOSS_DEATH_CINEMA");G.sub="none";G.bullets=[];
+ G.shake=25;G.flash=.18;
+ for(let i=0;i<80;i++)G.particle(270+G.rnd(-95,95),205+G.rnd(-90,90),i%3?"#eaf7ff":"#ff5a72",1,1.45);
+ setTimeout(()=>{
+  G.deathCinema=0;
+  G.say([
+   "アルカ・セラフの翼が、一枚ずつ光の粒へほどけていった。",
+   "砕けた装甲の奥で、最後まで動いていた青いコアが静かに消える。",
+   "機械天使のコアが砕けた。",
+   "勝ったはずなのに、宇宙は静かなままだった。"
+  ],()=>G.endScreen("NORMAL END","六人は朝へ帰った。機械天使の言葉だけが宇宙に残った。"));
+ },4400);
+};
+
 Game.openItemTarget=function(){if(Game.items.herb<=0){Game.toast("やくそうはもうない",.9);Game.setState("MENU");return}Game.setState("ITEM_TARGET")};
 Game.useItemOn=function(i){const G=Game,p=G.party[i];if(!p||p.hp<=0||G.permanentDead[i]){G.toast("その仲間には使えない",.8);return}if(G.items.herb<=0){G.toast("やくそうはもうない",.8);G.setState("MENU");return}G.items.herb--;p.hp=p.max;G.setState("MENU");G.toast(`${p.name} 完全回復　残り${G.items.herb}`,1.2)};
 Game.useItem=Game.openItemTarget;
@@ -214,7 +248,7 @@ Game.spawnPattern=function(id){
 };
 
 const _update=Game.update;
-Game.update=function(dt){if(Game.safeSpawn>0)Game.safeSpawn=Math.max(0,Game.safeSpawn-dt);if(Game.introMode&&Game.state==="DEFENSE"){Game.patternClock=-999;Game.introWave=(Game.introWave||0)+dt;if(Game.introWave>2.15){Game.introWave=0;Game.spawnPattern([1,2,3,4,5,43][Math.floor(Game.rnd(0,6))])}}_update(dt)};
+Game.update=function(dt){if(Game.worldUnlockCinema>0)Game.worldUnlockCinema=Math.max(0,Game.worldUnlockCinema-dt);if(Game.deathCinema>0)Game.deathCinema=Math.max(0,Game.deathCinema-dt);if(Game.safeSpawn>0)Game.safeSpawn=Math.max(0,Game.safeSpawn-dt);if(Game.introMode&&Game.state==="DEFENSE"){Game.patternClock=-999;Game.introWave=(Game.introWave||0)+dt;if(Game.introWave>2.15){Game.introWave=0;Game.spawnPattern([1,2,3,4,5,43][Math.floor(Game.rnd(0,6))])}}_update(dt)};
 const _hurt=Game.hurt;
 Game.hurt=function(n){if(Game.safeSpawn>0)return;_hurt(n)};
 
@@ -263,6 +297,83 @@ Game.draw=function(){
   G.T("アルカ・セラフ HP50%以下で使用可能",270,813,12,"#fff","center");
   G.T("今はまだ、時間を止められない",270,840,12,"#aaa","center");
   G.ctx.restore();
+ }
+};
+
+
+const _drawCinematicFinal=Game.draw;
+Game.draw=function(){
+ _drawCinematicFinal();
+ const G=Game,g=G.ctx;
+
+ if(G.state==="WORLD_UNLOCK_CINEMA"&&G.worldUnlockCinema>0){
+  const elapsed=3.8-G.worldUnlockCinema;
+  g.save();
+  g.fillStyle="rgba(0,0,8,.72)";g.fillRect(0,0,540,960);
+  g.translate(270,470);
+  g.shadowColor="#cdbdff";g.shadowBlur=38;
+  g.strokeStyle="#d8c8ff";
+  for(let i=0;i<9;i++){
+   const pulse=10*Math.sin(elapsed*3+i*.7);
+   g.lineWidth=i%2?3:6;
+   g.beginPath();g.arc(0,0,55+i*28+pulse,0,Math.PI*2);g.stroke();
+  }
+  for(let i=0;i<12;i++){
+   const a=i*Math.PI/6+elapsed*.22;
+   g.save();g.rotate(a);g.fillStyle="#f5efff";g.fillRect(-3,-220,6,24);g.restore();
+  }
+  g.lineWidth=9;g.beginPath();g.moveTo(0,0);g.lineTo(0,-145);g.stroke();
+  g.lineWidth=5;g.beginPath();g.moveTo(0,0);g.lineTo(105,25);g.stroke();
+  g.restore();
+  g.save();g.shadowColor="#000";g.shadowBlur=20;
+  G.T("時が、目を覚ます",270,116,34,"#ffd84e","center");
+  G.T("このモーションは飛ばせません",270,875,12,"#b9b3d6","center");
+  g.restore();
+ }
+
+ if(G.state==="BOSS_DEATH_CINEMA"&&G.deathCinema>0){
+  const elapsed=4.4-G.deathCinema;
+  const progress=G.clamp(elapsed/4.4,0,1);
+  g.save();
+  g.fillStyle=`rgba(0,0,0,${.18+progress*.45})`;g.fillRect(0,0,540,960);
+
+  // Expanding fractures from the boss core.
+  g.translate(270,205);
+  g.shadowColor="#9fe8ff";g.shadowBlur=28;
+  for(let i=0;i<18;i++){
+   const a=i*Math.PI*2/18+i*.21;
+   const len=(35+i%5*15)+progress*210;
+   g.strokeStyle=i%3===0?"#ff637c":"#dff8ff";
+   g.lineWidth=i%4===0?5:2;
+   g.beginPath();g.moveTo(Math.cos(a)*12,Math.sin(a)*12);
+   g.lineTo(Math.cos(a)*len,Math.sin(a)*len);g.stroke();
+  }
+
+  // Broken armor fragments.
+  for(let i=0;i<34;i++){
+   const a=i*.91;
+   const dist=progress*(70+(i%8)*24);
+   const x=Math.cos(a)*dist,y=Math.sin(a)*dist+progress*progress*80;
+   g.save();g.translate(x,y);g.rotate(a+elapsed*2);
+   g.globalAlpha=Math.max(0,1-progress*.85);
+   g.fillStyle=i%4===0?"#ff5a72":i%3===0?"#d8b967":"#c9d7e5";
+   g.fillRect(-6,-3,12+(i%3)*4,6+(i%2)*4);g.restore();
+  }
+
+  // Core collapses and flashes.
+  const coreR=Math.max(0,28*(1-progress));
+  g.globalAlpha=1-progress*.35;
+  g.fillStyle="#74ddff";g.beginPath();g.arc(0,12,coreR,0,Math.PI*2);g.fill();
+  g.restore();
+
+  if(progress>.72){
+   const a=(progress-.72)/.28;
+   g.fillStyle=`rgba(255,255,255,${Math.sin(a*Math.PI)*.75})`;g.fillRect(0,0,540,960);
+  }
+  g.save();g.shadowColor="#000";g.shadowBlur=18;
+  G.T(progress<.55?"装甲崩壊":"コア停止",270,852,progress<.55?24:30,progress<.55?"#dff8ff":"#ff6b80","center");
+  G.T("このモーションは飛ばせません",270,886,12,"#aaa","center");
+  g.restore();
  }
 };
 
