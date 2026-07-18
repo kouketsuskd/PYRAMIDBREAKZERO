@@ -15,14 +15,65 @@
   });
 })();
 </script><script>"use strict";window.Game={W:540,H:960,canvas:null,ctx:null,arena:{x:34,y:305,w:472,h:405},state:"BOOT",sub:"none",last:0,time:0,turn:0,active:0,bond:0,score:0,talkCount:0,talkRoute:false,trueReady:false,dialogue:[],dialogueIndex:0,dialogueNext:null,attackX:70,attackDir:1,attackTime:0,attackHits:0,attackTotal:0,attackEnded:false,bullets:[],particles:[],damageText:[],trails:[],hitRects:[],defenseTime:0,patternId:0,patternClock:0,dragging:false,shake:0,flash:0,message:"",messageTime:0,timeStopTurns:0,barrierTurns:0,critTurns:0,slowTurns:0,oniTurns:0,skillUsed:[0,0,0,0,0,0],permanentDead:[false,false,false,false,false,false],attackBoost:[1,1,1,1,1,1],stunTurns:[0,0,0,0,0,0],bossFx:{hover:0,wing:0,hit:0,transform:0,handL:0,handR:0,dash:0,reach:0,eyeBeam:0,coreOpen:0,cinema:0,cinemaType:"",cinemaName:"",cinemaQuote:"",cinemaColor:"#fff"},heart:{x:270,y:515,r:10,inv:0,ox:0,oy:0},party:[{name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#725fbd",skill:"ザ・ワールド",pow:22},{name:"カズアキ",max:195,hp:195,mp:50,mm:50,c:"#805044",skill:"ワールド・イズ・マイン",pow:39},{name:"マッピー",max:125,hp:125,mp:90,mm:90,c:"#d0aa60",skill:"ピラミッド・ハート",pow:18},{name:"ケイタ",max:135,hp:135,mp:78,mm:78,c:"#ef9432",skill:"鳳翼天翔",pow:29},{name:"イサジ",max:185,hp:185,mp:46,mm:46,c:"#edc650",skill:"領域展開・鬼",pow:36},{name:"リョウゴ",max:140,hp:140,mp:82,mm:82,c:"#438fca",skill:"虫の知らせ",pow:26}],boss:{name:"機械天使 アルカ・セラフ 完全体",max:1000000,hp:1000000,phase:1,armor:850},items:{herb:1},stars:[],nebulae:[],meteors:[]};Game.clamp=(v,a,b)=>Math.max(a,Math.min(b,v));Game.rnd=(a,b)=>a+Math.random()*(b-a);Game.actions=()=>Game.trueReady?["こうげき","わざ","どうぐ","手を差し伸べる","こうたい"]:["こうげき","わざ","どうぐ","はなす","こうたい"];Game.current=function(){if(Game.party[Game.active].hp<=0||Game.permanentDead[Game.active]){const i=Game.party.findIndex((p,j)=>p.hp>0&&!Game.permanentDead[j]);Game.active=i<0?0:i}return Game.party[Game.active]};Game.aliveCount=()=>Game.party.filter((p,i)=>p.hp>0&&!Game.permanentDead[i]).length;Game.skillLimit=i=>(i===2||i===5)?2:1;
-"use strict";Game.audio=null;Game.musicTimer=null;Game.musicStep=0;Game.ensureAudio=function(){if(!Game.audio)Game.audio=new(window.AudioContext||window.webkitAudioContext)};Game.beep=function(f=220,d=.08,t="sine",v=.025){if(!Game.audio)return;const o=Game.audio.createOscillator(),a=Game.audio.createGain();o.type=t;o.frequency.value=f;a.gain.value=v;o.connect(a);a.connect(Game.audio.destination);o.start();a.gain.exponentialRampToValueAtTime(.0001,Game.audio.currentTime+d);o.stop(Game.audio.currentTime+d)};Game.startMusic=function(){if(Game.musicTimer)return;const seq=[196,247,294,330,294,247,220,196,220,277,330,392,330,277,247,220];Game.musicTimer=setInterval(()=>{if(Game.state==="END")return;Game.beep(seq[Game.musicStep++%seq.length]*(Game.talkRoute?1.06:1),.17,Game.state==="DEFENSE"?"triangle":"sine",Game.state==="DEFENSE"?.014:.018)},170)};
+"use strict";
+Game.audio=null;Game.bgm=null;Game.musicTimer=null;Game.musicStep=0;
+Game.ensureAudio=function(){
+ if(!Game.audio)Game.audio=new(window.AudioContext||window.webkitAudioContext)();
+ if(Game.audio.state==="suspended")Game.audio.resume().catch(()=>{});
+ if(!Game.bgm){
+  Game.bgm=new Audio("audio/pixel-heartbeat.mp3");
+  Game.bgm.loop=true;Game.bgm.preload="auto";Game.bgm.volume=.58;
+ }
+};
+Game.tone=function(f=220,d=.08,t="sine",v=.025,delay=0,slide=0){
+ if(!Game.audio)return;
+ const now=Game.audio.currentTime+delay,o=Game.audio.createOscillator(),a=Game.audio.createGain();
+ o.type=t;o.frequency.setValueAtTime(Math.max(30,f),now);
+ if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),now+d);
+ a.gain.setValueAtTime(Math.max(.0001,v),now);
+ a.gain.exponentialRampToValueAtTime(.0001,now+d);
+ o.connect(a);a.connect(Game.audio.destination);o.start(now);o.stop(now+d+.02);
+};
+Game.noise=function(d=.08,v=.025,delay=0){
+ if(!Game.audio)return;
+ const len=Math.max(1,Math.floor(Game.audio.sampleRate*d));
+ const b=Game.audio.createBuffer(1,len,Game.audio.sampleRate),data=b.getChannelData(0);
+ for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*(1-i/len);
+ const s=Game.audio.createBufferSource(),a=Game.audio.createGain(),now=Game.audio.currentTime+delay;
+ s.buffer=b;a.gain.setValueAtTime(v,now);a.gain.exponentialRampToValueAtTime(.0001,now+d);
+ s.connect(a);a.connect(Game.audio.destination);s.start(now);
+};
+Game.beep=(f=220,d=.08,t="sine",v=.025)=>Game.tone(f,d,t,v);
+Game.sfxTap=function(){Game.tone(520,.035,"square",.025,0,160);Game.tone(760,.025,"sine",.018,.025,70)};
+Game.sfxAttack=function(crit=false,total=false){
+ if(total){Game.noise(.18,.075);Game.tone(95,.32,"sawtooth",.07,0,-45);Game.tone(190,.22,"square",.045,.035,-80);return}
+ Game.noise(crit?.11:.065,crit?.055:.03);
+ Game.tone(crit?150:230,crit?.18:.09,crit?"sawtooth":"square",crit?.055:.032,0,crit?-85:-110);
+ if(crit)Game.tone(820,.12,"sine",.03,.025,-350);
+};
+Game.sfxEnemy=function(kind="normal"){
+ if(kind==="beam"){Game.tone(90,.42,"sawtooth",.055,0,520);Game.tone(65,.35,"square",.03,.05,280)}
+ else if(kind==="hand"){Game.noise(.15,.055);Game.tone(72,.22,"square",.06,0,-30)}
+ else if(kind==="dash"){Game.noise(.22,.045);Game.tone(420,.2,"sawtooth",.035,0,-330)}
+ else {Game.tone(180,.12,"triangle",.027,0,-90)}
+};
+Game.sfxHurt=function(){Game.noise(.13,.065);Game.tone(110,.2,"sawtooth",.055,0,-55)};
+Game.sfxSkill=function(){Game.tone(220,.3,"sine",.035,0,440);Game.tone(330,.35,"triangle",.03,.08,550);Game.tone(660,.4,"sine",.025,.18,620)};
+Game.startMusic=function(){
+ Game.ensureAudio();
+ if(Game.bgm){
+  Game.bgm.currentTime=0;
+  const p=Game.bgm.play();
+  if(p&&p.catch)p.catch(()=>{});
+ }
+};
 "use strict";Game.talkLines=[["機械天使「命令以外を、私は知らない。」","マッピー「なら最初の言葉から始めよう。」"],["機械天使「なぜ逃げない。」","トシユキ「置いていけない奴がいるからだ。」"],["機械天使「私を恐れないのか。」","イサジ「怖い。でも、怖いまま立ってる。」"],["機械天使「痛みとは、故障ですか。」","ケイタ「痛みは、生きてる場所を教える。」"],["機械天使「私は兵器だ。」","カズアキ「兵器でも、選び直すことはできる。」"],["機械天使「選択は命令違反です。」","リョウゴ「未来だって、命令には従わない。」"],["機械天使「私を作った者は、もういない。」","マッピー「いなくなった誰かの命令で、今を捨てるな。」"],["機械天使「戦わなければ、私は空になる。」","トシユキ「空なら、これから入れればいい。」"],["機械天使「私に『これから』はない。」","ケイタ「朝は勝手に来る。君にも来る。」"],["機械天使「朝を見た記録がない。」","リョウゴ「なら、初めての記録を作ろう。」"],["機械天使「あなたたちは傷ついている。」","イサジ「傷があるから、守りたいものが分かる。」"],["機械天使「守る対象を理解できない。」","カズアキ「理解してから守るんじゃない。」"],["機械天使「私は何度も都市を消した。」","マッピー「消した数だけで、君の全部を決めない。」"],["機械天使「許されると思うのか。」","トシユキ「許すかどうかより、次を選べ。」"],["機械天使「次の一秒が怖い。」","ケイタ「怖い一秒を、一緒に越えるんだ。」"],["機械天使「私は泣く機能を持たない。」","リョウゴ「その声は、もう泣いてる。」"],["機械天使「声が震える理由を解析できない。」","イサジ「解析しなくていい。感じればいい。」"],["機械天使「感じることは弱さですか。」","カズアキ「弱さを抱えたまま進むのが強さだ。」"],["機械天使「私は終わり方を知らない。」","マッピー「終わらせなくていい。止まればいい。」"],["機械天使「止まる命令が存在しない。」","トシユキ「今ここで、自分に命令しろ。」"],["機械天使「私自身の命令……。」","ケイタ「それを願いって呼ぶんだ。」"],["機械天使「願いは許可されていない。」","リョウゴ「許可を待たなくていい未来もある。」"],["機械天使「私は帰る場所を持たない。」","マッピー「帰る場所は、誰かと作るものだ。」"],["機械天使「私がそこにいてもいいのか。」","イサジ「いいかどうかは、来てから決めろ。」"],["機械天使「あなたたちは、なぜ笑える。」","カズアキ「泣いた後でも笑えるって知ってるからだ。」"],["機械天使「私も笑えますか。」","ケイタ「下手でもいい。最初はみんなそうだ。」"],["機械天使「戦闘出力が低下している。」","リョウゴ「違う。君が自分で止まり始めてる。」"],["機械天使「命令が遠くなっていく。」","トシユキ「代わりに、俺たちの声を聞け。」"],["機械天使「あなたたちの声が、怖くない。」","マッピー「それが帰る音だ。」"],["機械天使「……私は、初めて命令ではなく、誰かの言葉で止まれた。」","六人は武器を下ろした。"]];Game.say=function(lines,next){Game.dialogue=Array.isArray(lines)?lines:[lines];Game.dialogueIndex=0;Game.dialogueNext=next||null;Game.sub="dialog"};Game.nextDialogue=function(){Game.dialogueIndex++;if(Game.dialogueIndex>=Game.dialogue.length){const n=Game.dialogueNext;Game.dialogue=[];Game.dialogueNext=null;Game.sub="none";if(n)n()}};Game.talk=function(){if(Game.trueReady)return Game.trueEnding();Game.talkRoute=true;const idx=Math.min(29,Game.talkCount);Game.talkCount++;if(Game.talkCount>=30)Game.trueReady=true;Game.say(Game.talkLines[idx],()=>{if(Game.trueReady){Game.toast("新しいコマンド『手を差し伸べる』が現れた",1.8);Game.setState("MENU")}else Game.beginDefense()})};
-"use strict";Game.setState=s=>{Game.state=s;Game.hitRects=[]};Game.toast=(s,t=1)=>{Game.message=s;Game.messageTime=t};Game.particle=function(x,y,c,n=14,pow=1){for(let i=0;i<n;i++)Game.particles.push({x,y,vx:Game.rnd(-170,170)*pow,vy:Game.rnd(-220,80)*pow,l:Game.rnd(.3,.75),c,s:Game.rnd(2,6)})};Game.startCinematic=function(type,name,quote,color){Object.assign(Game.bossFx,{cinema:2.25,cinemaType:type,cinemaName:name,cinemaQuote:quote,cinemaColor:color});Game.flash=.18;Game.shake=18;Game.particle(270,470,color,40,1.4)};Game.damageBoss=function(raw){const n=Math.max(1,Math.floor(raw-Game.boss.armor));Game.boss.hp=Math.max(0,Game.boss.hp-n);Game.score+=n*10;Game.bossFx.hit=.35;Game.shake=12;Game.flash=.08;Game.damageText.push({x:270,y:205,l:1.25,n,crit:n>=12000,total:false});Game.particle(270,190,"#fff",22,1.1);Game.beep(80,.15,"square",.06);if(Game.boss.hp<=0)Game.normalEnding()};Game.hurt=function(n){
+"use strict";Game.setState=s=>{Game.state=s;Game.hitRects=[]};Game.toast=(s,t=1)=>{Game.message=s;Game.messageTime=t};Game.particle=function(x,y,c,n=14,pow=1){for(let i=0;i<n;i++)Game.particles.push({x,y,vx:Game.rnd(-170,170)*pow,vy:Game.rnd(-220,80)*pow,l:Game.rnd(.3,.75),c,s:Game.rnd(2,6)})};Game.startCinematic=function(type,name,quote,color){Game.sfxSkill();Object.assign(Game.bossFx,{cinema:2.25,cinemaType:type,cinemaName:name,cinemaQuote:quote,cinemaColor:color});Game.flash=.18;Game.shake=18;Game.particle(270,470,color,40,1.4)};Game.damageBoss=function(raw){const n=Math.max(1,Math.floor(raw-Game.boss.armor));Game.boss.hp=Math.max(0,Game.boss.hp-n);Game.score+=n*10;Game.bossFx.hit=.35;Game.shake=12;Game.flash=.08;Game.damageText.push({x:270,y:205,l:1.25,n,crit:n>=12000,total:false});Game.particle(270,190,"#fff",22,1.1);Game.sfxAttack(n>=12000,false);if(Game.boss.hp<=0)Game.normalEnding()};Game.hurt=function(n){
  if(Game.barrierTurns>0)n=Math.ceil(n*.38);
  if(Game.talkRoute)n*=2;
  if(Game.boss.hp<=Game.boss.max/2)n*=1.25;
  const p=Game.current();
- p.hp=Math.max(0,p.hp-Math.ceil(n));
+ p.hp=Math.max(0,p.hp-Math.ceil(n));Game.sfxHurt();
  if(p.hp<=0){
   const next=Game.party.findIndex((q,i)=>q.hp>0&&!Game.permanentDead[i]);
   if(next<0)return Game.gameOver();
@@ -32,7 +83,9 @@
 "use strict";
 Game.addBullet=(x,y,vx,vy,r,c,k,extra={})=>Game.bullets.push({x,y,vx,vy,r,c,k,...extra});
 Game.spawnPattern=function(id){
- const G=Game,A=G.arena,cx=270,cy=510,add=G.addBullet;Object.assign(G.bossFx,{handL:0,handR:0,dash:0,reach:0,eyeBeam:0,coreOpen:0});id%=40;
+ const G=Game,A=G.arena,cx=270,cy=510,add=G.addBullet;
+ const sid=id%40;
+ Game.sfxEnemy([0,1,2,3,17,18,27,36].includes(sid)?"hand":[4,5,21,32,37].includes(sid)?"dash":[28,29,36,39].includes(sid)?"beam":"normal");Object.assign(G.bossFx,{handL:0,handR:0,dash:0,reach:0,eyeBeam:0,coreOpen:0});id%=40;
  const radial=(n,spd,c,k="ring")=>{for(let i=0;i<n;i++){const a=i*Math.PI*2/n;add(cx,cy,Math.cos(a)*spd,Math.sin(a)*spd,7,c,k)}};
  const rain=(n,c,spd=230,r=8)=>{for(let i=0;i<n;i++)add(G.rnd(A.x,A.x+A.w),A.y-30-G.rnd(0,150),G.rnd(-45,45),spd+G.rnd(0,90),r,c,"rain")};
  if(id===0||id===1){G.bossFx[id===0?"handL":"handR"]=1;G.bossFx.reach=1.4;for(let i=0;i<7;i++)add(id===0?A.x-45:A.x+A.w+45,A.y+35+i*52,id===0?260:-260,0,22,"#dce9f6","hand",{warn:.7})}
@@ -100,7 +153,7 @@ Game.attackTap=function(){const G=Game;if(G.state!=="ATTACK"||G.attackEnded)retu
 Game.finishAttack=function(){
  const G=Game;if(G.attackEnded)return;G.attackEnded=true;
  const fin=Math.floor(G.attackTotal*(G.attackHits>=5?.35:.15));if(fin>0)G.damageBoss(fin);
- const grand=G.attackTotal+fin;G.damageText.push({x:270,y:285,l:1.85,n:grand.toLocaleString(),crit:true,total:true});G.shake=22;G.flash=.16;
+ const grand=G.attackTotal+fin;G.damageText.push({x:270,y:285,l:1.85,n:grand.toLocaleString(),crit:true,total:true});G.sfxAttack(true,true);G.shake=22;G.flash=.16;
  if(G.boss.hp<=G.boss.max/2&&!G.worldUnlockedAnnounced){
   G.worldUnlockedAnnounced=true;
   if(G.boss.hp>0)setTimeout(()=>G.playWorldUnlockCinema(),900);
@@ -197,7 +250,7 @@ Game.playWorldUnlockCinema=function(){
  G.setState("WORLD_UNLOCK_CINEMA");
  G.sub="none";G.bullets=[];G.worldUnlockCinema=3.8;
  Object.assign(G.bossFx,{
-  cinema:3.8,cinemaType:"clock",cinemaName:"時が、目を覚ます",
+  cinema:3.8,cinemaType:"clock",cinemaName:"",
   cinemaQuote:"",cinemaColor:"#d8c8ff"
  });
  G.shake=8;G.flash=.08;
@@ -320,7 +373,7 @@ Game.draw=function(){
  if(G.boss.hp<=G.boss.max/2&&G.boss.hp>0){
   g.save();
   g.shadowColor="#ff3858";g.shadowBlur=14;
-  G.T("ENEMY ATK ↑",492,132,11,"#ff667d","right");
+  G.T("ENEMY ATK ↑",48,130,11,"#ff667d","left");
   g.restore();
  }
 
@@ -344,7 +397,7 @@ Game.draw=function(){
   g.lineWidth=5;g.beginPath();g.moveTo(0,0);g.lineTo(105,25);g.stroke();
   g.restore();
   g.save();g.shadowColor="#000";g.shadowBlur=20;
-  G.T("時が、目を覚ます",270,116,34,"#ffd84e","center");
+  
   
   g.restore();
  }
@@ -395,4 +448,4 @@ Game.draw=function(){
  }
 };
 
-"use strict";(function(){const G=Game;function fatal(err){console.error(err);document.getElementById("fatalText").textContent=err&&err.message?err.message:String(err);document.getElementById("fatal").classList.remove("hidden")}try{G.canvas=document.getElementById("game");G.ctx=G.canvas.getContext("2d");G.ctx.imageSmoothingEnabled=false;const pos=e=>{const r=G.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*G.W/r.width,y:(e.clientY-r.top)*G.H/r.height}};G.canvas.addEventListener("pointerdown",e=>{e.preventDefault();G.ensureAudio();const p=pos(e);if(G.sub==="dialog"){G.nextDialogue();return}if(G.state==="DEFENSE"){G.dragging=true;G.heart.ox=G.heart.x-p.x;G.heart.oy=G.heart.y-p.y;return}if(G.state==="ATTACK"){G.attackTap();return}for(const r of G.hitRects)if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h){if(r.type==="action")G.chooseAction(r.i);if(r.type==="skill")G.useSkill();if(r.type==="item")G.openItemTarget();if(r.type==="itemTarget")G.useItemOn(r.i);if(r.type==="back"){G.setState("MENU");G.toast("コマンドに戻った",.5)}if(r.type==="switch"&&G.party[r.i].hp>0&&!G.permanentDead[r.i]){G.active=r.i;G.setState("MENU");G.toast(G.party[r.i].name+"に交代",.7)}return}});G.canvas.addEventListener("pointermove",e=>{if(!G.dragging||G.state!=="DEFENSE")return;e.preventDefault();const p=pos(e);G.heart.x=G.clamp(p.x+G.heart.ox,G.arena.x+14,G.arena.x+G.arena.w-14);G.heart.y=G.clamp(p.y+G.heart.oy,G.arena.y+14,G.arena.y+G.arena.h-14);G.trails.push({x:G.heart.x,y:G.heart.y,l:.3});if(G.trails.length>16)G.trails.shift()});["pointerup","pointercancel","pointerout"].forEach(n=>G.canvas.addEventListener(n,()=>G.dragging=false));function loop(t){const dt=Math.min(.033,(t-G.last)/1000||0);G.last=t;if(G.state!=="END")G.update(dt);G.draw();requestAnimationFrame(loop)}document.getElementById("startButton").onclick=()=>{try{G.ensureAudio();G.startMusic();document.getElementById("start").classList.add("hidden");G.reset()}catch(e){fatal(e)}};document.getElementById("restartButton").onclick=()=>{document.getElementById("ending").classList.add("hidden");G.reset()};G.initSpace();requestAnimationFrame(loop)}catch(e){fatal(e)}})();</script></body></html>
+"use strict";(function(){const G=Game;function fatal(err){console.error(err);document.getElementById("fatalText").textContent=err&&err.message?err.message:String(err);document.getElementById("fatal").classList.remove("hidden")}try{G.canvas=document.getElementById("game");G.ctx=G.canvas.getContext("2d");G.ctx.imageSmoothingEnabled=false;const pos=e=>{const r=G.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*G.W/r.width,y:(e.clientY-r.top)*G.H/r.height}};G.canvas.addEventListener("pointerdown",e=>{e.preventDefault();G.ensureAudio();G.sfxTap();const p=pos(e);if(G.sub==="dialog"){G.nextDialogue();return}if(G.state==="DEFENSE"){G.dragging=true;G.heart.ox=G.heart.x-p.x;G.heart.oy=G.heart.y-p.y;return}if(G.state==="ATTACK"){G.attackTap();return}for(const r of G.hitRects)if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h){if(r.type==="action")G.chooseAction(r.i);if(r.type==="skill")G.useSkill();if(r.type==="item")G.openItemTarget();if(r.type==="itemTarget")G.useItemOn(r.i);if(r.type==="back"){G.setState("MENU");G.toast("コマンドに戻った",.5)}if(r.type==="switch"&&G.party[r.i].hp>0&&!G.permanentDead[r.i]){G.active=r.i;G.setState("MENU");G.toast(G.party[r.i].name+"に交代",.7)}return}});G.canvas.addEventListener("pointermove",e=>{if(!G.dragging||G.state!=="DEFENSE")return;e.preventDefault();const p=pos(e);G.heart.x=G.clamp(p.x+G.heart.ox,G.arena.x+14,G.arena.x+G.arena.w-14);G.heart.y=G.clamp(p.y+G.heart.oy,G.arena.y+14,G.arena.y+G.arena.h-14);G.trails.push({x:G.heart.x,y:G.heart.y,l:.3});if(G.trails.length>16)G.trails.shift()});["pointerup","pointercancel","pointerout"].forEach(n=>G.canvas.addEventListener(n,()=>G.dragging=false));function loop(t){const dt=Math.min(.033,(t-G.last)/1000||0);G.last=t;if(G.state!=="END")G.update(dt);G.draw();requestAnimationFrame(loop)}document.getElementById("startButton").onclick=()=>{try{G.ensureAudio();G.sfxTap();G.startMusic();document.getElementById("start").classList.add("hidden");G.reset()}catch(e){fatal(e)}};document.getElementById("restartButton").onclick=()=>{G.ensureAudio();G.sfxTap();document.getElementById("ending").classList.add("hidden");G.reset()};G.initSpace();requestAnimationFrame(loop)}catch(e){fatal(e)}})();</script></body></html>
