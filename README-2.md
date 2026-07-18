@@ -1,7 +1,8 @@
-DAYBREAK XIV REBIRTH 2
+# DAYBREAK XIV REBIRTH 4 — SPACE UI
 
-- Intro dialogue before opening barrage
-- Heart starts near lower center
-- Active character HP panel below the heart
-- Skill explanations appear after non-skippable animation
-- Larger damage numbers and huge TOTAL display
+変更点:
+- ボス名とボスHPの背景にあった黒い帯を削除
+- 宇宙背景の上へ直接表示
+- 文字の読みやすさは影だけで確保
+- 最終合計ダメージの「TOTAL」表記を削除
+- 合計数値の巨大表示・発光・揺れは維持
