@@ -847,4 +847,77 @@ Game.draw=function(){
 })();
 </script>
 
+
+<script>
+"use strict";
+(function(){
+ const G=Game,A=G.arena;
+ G.guardItem=null;G.guardPulse=0;G.guardReflected=0;G.field={mode:"rect",t:0,angle:0,cx:270,cy:507,w:472,h:405,label:"通常領域"};
+ const oldReset=G.reset;
+ G.reset=function(){G.items.mae=6;G.items.ura=6;G.guardItem=null;G.guardPulse=0;G.guardReflected=0;G.field={mode:"rect",t:0,angle:0,cx:270,cy:507,w:472,h:405,label:"通常領域"};oldReset();G.items.mae=6;G.items.ura=6};
+ G.openItemTarget=function(){G.setState("ITEM_SELECT")};
+ G.useItem=G.openItemTarget;
+ G.chooseGuardItem=function(kind){
+  if(G.guardItem){G.toast("マエとウラは併用できない",1.1);return}
+  if((G.items[kind]||0)<=0){G.toast(kind==="mae"?"マエバリアンはもうない":"ウラバリアンはもうない",1);return}
+  G.items[kind]--;G.guardItem=kind;G.guardReflected=0;G.guardPulse=1;
+  G.setState("MENU");G.toast(kind==="mae"?"マエバリアン装着：攻撃前半を反射":"ウラバリアン装着：攻撃後半を反射",1.35);
+  setTimeout(()=>G.beginDefense(),420);
+ };
+ const oldBegin=G.beginDefense;
+ G.beginDefense=function(){oldBegin();if(G.state==="DEFENSE"){G.defenseTotal=G.defenseTime;G.field.t=0;G.field.mode="rect";G.field.angle=0}};
+ const oldNext=G.nextTurn;
+ G.nextTurn=function(){if(G.guardItem&&G.guardReflected>0)G.toast(`${G.guardReflected}発反射した！`,.8);G.guardItem=null;G.guardPulse=0;oldNext()};
+ G.guardActive=function(){if(!G.guardItem||G.state!=="DEFENSE"||!G.defenseTotal)return false;const elapsed=G.defenseTotal-G.defenseTime;return G.guardItem==="mae"?elapsed<=G.defenseTotal*.5:elapsed>G.defenseTotal*.5};
+ const oldUB=G.updateBullets;
+ G.updateBullets=function(dt){
+  if(G.guardActive()){
+   for(const b of G.bullets){if(!b||b.reflected)continue;const dx=b.x-G.heart.x,dy=b.y-G.heart.y,d=Math.hypot(dx,dy);if(d<(b.r||7)+34){const l=d||1,sp=Math.max(280,Math.hypot(b.vx||0,b.vy||0)*1.18);b.x=G.heart.x+dx/l*38;b.y=G.heart.y+dy/l*38;b.vx=dx/l*sp;b.vy=dy/l*sp;b.reflected=true;b.c=G.guardItem==="mae"?"#62efff":"#ff73dd";G.guardPulse=1;G.guardReflected++;G.damageBoss(750+G.effectivePhase()*250);G.particle(b.x,b.y,b.c,8,1);G.tone(920,.05,"square",.028,0,260)}}
+  }
+  oldUB(dt)
+ };
+ function setField(elapsed){
+  const ep=G.effectivePhase(),slot=Math.floor(elapsed/1.55)%8,F=G.field;F.t=elapsed;
+  const modes=ep<=1?["rect","half","moveRect","rect"]:ep<=3?["rect","diamond","half","moveRect","roll","none"]:["diamond","half","roll","moveRect","none","tiny","slam","diamond"];
+  F.mode=modes[slot%modes.length];F.angle=F.mode==="roll"?elapsed*1.7:F.mode==="slam"?Math.sin(elapsed*8)*.42:0;
+  F.cx=270+(F.mode==="moveRect"?Math.sin(elapsed*2.8)*112:F.mode==="slam"?Math.sin(elapsed*7)*90:0);
+  F.cy=507+(F.mode==="moveRect"?Math.cos(elapsed*2.1)*72:F.mode==="slam"?Math.cos(elapsed*9)*60:0);
+  F.w=F.mode==="tiny"?185:F.mode==="half"?230:F.mode==="moveRect"?285:472;F.h=F.mode==="tiny"?150:F.mode==="moveRect"?225:405;
+  F.label={rect:"通常領域",diamond:"領域変形：ひし形",half:"領域切断：半分",moveRect:"暴走領域：高速移動",roll:"転動領域：回転",none:"領域消失",tiny:"極小領域",slam:"激震領域"}[F.mode]||"領域変形";
+ }
+ function constrainHeart(){
+  const F=G.field,h=G.heart,pad=15;
+  if(F.mode==="none"){h.x=G.clamp(h.x,26,514);h.y=G.clamp(h.y,300,716);return}
+  let dx=h.x-F.cx,dy=h.y-F.cy,ca=Math.cos(-F.angle),sa=Math.sin(-F.angle),lx=dx*ca-dy*sa,ly=dx*sa+dy*ca;
+  if(F.mode==="diamond"){
+   const rx=210-pad,ry=180-pad,q=Math.abs(lx)/rx+Math.abs(ly)/ry;if(q>1){lx/=q;ly/=q}
+  }else{lx=G.clamp(lx,-F.w/2+pad,F.w/2-pad);ly=G.clamp(ly,-F.h/2+pad,F.h/2-pad)}
+  ca=Math.cos(F.angle);sa=Math.sin(F.angle);h.x=F.cx+lx*ca-ly*sa;h.y=F.cy+lx*sa+ly*ca;
+ }
+ const oldUpdate=G.update;
+ G.update=function(dt){oldUpdate(dt);G.guardPulse=Math.max(0,G.guardPulse-dt*2.8);if(G.state==="DEFENSE"&&G.defenseTotal){const e=G.defenseTotal-G.defenseTime;setField(e);constrainHeart()}};
+ function localPos(e){const r=G.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*G.W/r.width,y:(e.clientY-r.top)*G.H/r.height}}
+ G.canvas.addEventListener("pointerdown",e=>{if(G.state!=="ITEM_SELECT")return;const p=localPos(e);for(const r of G.hitRects){if(!r.custom||p.x<r.x||p.x>r.x+r.w||p.y<r.y||p.y>r.y+r.h)continue;e.preventDefault();if(r.custom==="herb")G.openHerbTarget();if(r.custom==="mae")G.chooseGuardItem("mae");if(r.custom==="ura")G.chooseGuardItem("ura");if(r.custom==="back")G.setState("MENU");return}},true);
+ G.openHerbTarget=function(){if(G.items.herb<=0){G.toast("やくそうはもうない",.9);return}G.setState("ITEM_TARGET")};
+ const oldDraw=G.draw;
+ G.draw=function(){oldDraw();const g=G.ctx;
+  if(G.state==="ITEM_SELECT"&&G.sub!=="dialog"){
+   G.panel(24,700,492,230,"#7de3ff","#02060cf5");G.T("どうぐ",270,728,19,"#fff","center");
+   const rows=[{y:742,k:"herb",name:`完全回復やくそう ×${G.items.herb}`,c:"#7de3a0",d:"仲間ひとりを完全回復"},{y:790,k:"mae",name:`マエバリアン ×${G.items.mae}`,c:"#62efff",d:"敵攻撃の前半を反射"},{y:838,k:"ura",name:`ウラバリアン ×${G.items.ura}`,c:"#ff73dd",d:"敵攻撃の後半を反射"}];
+   rows.forEach(r=>{G.hitRects.push({x:42,y:r.y,w:456,h:42,custom:r.k});G.R(42,r.y,456,42,"#0a1019");G.R(48,r.y+6,8,30,r.c);G.T(r.name,68,r.y+18,15,"#fff");G.T(r.d,68,r.y+35,10,"#b8c7d8")});
+   G.hitRects.push({x:180,y:888,w:180,h:32,custom:"back"});G.R(180,888,180,32,"#10131a");G.T("← もどる",270,910,13,"#fff","center");
+  }
+  if(G.state==="DEFENSE"){
+   const F=G.field;g.save();g.translate(F.cx,F.cy);g.rotate(F.angle);g.lineWidth=5;g.shadowBlur=22;g.shadowColor=F.mode==="none"?"#ff3b68":"#74ecff";g.strokeStyle=F.mode==="none"?"rgba(255,55,95,.22)":"#b9f5ff";
+   if(F.mode==="diamond"){g.beginPath();g.moveTo(0,-F.h/2);g.lineTo(F.w/2,0);g.lineTo(0,F.h/2);g.lineTo(-F.w/2,0);g.closePath();g.stroke()}
+   else if(F.mode!=="none")g.strokeRect(-F.w/2,-F.h/2,F.w,F.h);g.restore();
+   if(F.mode==="half"){g.fillStyle="rgba(255,20,65,.17)";g.fillRect(F.cx+F.w/2,F.cy-F.h/2,236,F.h)}
+   if(F.mode==="none"){g.save();g.setLineDash([10,12]);g.strokeStyle="rgba(255,50,90,.38)";g.lineWidth=3;g.strokeRect(24,296,492,424);g.restore()}
+   G.panel(135,306,270,34,F.mode==="none"?"#ff4b6c":"#70eaff","#02030ad9");G.T(F.label,270,329,14,"#fff","center");
+   if(G.guardItem){const active=G.guardActive(),col=G.guardItem==="mae"?"#62efff":"#ff73dd",rr=31+Math.sin(G.time*12)*4+G.guardPulse*12;g.save();g.globalAlpha=active?1:.28;g.strokeStyle=col;g.lineWidth=5;g.shadowColor=col;g.shadowBlur=26;g.beginPath();g.arc(G.heart.x,G.heart.y,rr,0,Math.PI*2);g.stroke();g.beginPath();g.arc(G.heart.x,G.heart.y,rr+9,G.time*2,G.time*2+Math.PI*1.25);g.stroke();g.restore();G.T(`${G.guardItem==="mae"?"マエ":"ウラ"}バリアン ${active?"反射中":"待機中"}`,270,699,12,active?col:"#777","center")}
+  }
+ };
+})();
+</script>
+
 </body></html>
