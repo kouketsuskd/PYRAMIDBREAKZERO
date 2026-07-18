@@ -12,3 +12,9 @@ GitHubへ入れるもの:
 - index.html
 - audio/pixel-heartbeat.mp3
 - audio/kudakebashi-no-ketto.mp3
+
+## REBIRTH 16 - INTRO ASSAULT UPDATE
+- Opening defense extended to 14.5 seconds.
+- Added six opening-only layered bullet patterns (IDs 48-53).
+- Faster 1.72-second wave cadence with a designed sequence.
+- Shortened initial protection while preserving telegraphed escape lanes.

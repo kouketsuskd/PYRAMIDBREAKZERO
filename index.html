@@ -425,7 +425,7 @@ Game.reset=function(){
  G.introMode=true;G.setState("MENU");
  G.say(["機械天使『よく、この世界の最深部まで入り込むことができたな。』","機械天使『だが、言葉を交わす資格があるかは別の話だ。』","機械天使『まずは、この攻撃を受けてみるがいい。』","機械天使『立っていられたなら――話はそれからだ。』"],()=>G.startIntroAttack());
 };
-Game.startIntroAttack=function(){const G=Game;G.introMode=true;G.setState("DEFENSE");G.defenseTime=12.5;G.patternClock=0;G.bullets=[];G.trails=[];G.safeSpawn=1.7;G.heart.x=270;G.heart.y=G.arena.y+G.arena.h-42;G.heart.inv=1.9;G.patternId=0;G.introWave=0;G.patternClock=-999;G.spawnPattern(0)};
+Game.startIntroAttack=function(){const G=Game;G.introMode=true;G.setState("DEFENSE");G.defenseTime=14.5;G.patternClock=0;G.bullets=[];G.trails=[];G.safeSpawn=1.25;G.heart.x=270;G.heart.y=G.arena.y+G.arena.h-42;G.heart.inv=1.45;G.patternId=48;G.introWave=0;G.introStep=0;G.patternClock=-999;G.spawnPattern(48)};
 
 const _nextTurn=Game.nextTurn;
 Game.nextTurn=function(){
@@ -531,10 +531,17 @@ Game.spawnPattern=function(id){
  if(id===45){for(let i=0;i<18;i++)add(A.x+20+(i%9)*54,A.y-40-Math.floor(i/9)*160,Math.sin(i)*110,270,12,"#ffe278","spear",{warn:.45+(i%5)*.09})}
  if(id===46){G.bossFx.dash=1.9;G.bossFx.eyeBeam=1.8;for(let i=0;i<3;i++)add(i%2?A.x+A.w+100:A.x-100,A.y+120+i*105,i%2?-610:610,0,56,"#f4fbff","body",{warn:1+i*.22})}
  if(id===47){G.bossFx.coreOpen=6;G.bossFx.eyeBeam=2.2;for(let i=0;i<42;i++){const a=i*Math.PI*2/42;add(cx,cy,Math.cos(a)*(190+(i%5)*35),Math.sin(a)*(190+(i%5)*35),i%6===0?13:6,i%6===0?"#ff365f":"#fff","finale")}}
+ // Opening-only attacks: fast, layered, but each wave leaves a readable escape lane.
+ if(id===48){G.bossFx.handL=G.bossFx.handR=1;G.bossFx.reach=1.7;for(let i=0;i<7;i++){if(i!==3)add(A.x-55,A.y+28+i*54,355,0,15,"#e8f5ff","hand",{warn:.48+i*.025});if(i!==4)add(A.x+A.w+55,A.y+28+i*54,-355,0,15,"#e8f5ff","hand",{warn:.58+i*.025})}}
+ if(id===49){G.bossFx.eyeBeam=1.6;for(let i=0;i<9;i++){if(i!==2&&i!==6)add(A.x+28+i*52,A.y-35,Math.sin(i*.8)*55,355,12,i%2?"#ff4d70":"#fff","eyeBeam",{warn:.38+(i%3)*.08})}for(let i=0;i<5;i++)add(i%2?A.x+A.w+25:A.x-25,A.y+72+i*68,i%2?-255:255,0,8,"#79ddff","sweep",{warn:.72})}
+ if(id===50){G.bossFx.coreOpen=2.8;for(let ring=0;ring<3;ring++)for(let i=0;i<14;i++){const a=i*Math.PI*2/14+ring*.19;add(cx,cy,Math.cos(a)*(205+ring*38),Math.sin(a)*(205+ring*38),ring===1?8:6,ring===1?"#ff7190":"#fff","spiral",{spin:ring%2?.72:-.72,warn:.28+ring*.12})}}
+ if(id===51){for(let i=0;i<12;i++){const left=i%2===0;add(left?A.x-35:A.x+A.w+35,A.y+22+(i%6)*67,left?330:-330,(i%3-1)*75,10,i%3?"#ffd866":"#ff6688","zig",{phase:i,warn:.34+(i%4)*.07})}for(let i=0;i<6;i++)add(A.x+45+i*76,A.y+A.h+30,Math.sin(i)*80,-285,9,"#8de8ff","geyser",{warn:.82})}
+ if(id===52){G.bossFx.dash=1.8;for(let i=0;i<3;i++)add(i%2?A.x+A.w+95:A.x-95,A.y+95+i*112,i%2?-590:590,0,45,"#f3f9ff","body",{warn:.68+i*.2});for(let i=0;i<14;i++)add(cx,cy,Math.cos(i*Math.PI*2/14)*235,Math.sin(i*Math.PI*2/14)*235,6,"#ffb05c","burst",{warn:.48})}
+ if(id===53){G.bossFx.coreOpen=4;G.bossFx.eyeBeam=1.8;for(let i=0;i<24;i++){const a=i*Math.PI*2/24;add(cx+Math.cos(a)*245,cy+Math.sin(a)*190,-Math.cos(a)*(245+(i%3)*35),-Math.sin(a)*(245+(i%3)*35),7,i%4?"#fff":"#ff365d","judgement",{warn:.45+(i%2)*.12})}for(let i=0;i<7;i++)add(A.x+45+i*64,A.y-25,Math.sin(i)*95,330,11,"#ffe26f","spear",{warn:.78+i*.035})}
 };
 
 const _update=Game.update;
-Game.update=function(dt){if(Game.worldUnlockCinema>0)Game.worldUnlockCinema=Math.max(0,Game.worldUnlockCinema-dt);if(Game.deathCinema>0)Game.deathCinema=Math.max(0,Game.deathCinema-dt);if(Game.safeSpawn>0)Game.safeSpawn=Math.max(0,Game.safeSpawn-dt);if(Game.introMode&&Game.state==="DEFENSE"){Game.patternClock=-999;Game.introWave=(Game.introWave||0)+dt;if(Game.introWave>2.15){Game.introWave=0;Game.spawnPattern([1,2,3,4,5,43][Math.floor(Game.rnd(0,6))])}}_update(dt)};
+Game.update=function(dt){if(Game.worldUnlockCinema>0)Game.worldUnlockCinema=Math.max(0,Game.worldUnlockCinema-dt);if(Game.deathCinema>0)Game.deathCinema=Math.max(0,Game.deathCinema-dt);if(Game.safeSpawn>0)Game.safeSpawn=Math.max(0,Game.safeSpawn-dt);if(Game.introMode&&Game.state==="DEFENSE"){Game.patternClock=-999;Game.introWave=(Game.introWave||0)+dt;if(Game.introWave>1.72){Game.introWave=0;const seq=[49,50,51,52,48,53,50,52];Game.introStep=(Game.introStep||0)+1;Game.spawnPattern(seq[(Game.introStep-1)%seq.length])}}_update(dt)};
 const _hurt=Game.hurt;
 Game.hurt=function(n){if(Game.safeSpawn>0)return;_hurt(n)};
 
