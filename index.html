@@ -720,4 +720,61 @@ Game.draw=function(){
   if(G.visual.impact>0){g.globalCompositeOperation='screen';g.globalAlpha=G.visual.impact*.18;g.fillStyle='#fff';g.fillRect(0,0,540,960)}g.restore()};
 })();
 </script>
+<script>
+"use strict";
+(function(){
+ const G=Game,A=G.arena;
+ G.chaos={gravityX:0,gravityY:0,dark:0,quake:0,blackholes:[],label:"",labelTime:0};
+ const name={54:"時間凍結弾",55:"反転弾道",56:"双星ブラックホール",57:"嘘の安全地帯",58:"死者の弾幕",59:"重力崩壊",60:"圧縮される宇宙",61:"ワープホール",62:"時間逆行",63:"未来予測狙撃",64:"星座牢獄",65:"暗黒の眼",66:"反射する豪雨",67:"螺旋回廊",68:"追跡する壁",69:"超新星爆発",70:"神のルーレット"};
+ const announce=id=>{G.chaos.label=name[id]||"未知の攻撃";G.chaos.labelTime=1.6;G.shake=Math.max(G.shake,5)};
+ const prevSpawn=G.spawnPattern;
+ G.spawnPattern=function(id){
+  if(id<54)return prevSpawn(id);
+  announce(id);const add=G.addBullet,cx=270,cy=510;G.sfxEnemy(id===56?"core":id===65?"beam":"spiral");
+  if(id===54){for(let i=0;i<30;i++){const a=i*Math.PI*2/30,r=100+(i%3)*65,spd=185+(i%4)*24;add(cx+Math.cos(a)*r,cy+Math.sin(a)*r,0,0,7,i%3?"#dff8ff":"#ff7394","stasis",{svx:-Math.cos(a)*spd,svy:-Math.sin(a)*spd,hold:.75+(i%5)*.12,warn:.3})}}
+  if(id===55){for(let i=0;i<24;i++){const a=i*Math.PI*2/24;add(cx,cy,Math.cos(a)*245,Math.sin(a)*245,7,i%2?"#fff":"#f6b75f","reverse",{flip:.85+(i%4)*.12,flipped:false})}}
+  if(id===56){G.chaos.blackholes=[{x:A.x+120,y:cy,r:70,t:3.8},{x:A.x+A.w-120,y:cy,r:70,t:3.8}];for(let i=0;i<26;i++){const side=i%2,px=side?A.x+A.w-120:A.x+120,py=cy,a=i*.82;add(px+Math.cos(a)*115,py+Math.sin(a)*115,-Math.sin(a)*170,Math.cos(a)*170,7,side?"#ff6dca":"#75e9ff","orbitHole",{hole:side})}}
+  if(id===57){for(let x=0;x<8;x++)for(let y=0;y<6;y++){const real=(x===2&&y>1)||(x===6&&y<4);add(A.x+34+x*58,A.y+35+y*66,0,0,real?11:8,real?"#ff365e":"#8eeaff","deception",{fake:!real,timer:.9+(x+y)%3*.12})}for(let i=0;i<9;i++)add(A.x-30,A.y+22+i*45,300,0,9,"#fff","sweep",{warn:1.05})}
+  if(id===58){for(let i=0;i<18;i++){const a=i*Math.PI*2/18;add(cx,cy,Math.cos(a)*270,Math.sin(a)*270,7,"#d7b2ff","revenant",{revive:1.15,stage:0,ox:cx,oy:cy})}}
+  if(id===59){G.chaos.gravityX=(Math.random()<.5?-1:1)*95;G.chaos.gravityY=(Math.random()<.5?-1:1)*75;for(let i=0;i<22;i++)add(G.rnd(A.x,A.x+A.w),G.rnd(A.y,A.y+A.h),G.rnd(-80,80),G.rnd(-80,80),8,i%2?"#ffe670":"#ff6ea9","gravityOrb",{life:3.6})}
+  if(id===60){for(let i=0;i<7;i++){add(A.x-70-i*32,A.y+35+i*50,150+i*18,0,25,"#eef8ff","crushWall",{warn:.55+i*.08});add(A.x+A.w+70+i*32,A.y+A.h-35-i*50,-150-i*18,0,25,"#eef8ff","crushWall",{warn:.55+i*.08})}}
+  if(id===61){for(let i=0;i<22;i++){const side=i%4,a=(i%11)*.58,px=side<2?A.x+28:A.x+A.w-28,py=A.y+28+(i%7)*55;add(px,py,side<2?210:-210,Math.sin(a)*150,8,i%2?"#63eaff":"#ff68d6","portal",{jumps:0})}}
+  if(id===62){for(let i=0;i<28;i++){const a=i*Math.PI*2/28;add(cx,cy,Math.cos(a)*(155+(i%4)*35),Math.sin(a)*(155+(i%4)*35),7,i%3?"#fff":"#73dbff","rewind",{flip:.95,flipped:false})}}
+  if(id===63){for(let i=0;i<10;i++){const tx=G.clamp(G.heart.x+(G.heart.x-cx)*.35+(i-5)*8,A.x+25,A.x+A.w-25),ty=G.clamp(G.heart.y+(G.heart.y-cy)*.2,A.y+25,A.y+A.h-25);const edge=i%2?A.x-45:A.x+A.w+45,dx=tx-edge,dy=ty-(A.y+35+i*38),l=Math.hypot(dx,dy)||1;add(edge,A.y+35+i*38,dx/l*430,dy/l*430,10,"#ff355f","prediction",{warn:.65+i*.055})}}
+  if(id===64){for(let row=0;row<6;row++)for(let col=0;col<7;col++){if((row+col)%3!==1)add(A.x+38+col*66,A.y+38+row*65,(row%2?1:-1)*65,(col%2?1:-1)*35,7,"#b9edff","constellation",{phase:row*.7+col})}}
+  if(id===65){G.chaos.dark=3.5;for(let i=0;i<16;i++){const a=i*Math.PI*2/16;add(cx+Math.cos(a)*210,cy+Math.sin(a)*160,-Math.cos(a)*250,-Math.sin(a)*250,9,i%2?"#ff315c":"#fff","darkEye",{warn:.75+(i%4)*.09})}}
+  if(id===66){for(let i=0;i<22;i++)add(A.x+15+i*22,A.y-30-Math.random()*180,G.rnd(-40,40),280+Math.random()*80,8,i%3?"#dff7ff":"#ffd75e","bounce",{bounces:2})}
+  if(id===67){for(let lane=0;lane<4;lane++)for(let i=0;i<15;i++){const a=i*.48+lane*Math.PI/2;add(cx+Math.cos(a)*30,cy+Math.sin(a)*30,Math.cos(a)*(150+lane*25),Math.sin(a)*(150+lane*25),7,lane%2?"#ff76b8":"#7cecff","spiral",{spin:lane%2?.72:-.72})}}
+  if(id===68){for(let i=0;i<12;i++){const y=A.y+20+i*35;add(i%2?A.x+A.w+40:A.x-40,y,i%2?-235:235,0,17,"#f0f5ff","hunterWall",{track:.85+i*.04})}}
+  if(id===69){for(let ring=0;ring<4;ring++)for(let i=0;i<24;i++){const a=i*Math.PI*2/24+ring*.11;add(cx,cy,Math.cos(a)*(115+ring*58),Math.sin(a)*(115+ring*58),ring===3?9:6,ring%2?"#fff":"#ff5578","supernova",{warn:.45+ring*.22})}}
+  if(id===70){const pool=[54,55,56,58,59,61,62,63,65,66,68,69],a=pool[Math.floor(Math.random()*pool.length)],b=pool[Math.floor(Math.random()*pool.length)];G.spawnPattern(a);setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(b===a?69:b),680)}
+ };
+ const prevBegin=G.beginDefense;
+ G.beginDefense=function(){prevBegin();if(G.state!=="DEFENSE"||G.introMode)return;const ep=G.effectivePhase();if(ep>=3&&Math.random()<.42){const id=54+Math.floor(Math.random()*(ep>=5?17:ep>=4?13:7));setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(id),ep>=5?420:760)}if(ep>=5&&Math.random()<.35)setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(70),1350)};
+ const prevUB=G.updateBullets;
+ G.updateBullets=function(dt){
+  const C=G.chaos;C.labelTime=Math.max(0,C.labelTime-dt);C.dark=Math.max(0,C.dark-dt);C.gravityX*=Math.pow(.18,dt);C.gravityY*=Math.pow(.18,dt);C.blackholes=C.blackholes.filter(h=>(h.t-=dt)>0);
+  if(G.state==="DEFENSE"){G.heart.x+=C.gravityX*dt;G.heart.y+=C.gravityY*dt;for(const h of C.blackholes){const dx=h.x-G.heart.x,dy=h.y-G.heart.y,l=Math.max(32,Math.hypot(dx,dy));G.heart.x+=dx/l*(10500/(l+35))*dt;G.heart.y+=dy/l*(10500/(l+35))*dt}}
+  const resurrect=[];
+  for(const b of G.bullets){
+   if(b.k==="stasis"){b.hold-=dt;if(b.hold<=0&&b.vx===0&&b.vy===0){b.vx=b.svx;b.vy=b.svy;G.flash=.06}}
+   if((b.k==="reverse"||b.k==="rewind")&&!b.flipped){b.flip-=dt;if(b.flip<=0){b.flipped=true;b.vx*=-1;b.vy*=-1;G.shake=5}}
+   if(b.k==="deception"){b.timer-=dt;if(b.timer<=0&&!b.fake&&b.vx===0){const dx=G.heart.x-b.x,dy=G.heart.y-b.y,l=Math.hypot(dx,dy)||1;b.vx=dx/l*260;b.vy=dy/l*260}}
+   if(b.k==="revenant"&&b.stage===0){b.revive-=dt;if(b.revive<=0){b.stage=1;b.vx*=0;b.vy*=0;b.x=G.rnd(A.x,A.x+A.w);b.y=G.rnd(A.y,A.y+A.h);b.warn=.55;const dx=G.heart.x-b.x,dy=G.heart.y-b.y,l=Math.hypot(dx,dy)||1;b.vx=dx/l*285;b.vy=dy/l*285}}
+   if(b.k==="portal"){if(b.x<A.x-10&&b.jumps<2){b.x=A.x+A.w+8;b.jumps++}if(b.x>A.x+A.w+10&&b.jumps<2){b.x=A.x-8;b.jumps++}if(b.y<A.y-10&&b.jumps<2){b.y=A.y+A.h+8;b.jumps++}if(b.y>A.y+A.h+10&&b.jumps<2){b.y=A.y-8;b.jumps++}}
+   if(b.k==="constellation"){b.vx+=Math.sin(G.time*3+b.phase)*40*dt;b.vy+=Math.cos(G.time*2.4+b.phase)*35*dt}
+   if(b.k==="bounce"&&b.bounces>0&&b.y>A.y+A.h-8&&b.vy>0){b.y=A.y+A.h-9;b.vy=-Math.abs(b.vy)*.82;b.bounces--}
+   if(b.k==="hunterWall"){b.track-=dt;if(b.track>0)b.vy+=(G.heart.y-b.y)*1.5*dt}
+  }
+  prevUB(dt);if(resurrect.length)G.bullets.push(...resurrect);
+ };
+ const prevReset=G.reset;G.reset=function(){G.chaos.gravityX=G.chaos.gravityY=G.chaos.dark=G.chaos.labelTime=0;G.chaos.blackholes=[];prevReset()};
+ const prevDraw=G.draw;G.draw=function(){prevDraw();const g=G.ctx,C=G.chaos;if(G.state==="DEFENSE"){
+  g.save();for(const h of C.blackholes){const p=.5+.5*Math.sin(G.time*8);const gr=g.createRadialGradient(h.x,h.y,4,h.x,h.y,h.r);gr.addColorStop(0,"rgba(0,0,0,1)");gr.addColorStop(.35,"rgba(50,0,80,.95)");gr.addColorStop(.7,"rgba(255,70,210,.28)");gr.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gr;g.beginPath();g.arc(h.x,h.y,h.r+p*8,0,Math.PI*2);g.fill();g.strokeStyle="rgba(110,235,255,.55)";g.lineWidth=3;g.beginPath();g.ellipse(h.x,h.y,h.r*.9,h.r*.28,G.time,0,Math.PI*2);g.stroke()}
+  if(C.dark>0){g.fillStyle=`rgba(0,0,0,${Math.min(.88,C.dark*.35)})`;g.fillRect(0,285,540,445);for(let i=0;i<5;i++){const x=90+i*90,y=390+Math.sin(G.time*2+i)*120;g.fillStyle="#ff3157";g.shadowColor="#ff3157";g.shadowBlur=25;g.beginPath();g.ellipse(x,y,12,5,0,0,Math.PI*2);g.fill()}}
+  if(C.labelTime>0){g.globalAlpha=Math.min(1,C.labelTime*2);G.panel(92,327,356,46,"#ff4166","#02030adf");G.T(C.label,270,357,18,"#fff","center")}
+  g.restore()}};
+})();
+</script>
+
 </body></html>
