@@ -16,7 +16,7 @@
 })();
 </script><script>"use strict";window.Game={W:540,H:960,canvas:null,ctx:null,arena:{x:34,y:305,w:472,h:405},state:"BOOT",sub:"none",last:0,time:0,turn:0,active:0,bond:0,score:0,talkCount:0,talkRoute:false,trueReady:false,dialogue:[],dialogueIndex:0,dialogueNext:null,attackX:70,attackDir:1,attackTime:0,attackHits:0,attackTotal:0,attackEnded:false,bullets:[],particles:[],damageText:[],trails:[],hitRects:[],defenseTime:0,patternId:0,patternClock:0,dragging:false,shake:0,flash:0,message:"",messageTime:0,timeStopTurns:0,barrierTurns:0,critTurns:0,slowTurns:0,oniTurns:0,skillUsed:[0,0,0,0,0,0],permanentDead:[false,false,false,false,false,false],attackBoost:[1,1,1,1,1,1],stunTurns:[0,0,0,0,0,0],bossFx:{hover:0,wing:0,hit:0,transform:0,handL:0,handR:0,dash:0,reach:0,eyeBeam:0,coreOpen:0,cinema:0,cinemaType:"",cinemaName:"",cinemaQuote:"",cinemaColor:"#fff"},heart:{x:270,y:515,r:10,inv:0,ox:0,oy:0},party:[{name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#725fbd",skill:"ザ・ワールド",pow:22},{name:"カズアキ",max:195,hp:195,mp:50,mm:50,c:"#805044",skill:"ワールド・イズ・マイン",pow:39},{name:"マッピー",max:125,hp:125,mp:90,mm:90,c:"#d0aa60",skill:"ピラミッド・ハート",pow:18},{name:"ケイタ",max:135,hp:135,mp:78,mm:78,c:"#ef9432",skill:"鳳翼天翔",pow:29},{name:"イサジ",max:185,hp:185,mp:46,mm:46,c:"#edc650",skill:"領域展開・鬼",pow:36},{name:"リョウゴ",max:140,hp:140,mp:82,mm:82,c:"#438fca",skill:"虫の知らせ",pow:26}],boss:{name:"機械天使 アルカ・セラフ 完全体",max:1000000,hp:1000000,phase:1,armor:850},items:{herb:1},stars:[],nebulae:[],meteors:[]};Game.clamp=(v,a,b)=>Math.max(a,Math.min(b,v));Game.rnd=(a,b)=>a+Math.random()*(b-a);Game.actions=()=>Game.trueReady?["こうげき","わざ","どうぐ","手を差し伸べる","こうたい"]:["こうげき","わざ","どうぐ","はなす","こうたい"];Game.current=function(){if(Game.party[Game.active].hp<=0||Game.permanentDead[Game.active]){const i=Game.party.findIndex((p,j)=>p.hp>0&&!Game.permanentDead[j]);Game.active=i<0?0:i}return Game.party[Game.active]};Game.aliveCount=()=>Game.party.filter((p,i)=>p.hp>0&&!Game.permanentDead[i]).length;Game.skillLimit=i=>(i===1||i===5)?2:1;
 "use strict";
-Game.audio=null;Game.bgm=null;Game.musicTimer=null;Game.musicStep=0;Game.sfxGain=4.5;
+Game.audio=null;Game.bgm=null;Game.bgmPhase2=null;Game.musicTimer=null;Game.musicStep=0;Game.sfxGain=4.5;Game.phase2MusicStarted=false;
 
 Game.ensureMaster=function(){
  if(!Game.audio)return;
@@ -37,6 +37,10 @@ Game.ensureAudio=function(){
  if(!Game.bgm){
   Game.bgm=new Audio("audio/pixel-heartbeat.mp3");
   Game.bgm.loop=true;Game.bgm.preload="auto";Game.bgm.volume=0;
+ }
+ if(!Game.bgmPhase2){
+  Game.bgmPhase2=new Audio("audio/kudakebashi-no-ketto.mp3");
+  Game.bgmPhase2.loop=true;Game.bgmPhase2.preload="auto";Game.bgmPhase2.volume=0;
  }
 };
 Game.tone=function(f=220,d=.08,t="sine",v=.025,delay=0,slide=0){
@@ -117,8 +121,35 @@ Game.fadeBgm=function(target=0.58,duration=2){
   if(t>=1){clearInterval(Game._bgmFade);Game._bgmFade=null}
  },1000/30);
 };
+Game.fadeTrack=function(track,target,duration=1,key="_trackFade"){
+ if(!track)return;
+ const from=track.volume,steps=Math.max(1,Math.floor(duration*30));
+ let n=0;clearInterval(Game[key]);
+ Game[key]=setInterval(()=>{
+  n++;const t=Math.min(1,n/steps);
+  track.volume=from+(target-from)*t;
+  if(t>=1){clearInterval(Game[key]);Game[key]=null}
+ },1000/30);
+};
+Game.startPhase2Music=function(){
+ Game.ensureAudio();
+ if(Game.phase2MusicStarted)return;
+ Game.phase2MusicStarted=true;
+ if(Game.bgm&&!Game.bgm.paused)Game.fadeTrack(Game.bgm,0,1.4,"_phase1Fade");
+ if(Game.bgmPhase2){
+  Game.bgmPhase2.pause();
+  Game.bgmPhase2.currentTime=0;
+  Game.bgmPhase2.volume=0;
+  const p=Game.bgmPhase2.play();
+  if(p&&p.catch)p.catch(()=>{});
+  Game.fadeTrack(Game.bgmPhase2,.16,2.2,"_phase2Fade");
+ }
+};
+
 Game.startMusic=function(){
  Game.ensureAudio();
+ Game.phase2MusicStarted=false;
+ if(Game.bgmPhase2){Game.bgmPhase2.pause();Game.bgmPhase2.currentTime=0;Game.bgmPhase2.volume=0;}
  if(Game.bgm){
   Game.bgm.pause();
   Game.bgm.currentTime=0;
@@ -129,15 +160,16 @@ Game.startMusic=function(){
  }
 };
 Game.fadeOutMusic=function(duration=5){
- if(Game.bgm&&!Game.bgm.paused)Game.fadeBgm(0,duration);
+ if(Game.bgm&&!Game.bgm.paused)Game.fadeTrack(Game.bgm,0,duration,"_phase1Fade");
+ if(Game.bgmPhase2&&!Game.bgmPhase2.paused)Game.fadeTrack(Game.bgmPhase2,0,duration,"_phase2Fade");
 };
 Game.duckMusic=function(level=.28,duration=.6){
- if(!Game.bgm)return;
- Game.fadeBgm(level,duration);
+ const t=Game.phase2MusicStarted?Game.bgmPhase2:Game.bgm;
+ if(t)Game.fadeTrack(t,level,duration,Game.phase2MusicStarted?"_phase2Fade":"_phase1Fade");
 };
 Game.restoreMusic=function(duration=.9){
- if(!Game.bgm)return;
- Game.fadeBgm(.12,duration);
+ const t=Game.phase2MusicStarted?Game.bgmPhase2:Game.bgm;
+ if(t)Game.fadeTrack(t,Game.phase2MusicStarted?.16:.12,duration,Game.phase2MusicStarted?"_phase2Fade":"_phase1Fade");
 };
 Game.sfxClock=function(){
  for(let i=0;i<8;i++){Game.tone(i%2?880:660,.035,"square",.022,i*.34,-120)}
@@ -317,7 +349,7 @@ Game.skillStatus=function(i){const G=Game;if(i===0&&G.timeStopTurns>0)return `�
 
 Game.reset=function(){
  const G=Game;G.party.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(G.boss,{hp:G.boss.max,phase:1,armor:850});
- G.items.herb=2;G.turn=0;G.active=0;G.bond=0;G.score=0;G.talkCount=0;G.talkRoute=false;G.trueReady=false;G.worldUnlockedAnnounced=false;G.worldUnlockCinema=0;G.deathCinema=0;G.deathSequenceStarted=false;
+ G.items.herb=2;G.phase2MusicStarted=false;G.turn=0;G.active=0;G.bond=0;G.score=0;G.talkCount=0;G.talkRoute=false;G.trueReady=false;G.worldUnlockedAnnounced=false;G.worldUnlockCinema=0;G.deathCinema=0;G.deathSequenceStarted=false;
  G.skillUsed=[0,0,0,0,0,0];G.permanentDead=[false,false,false,false,false,false];G.timeStopTurns=G.barrierTurns=G.critTurns=G.slowTurns=G.oniTurns=0;
  G.attackBoost=[1,1,1,1,1,1];G.stunTurns=[0,0,0,0,0,0];G.bullets=[];G.particles=[];G.damageText=[];G.trails=[];G.shake=G.flash=0;G.initSpace();
  G.introMode=true;G.setState("MENU");
@@ -375,7 +407,7 @@ Game.playWorldUnlockCinema=function(){
  });
  G.shake=8;G.flash=.08;
  setTimeout(()=>{
-  G.bossFx.cinema=0;G.worldUnlockCinema=0;G.restoreMusic(1.2);
+  G.bossFx.cinema=0;G.worldUnlockCinema=0;G.startPhase2Music();
   G.say([
    "アルカ・セラフの生命が、ついに半分を下回った。",
    "砕けた翼の向こうで、宇宙の時計が一斉に震え始める。",

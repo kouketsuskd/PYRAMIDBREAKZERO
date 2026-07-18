@@ -1,8 +1,9 @@
-# DAYBREAK XIV REBIRTH 12 — LOUD SFX
+# DAYBREAK XIV REBIRTH 13 — 後半BGM切り替え
 
-- 全効果音を約4.5倍に増幅
-- BGM音量を約12%へ低下
-- 必殺技・時計演出中はBGMをさらに低下
-- タップ音と被弾音を特に大きく調整
-- 音割れを抑えるコンプレッサーを追加
-- MP3パス: audio/pixel-heartbeat.mp3
+- 前半: audio/pixel-heartbeat.mp3
+- ボスHP50%以下の時計モーション終了後:
+  audio/kudakebashi-no-ketto.mp3
+- 前半曲は1.4秒フェードアウト
+- 後半曲は2.2秒フェードイン
+- 後半曲もループ
+- 大音量効果音設定は維持
