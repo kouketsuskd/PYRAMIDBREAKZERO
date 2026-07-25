@@ -447,7 +447,7 @@ Game.useSkill=function(){
  if(G.skillUsed[i]>=lim){G.toast("この必殺技はもう使えない",1);G.setState("MENU");return}
  G.skillUsed[i]++;
  const names=["ザ・ワールド","ワールド・イズ・マイン","ピラミッド・ハート","鳳翼天翔","領域展開・鬼","虫の知らせ"];
- const quotes=["止まれ、世界。仲間の鼓動だけは進め。","この光の中では、全員の一撃が世界を斬る。","帰る場所を、ここに作る。","この命を、みんなの朝へ渡す。","守るために鬼になる。拳の数を倍にする。","見えなくても分かる。敵が動く、その一瞬前が。"];
+ const quotes=["止まれ、世界。仲間の鼓動だけは進め。","この光の中では、全員の一撃が世界を斬る。","帰る場所を、ここに作る。","この命を、みんなの朝へ渡す。","守るために鬼になる。攻撃の時間を引き延ばす。","見えなくても分かる。敵が動く、その一瞬前が。"];
  G.startCinematic(["clock","slash","pyramid","phoenix","oni","future"][i],names[i],quotes[i],p.c);G.setState("SKILL_CINEMA");
  setTimeout(()=>{
   G.setState("MENU");Game.restoreMusic(.8);
@@ -465,7 +465,7 @@ Game.useSkill=function(){
     if(n>=0)G.active=n;G.setState("MENU")
    });return
   }
-  if(i===4){G.oniTurns=Math.max(G.oniTurns,3);G.attackBoost[i]=2;G.say(["赤黒い領域が開き、イサジの背後に『鬼』が立った。","三回のイサジの行動で、攻撃回数が二倍になる。"],backSame);return}
+  if(i===4){G.oniTurns=Math.max(G.oniTurns,3);G.attackBoost[i]=2;G.say(["赤黒い領域が開き、イサジの背後に『鬼』が立った。","三回のイサジの行動で、連打攻撃の制限時間が6.5秒になる。"],backSame);return}
   if(i===5){G.slowTurns=Math.max(G.slowTurns,5);G.say([`虫の知らせ ${G.skillUsed[i]}/2。`,`五回の敵攻撃で、弾速と予備動作が遅くなる。`],backSame);return}
  },2500);
 };
@@ -1045,5 +1045,89 @@ Game.draw=function(){
     if(l.trail.length){g.moveTo(l.trail[0].x,l.trail[0].y);for(const q of l.trail)g.lineTo(q.x,q.y)}g.lineTo(l.x,l.y);g.stroke();g.fillStyle="#fff";g.beginPath();g.arc(l.x,l.y,l.rifle?23:l.charged?15:5,0,Math.PI*2);g.fill();g.restore();
    }
   }
+ };
+})();
+
+/* REBIRTH 27: DYNAMIC TAP RUSH */
+(function(){
+ const G=Game;
+ G.attackPulse=0;G.attackBurst=[];G.attackDisplayDamage=0;
+ const oldChoose=G.chooseAction;
+ G.chooseAction=function(i){
+  const a=G.actions()[i];
+  if(a!=="こうげき")return oldChoose.call(G,i);
+  G.setState("ATTACK");G.attackTime=(G.active===4&&G.oniTurns>0)?6.5:4.2;
+  G.attackHits=0;G.attackTotal=0;G.attackEnded=false;G.attackPulse=0;G.attackBurst=[];G.attackDisplayDamage=0;
+ };
+ G.sfxRushHit=function(power=1){
+  G.ensureAudio();
+  const v=Math.min(.16,.085+power*.004);
+  G.noise(.11,v);
+  G.tone(82+Math.random()*35,.18,"sawtooth",v,0,-42);
+  G.tone(250+Math.random()*130,.09,"square",v*.7,0,-150);
+  G.tone(920+Math.random()*250,.055,"sine",v*.45,.018,-420);
+ };
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded)return;
+  const p=G.current();
+  let actual=Math.floor(p.pow*(17+Math.min(16,G.attackHits)*.7)+G.rnd(90,190));
+  if(G.critTurns>0)actual=Math.floor(actual*1.8);
+  if(G.bossFx.coreOpen>0)actual=Math.floor(actual*1.45);
+  actual=Math.max(120,actual);
+  G.boss.hp=Math.max(0,G.boss.hp-actual);G.score+=actual*10;
+  G.attackHits++;G.attackTotal+=actual;G.attackDisplayDamage=actual;G.attackPulse=1;
+  const ang=G.rnd(0,Math.PI*2),rad=G.rnd(28,120);
+  G.attackBurst.push({x:270+Math.cos(ang)*rad,y:670+Math.sin(ang)*rad*.55,l:.5,r:G.rnd(10,24)});
+  G.damageText.push({x:G.rnd(205,335),y:G.rnd(155,225),l:.72,n:actual.toLocaleString(),crit:G.critTurns>0,total:false});
+  G.bossFx.hit=.2;G.shake=Math.min(20,5+G.attackHits*.25);G.flash=.035;G.particle(270,190,p.c,8,.65);G.sfxRushHit(G.attackHits);
+  if(G.boss.hp<=0){G.attackEnded=true;G.normalEnding()}
+ };
+ G.finishAttack=function(){
+  if(G.attackEnded)return;G.attackEnded=true;
+  const bonus=Math.floor(G.attackTotal*Math.min(.28,.08+G.attackHits*.004));
+  if(bonus>0){G.boss.hp=Math.max(0,G.boss.hp-bonus);G.attackTotal+=bonus}
+  G.damageText.push({x:270,y:270,l:1.7,n:G.attackTotal.toLocaleString(),crit:true,total:true});
+  G.sfxAttack(true,true);G.shake=26;G.flash=.2;
+  if(G.boss.hp<=0){G.normalEnding();return}
+  setTimeout(()=>G.beginDefense(),650);
+ };
+ const oldUpdate=G.update;
+ G.update=function(dt){
+  const wasAttack=G.state==="ATTACK";
+  oldUpdate.call(G,dt);
+  G.attackPulse=Math.max(0,G.attackPulse-dt*4.8);
+  G.attackBurst.forEach(b=>b.l-=dt);G.attackBurst=G.attackBurst.filter(b=>b.l>0);
+  // Original update moves an obsolete timing cursor; it is intentionally ignored by the new overlay.
+ };
+ const oldDraw=G.draw;
+ G.draw=function(){
+  oldDraw.call(G);
+  if(G.state!=="ATTACK")return;
+  const g=G.ctx,t=Math.max(0,G.attackTime),rate=Math.min(1,G.attackHits/35),pulse=G.attackPulse;
+  g.save();
+  // Hide party parameters and command panel completely during the rush.
+  const bg=g.createLinearGradient(0,430,0,950);bg.addColorStop(0,"rgba(3,7,18,.94)");bg.addColorStop(1,"rgba(0,0,3,.99)");g.fillStyle=bg;g.fillRect(0,420,540,540);
+  g.strokeStyle=G.current().c;g.lineWidth=4+Math.sin(G.time*10)*1.5;g.shadowColor=G.current().c;g.shadowBlur=26;g.strokeRect(24,448,492,455);
+  g.shadowBlur=0;G.T("TIME ATTACK RUSH",270,493,25,"#fff","center");
+  G.T("画面を連打して攻撃！",270,535,22,"#ffd84e","center");
+  G.T(t.toFixed(1),270,602,62,t<1?"#ff5577":"#fff","center");
+  G.R(55,625,430,18,"#202737");G.R(55,625,430*Math.max(0,t/((G.active===4&&G.oniTurns>0)?6.5:4.2)),18,t<1?"#ff456a":G.current().c);
+  const rr=78+pulse*34+Math.sin(G.time*8)*5;
+  g.globalAlpha=.28+.25*pulse;g.fillStyle=G.current().c;g.beginPath();g.arc(270,744,rr+25,0,Math.PI*2);g.fill();g.globalAlpha=1;
+  g.strokeStyle="#fff";g.lineWidth=8+pulse*8;g.shadowColor=G.current().c;g.shadowBlur=35+pulse*35;g.beginPath();g.arc(270,744,rr,0,Math.PI*2);g.stroke();
+  g.shadowBlur=0;G.T("TAP!",270,758,42,"#fff","center");
+  G.T(`与えたダメージ  ${G.attackTotal.toLocaleString()}`,270,855,20,"#ffd84e","center");
+  for(const b of G.attackBurst){g.globalAlpha=Math.max(0,b.l*2);g.strokeStyle="#fff";g.lineWidth=5;g.beginPath();g.arc(b.x,b.y,b.r+(1-b.l)*35,0,Math.PI*2);g.stroke()}
+  g.globalAlpha=1;g.restore();
+ };
+ // Isaji now extends the tapping window rather than changing a hidden hit limit.
+ const oldSkill=G.useSkill;
+ G.useSkill=function(){return oldSkill.call(G)};
+ const oldDrawSkill=G.draw;
+ // Patch text used by both the skill panel and cinematic dialogue.
+ const originalT=G.T;
+ G.T=function(text,...args){
+  if(text==="イサジの行動3回 攻撃回数2倍")text="イサジの攻撃時間を6.5秒に延長";
+  return originalT.call(G,text,...args);
  };
 })();
