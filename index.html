@@ -1158,4 +1158,73 @@ Game.draw=function(){
 })();
 </script>
 
+
+<script>
+"use strict";
+(function(){
+ const G=Game;
+ /* REBIRTH 28 VERIFIED: TALK is a strictly non-attack defense turn. */
+ G.pendingTalkDefense=false;
+ G.talkDefenseNonAttack=false;
+
+ const originalTalk=G.talk;
+ G.talk=function(){
+   G.pendingTalkDefense=true;
+   return originalTalk.apply(G,arguments);
+ };
+
+ const originalBeginDefense28=G.beginDefense;
+ G.beginDefense=function(){
+   G.talkDefenseNonAttack=!!G.pendingTalkDefense;
+   G.pendingTalkDefense=false;
+   return originalBeginDefense28.apply(G,arguments);
+ };
+
+ const originalNextTurn28=G.nextTurn;
+ G.nextTurn=function(){
+   const result=originalNextTurn28.apply(G,arguments);
+   G.talkDefenseNonAttack=false;
+   return result;
+ };
+
+ /* Block every player-side damage source during the defense created by はなす. */
+ const originalDamageBoss28=G.damageBoss;
+ G.damageBoss=function(raw){
+   if(G.state==="DEFENSE"&&G.talkDefenseNonAttack)return 0;
+   return originalDamageBoss28.call(G,raw);
+ };
+
+ /* Homing, charged buster and Posidrone Rifle cannot fire during a talk defense. */
+ const originalFireHoming28=G.fireHomingLaser;
+ G.fireHomingLaser=function(mode){
+   if(G.state==="DEFENSE"&&G.talkDefenseNonAttack){
+     G.homingCharging=false;
+     G.homingChargeStart=0;
+     G.homingChargeMode=null;
+     if(G.stopChargeSound)G.stopChargeSound();
+     G.toast("はなすを選んだ敵ターンは攻撃できない",1.35);
+     return;
+   }
+   return originalFireHoming28.call(G,mode);
+ };
+
+ /* Do not even start charge effects/sounds on a talk defense. */
+ G.canvas.addEventListener("pointerdown",function(){
+   if(G.state==="DEFENSE"&&G.talkDefenseNonAttack){
+     G.homingCharging=false;
+     G.homingChargeStart=0;
+     G.homingChargeMode=null;
+     if(G.stopChargeSound)G.stopChargeSound();
+   }
+ },true);
+
+ const originalReset28=G.reset;
+ G.reset=function(){
+   G.pendingTalkDefense=false;
+   G.talkDefenseNonAttack=false;
+   return originalReset28.apply(G,arguments);
+ };
+})();
+</script>
+
 </body></html>
