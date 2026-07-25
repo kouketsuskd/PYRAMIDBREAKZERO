@@ -2321,3 +2321,114 @@ Game.draw=function(){
  };
 })();
 </script>
+
+<script>
+"use strict";
+/* REBIRTH 39 - hit grace restored / yellow TOTAL + weapon damage / Isaji text cleanup */
+(function(){
+ const G=Game;
+ G.hitGrace=0;
+
+ /* Enemy-turn start has no free invulnerability. A hit itself grants ~0.7 sec grace. */
+ const hurt39=G.hurt;
+ G.hurt=function(n){
+  if(G.state==="DEFENSE" && G.hitGrace>0)return;
+  const before=G.current().hp;
+  hurt39.call(G,n);
+  if(G.state==="DEFENSE" && before!==G.current().hp){
+   G.hitGrace=.7;
+   G.heart.inv=.7;
+  }else if(G.state==="DEFENSE"){
+   /* Even if the damaged character fell and active changed, the collision was a real hit. */
+   G.hitGrace=.7;
+   G.heart.inv=.7;
+  }
+ };
+
+ const begin39=G.beginDefense;
+ G.beginDefense=function(){
+  G.hitGrace=0;
+  const out=begin39.apply(G,arguments);
+  if(G.state==="DEFENSE"){
+   G.safeSpawn=0;
+   G.heart.inv=0;
+  }
+  return out;
+ };
+ const intro39=G.startIntroAttack;
+ G.startIntroAttack=function(){
+  G.hitGrace=0;
+  const out=intro39.apply(G,arguments);
+  if(G.state==="DEFENSE"){
+   G.safeSpawn=0;
+   G.heart.inv=0;
+  }
+  return out;
+ };
+
+ /* The older layer zeroed heart.inv every frame. Restore it only after a real hit. */
+ const update39=G.update;
+ G.update=function(dt){
+  update39.call(G,dt);
+  if(G.state==="DEFENSE"){
+   if(G.hitGrace>0){
+    G.hitGrace=Math.max(0,G.hitGrace-dt);
+    G.heart.inv=G.hitGrace;
+   }else{
+    G.heart.inv=0;
+   }
+  }else{
+   G.hitGrace=0;
+  }
+ };
+
+ /* Remove only the unwanted final explanatory sentence after Isaji's special. */
+ const say39=G.say;
+ G.say=function(lines,next){
+  let arr=Array.isArray(lines)?lines.slice():[lines];
+  arr=arr.filter(line=>!String(line).includes("1回攻撃するごとに残り回数が1ずつ減る"));
+  if(arr.length===0){ if(next)next(); return; }
+  return say39.call(G,arr,next);
+ };
+
+ /* Hide the old red result layers, then redraw the requested yellow results. */
+ const draw39=G.draw;
+ G.draw=function(){
+  const totalFx=G.simpleTotalFx||0;
+  const weaponFx=G.redWeaponFx||0;
+  const totalValue=G.simpleTotalValue||0;
+  const weaponValue=G.redWeaponValue||0;
+
+  if(totalFx>0)G.simpleTotalFx=0;
+  if(weaponFx>0)G.redWeaponFx=0;
+  draw39.call(G);
+  G.simpleTotalFx=totalFx;
+  G.redWeaponFx=weaponFx;
+
+  const g=G.ctx;
+  if(totalFx>0){
+   const t=totalFx/1.35;
+   const a=Math.max(0,Math.min(1,(1-t)*7,t*4));
+   g.save();
+   g.globalAlpha=a;
+   g.shadowColor="#ffd84e";
+   g.shadowBlur=32;
+   const scale=1+Math.max(0,t-.72)*.15;
+   g.translate(270,205);
+   g.scale(scale,scale);
+   G.T(`TOTAL ${Number(totalValue).toLocaleString()}`,0,18,54,"#ffd84e","center");
+   g.restore();
+  }
+  if(weaponFx>0){
+   const t=weaponFx/1.45;
+   const a=Math.max(0,Math.min(1,(1-t)*8,t*4));
+   g.save();
+   g.globalAlpha=a;
+   g.shadowColor="#ffd84e";
+   g.shadowBlur=34;
+   G.T(Number(weaponValue).toLocaleString(),270,245,62,"#ffd84e","center");
+   g.restore();
+  }
+ };
+})();
+</script>
