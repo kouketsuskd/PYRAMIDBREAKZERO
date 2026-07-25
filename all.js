@@ -1131,3 +1131,69 @@ Game.draw=function(){
   return originalT.call(G,text,...args);
  };
 })();
+
+/* REBIRTH 28: TALK = COMPLETE NON-ATTACK ROUTE */
+(function(){
+ const G=Game;
+ G.nonAttackDefense=false;
+
+ const prevChoose=G.chooseAction;
+ G.chooseAction=function(i){
+  const a=G.actions()[i];
+  if(a==="はなす"||a==="手を差し伸べる"){
+   G.nonAttackDefense=true;
+   return prevChoose.call(G,i);
+  }
+  if(a!=="どうぐ")G.nonAttackDefense=false;
+  return prevChoose.call(G,i);
+ };
+
+ const prevFire=G.fireHomingLaser;
+ G.fireHomingLaser=function(mode){
+  if(G.nonAttackDefense){
+   G.toast("『はなす』を選んだ敵ターンは攻撃できない",1.05);
+   return;
+  }
+  return prevFire.call(G,mode);
+ };
+
+ const prevNext=G.nextTurn;
+ G.nextTurn=function(){
+  const r=prevNext.apply(G,arguments);
+  G.nonAttackDefense=false;
+  return r;
+ };
+
+ /* 防御開始前にライフルのチャージ状態を止める。装着済みでも発射は不可。 */
+ const prevBegin=G.beginDefense;
+ G.beginDefense=function(){
+  if(G.nonAttackDefense){
+   G.homingCharging=false;
+   G.homingChargeStart=0;
+   G.homingChargeMode=null;
+  }
+  return prevBegin.apply(G,arguments);
+ };
+
+ /* 捕捉リスナーで、既存のホーミング開始処理より先に止める。 */
+ G.canvas.addEventListener("pointerdown",function(e){
+  if(G.state==="DEFENSE"&&G.nonAttackDefense){
+   e.preventDefault();
+   e.stopImmediatePropagation();
+   G.homingCharging=false;
+   G.homingChargeStart=0;
+   G.homingChargeMode=null;
+   G.toast("『はなす』中は攻撃できない",.72);
+  }
+ },true);
+
+ /* バリア反射そのものは残すが、会話ルートの敵ターンではダメージを0にする。 */
+ const prevDamageBoss=G.damageBoss;
+ G.damageBoss=function(n){
+  if(G.nonAttackDefense&&G.state==="DEFENSE"&&G.guardActive&&G.guardActive()){
+   G.bossFx.hit=Math.max(G.bossFx.hit||0,.08);
+   return 0;
+  }
+  return prevDamageBoss.apply(G,arguments);
+ };
+})();
