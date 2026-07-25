@@ -1734,4 +1734,119 @@ Game.draw=function(){
 })();
 </script>
 
+
+<script>
+"use strict";
+/* REBIRTH 33 - persistent Kazuaki/Isaji weapon effects + rapid total result */
+(function(){
+ const G=Game;
+ G.weaponCritCharge=0;
+ G.weaponOniCharge=0;
+ G.attackWeaponCrit=false;
+ G.rapidTotalFx=0;
+ G.rapidTotalValue=0;
+
+ const oldReset=G.reset;
+ G.reset=function(){
+  oldReset.apply(G,arguments);
+  G.weaponCritCharge=0;G.weaponOniCharge=0;G.attackWeaponCrit=false;
+  G.rapidTotalFx=0;G.rapidTotalValue=0;
+ };
+
+ /* Weapon effects are stored separately so the following enemy turn cannot erase them. */
+ const oldApply=G.applyWeaponEffect;
+ G.applyWeaponEffect=function(i){
+  if(i===1){
+   G.weaponCritCharge+=1;
+   G.toast("次の攻撃を1回クリティカル化",1.35);
+   return;
+  }
+  if(i===4){
+   G.weaponOniCharge+=1;
+   G.toast("次のイサジ攻撃を1回延長",1.35);
+   return;
+  }
+  return oldApply.call(G,i);
+ };
+
+ const oldChoose=G.chooseAction;
+ G.chooseAction=function(i){
+  const action=(G.state==="MENU"&&G.actions)?G.actions()[i]:null;
+  if(action==="こうげき"){
+   G.attackWeaponCrit=G.weaponCritCharge>0;
+   if(G.attackWeaponCrit)G.weaponCritCharge--;
+   const useWeaponOni=G.active===4&&G.weaponOniCharge>0;
+   if(useWeaponOni)G.weaponOniCharge--;
+   const r=oldChoose.call(G,i);
+   if(useWeaponOni&&G.state==="ATTACK"&&!G.weaponMode)G.attackTime=Math.max(G.attackTime,5.6);
+   return r;
+  }
+  return oldChoose.call(G,i);
+ };
+
+ /* Every tap keeps its own number; Kazuaki's stored weapon effect boosts one whole rapid attack. */
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
+  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
+  G.rapidStrikeSound(1.45);
+  let shown=820+G.current().pow*4;
+  const isCrit=G.critTurns>0||G.attackWeaponCrit;
+  if(isCrit)shown=Math.floor(shown*1.45);
+  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
+  shown=Math.max(1,Math.floor(shown));
+  G.attackTotal+=shown;
+  G.damageBoss(G.boss.armor+shown);
+  const d=G.damageText[G.damageText.length-1];
+  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=isCrit;d.total=false}
+  G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),G.current().c,7,.65);
+ };
+
+ G.finishAttack=function(){
+  if(G.attackEnded||G.weaponMode)return;
+  G.attackEnded=true;G.shake=24;G.flash=.16;
+  G.rapidTotalValue=Math.max(0,Math.floor(G.attackTotal));
+  G.rapidTotalFx=1.55;
+  G.damageText.push({x:270,y:270,l:1.55,n:G.rapidTotalValue.toLocaleString(),crit:true,total:true});
+  try{G.sfxAttack(true,true)}catch(e){}
+  G.attackWeaponCrit=false;
+  if(G.active===4&&G.oniTurns>0){G.oniTurns--;if(G.oniTurns<=0){G.oniTurns=0;G.attackBoost[4]=1}}
+  if(G.boss.hp>0)setTimeout(()=>{if(G.boss.hp>0)G.beginDefense()},1450);
+ };
+
+ /* Stored Kazuaki charge may also be spent by the next limited weapon attack. */
+ const oldFire=G.fireWeapon;
+ G.fireWeapon=function(){
+  if(G.weaponStopped)return;
+  const useStored=G.weaponCritCharge>0;
+  if(useStored){G.weaponCritCharge--;G.critTurns+=1}
+  oldFire.apply(G,arguments);
+  if(useStored){
+   setTimeout(()=>{if(G.critTurns>0)G.critTurns--},520);
+  }
+ };
+
+ const oldUpdate=G.update;
+ G.update=function(dt){oldUpdate.call(G,dt);if(G.rapidTotalFx>0)G.rapidTotalFx=Math.max(0,G.rapidTotalFx-dt)};
+
+ const oldDraw=G.draw;
+ G.draw=function(){
+  oldDraw.call(G);
+  if(G.rapidTotalFx<=0)return;
+  const g=G.ctx,t=G.rapidTotalFx/1.55;
+  g.save();
+  g.globalAlpha=Math.min(1,(1-t)*4,t*3);
+  g.fillStyle="rgba(0,4,14,.76)";g.fillRect(45,220,450,150);
+  g.strokeStyle=G.current().c;g.lineWidth=3;g.shadowColor=G.current().c;g.shadowBlur=28;g.strokeRect(57,232,426,126);g.shadowBlur=0;
+  G.T("TOTAL DAMAGE",270,267,18,"#dffbff","center");
+  G.T(G.rapidTotalValue.toLocaleString(),270,326,48,"#ffd75f","center");
+  g.restore();
+ };
+
+ if(G.weapons){
+  G.weapons[1].effect="敵ターン後も残る・次の攻撃1回を会心化";
+  G.weapons[4].effect="敵ターン後も残る・次のイサジ攻撃1回を延長";
+ }
+})();
+</script>
+
 </body></html>
