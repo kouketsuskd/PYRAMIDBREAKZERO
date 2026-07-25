@@ -1,4 +1,20 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK XIV REBIRTH 5 REBIRTH 3 REBIRTH</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XIV REBIRTH 3 REBIRTH</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK XIV REBIRTH 5 REBIRTH 3 REBIRTH</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style>
+<style id="rebirth41-damage-result-override">
+/* Attack result: red, centered directly beneath the boss. */
+#totalDamage, #total-damage, .totalDamage, .total-damage,
+#damageTotal, #damage-total, .damageTotal, .damage-total,
+#attackResult, #attack-result, .attackResult, .attack-result,
+#weaponDamage, #weapon-damage, .weaponDamage, .weapon-damage {
+  color: #ff2b2b !important;
+  left: 50% !important;
+  top: 43% !important;
+  transform: translate(-50%, 0) !important;
+  text-align: center !important;
+  z-index: 9999 !important;
+}
+</style>
+
+</head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XIV REBIRTH 3 REBIRTH</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -14,7 +30,7 @@
     if(t)t.textContent='エラー: '+(e.message||'不明なエラー');if(f)f.classList.remove('hidden');
   });
 })();
-</script><script>"use strict";window.Game={W:540,H:960,canvas:null,ctx:null,arena:{x:34,y:305,w:472,h:405},state:"BOOT",sub:"none",last:0,time:0,turn:0,active:0,bond:0,score:0,talkCount:0,talkRoute:false,trueReady:false,dialogue:[],dialogueIndex:0,dialogueNext:null,attackX:70,attackDir:1,attackTime:0,attackHits:0,attackTotal:0,attackEnded:false,bullets:[],particles:[],damageText:[],trails:[],hitRects:[],defenseTime:0,patternId:0,patternClock:0,dragging:false,shake:0,flash:0,message:"",messageTime:0,timeStopTurns:0,barrierTurns:0,critTurns:0,slowTurns:0,oniTurns:0,skillUsed:[0,0,0,0,0,0],permanentDead:[false,false,false,false,false,false],attackBoost:[1,1,1,1,1,1],stunTurns:[0,0,0,0,0,0],bossFx:{hover:0,wing:0,hit:0,transform:0,handL:0,handR:0,dash:0,reach:0,eyeBeam:0,coreOpen:0,cinema:0,cinemaType:"",cinemaName:"",cinemaQuote:"",cinemaColor:"#fff"},heart:{x:270,y:515,r:10,inv:0,ox:0,oy:0},party:[{name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#725fbd",skill:"ザ・ワールド",pow:22},{name:"カズアキ",max:195,hp:195,mp:50,mm:50,c:"#805044",skill:"ワールド・イズ・マイン",pow:39},{name:"マッピー",max:125,hp:125,mp:90,mm:90,c:"#d0aa60",skill:"ピラミッド・ハート",pow:18},{name:"ケイタ",max:135,hp:135,mp:78,mm:78,c:"#ef9432",skill:"鳳翼天翔",pow:29},{name:"イサジ",max:185,hp:185,mp:46,mm:46,c:"#edc650",skill:"領域展開・鬼",pow:36},{name:"リョウゴ",max:140,hp:140,mp:82,mm:82,c:"#438fca",skill:"虫の知らせ",pow:26}],boss:{name:"機械天使 アルカ・セラフ 完全体",max:1000000,hp:1000000,phase:1,armor:850},items:{herb:1},stars:[],nebulae:[],meteors:[]};Game.clamp=(v,a,b)=>Math.max(a,Math.min(b,v));Game.rnd=(a,b)=>a+Math.random()*(b-a);Game.actions=()=>Game.trueReady?["こうげき","わざ","どうぐ","手を差し伸べる","こうたい"]:["こうげき","わざ","どうぐ","はなす","こうたい"];Game.current=function(){if(Game.party[Game.active].hp<=0||Game.permanentDead[Game.active]){const i=Game.party.findIndex((p,j)=>p.hp>0&&!Game.permanentDead[j]);Game.active=i<0?0:i}return Game.party[Game.active]};Game.aliveCount=()=>Game.party.filter((p,i)=>p.hp>0&&!Game.permanentDead[i]).length;Game.skillLimit=i=>1;
+</script><script>"use strict";window.Game={W:540,H:960,canvas:null,ctx:null,arena:{x:34,y:305,w:472,h:405},state:"BOOT",sub:"none",last:0,time:0,turn:0,active:0,bond:0,score:0,talkCount:0,talkRoute:false,trueReady:false,dialogue:[],dialogueIndex:0,dialogueNext:null,attackX:70,attackDir:1,attackTime:0,attackHits:0,attackTotal:0,attackEnded:false,bullets:[],particles:[],damageText:[],trails:[],hitRects:[],defenseTime:0,patternId:0,patternClock:0,dragging:false,shake:0,flash:0,message:"",messageTime:0,timeStopTurns:0,barrierTurns:0,critTurns:0,slowTurns:0,oniTurns:0,skillUsed:[0,0,0,0,0,0],permanentDead:[false,false,false,false,false,false],attackBoost:[1,1,1,1,1,1],stunTurns:[0,0,0,0,0,0],bossFx:{hover:0,wing:0,hit:0,transform:0,handL:0,handR:0,dash:0,reach:0,eyeBeam:0,coreOpen:0,cinema:0,cinemaType:"",cinemaName:"",cinemaQuote:"",cinemaColor:"#fff"},heart:{x:270,y:515,r:10,inv:0,ox:0,oy:0},party:[{name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#725fbd",skill:"ザ・ワールド",pow:22},{name:"カズアキ",max:195,hp:195,mp:50,mm:50,c:"#805044",skill:"ワールド・イズ・マイン",pow:39},{name:"マッピー",max:125,hp:125,mp:90,mm:90,c:"#d0aa60",skill:"ピラミッド・ハート",pow:18},{name:"ケイタ",max:135,hp:135,mp:78,mm:78,c:"#ef9432",skill:"鳳翼天翔",pow:29},{name:"イサジ",max:185,hp:185,mp:46,mm:46,c:"#edc650",skill:"領域展開・鬼",pow:36},{name:"リョウゴ",max:140,hp:140,mp:82,mm:82,c:"#438fca",skill:"虫の知らせ",pow:26}],boss:{name:"機械天使 アルカ・セラフ 完全体",max:1200000,hp:1200000,phase:1,armor:850},items:{herb:1},stars:[],nebulae:[],meteors:[]};Game.clamp=(v,a,b)=>Math.max(a,Math.min(b,v));Game.rnd=(a,b)=>a+Math.random()*(b-a);Game.actions=()=>Game.trueReady?["こうげき","わざ","どうぐ","手を差し伸べる","こうたい"]:["こうげき","わざ","どうぐ","はなす","こうたい"];Game.current=function(){if(Game.party[Game.active].hp<=0||Game.permanentDead[Game.active]){const i=Game.party.findIndex((p,j)=>p.hp>0&&!Game.permanentDead[j]);Game.active=i<0?0:i}return Game.party[Game.active]};Game.aliveCount=()=>Game.party.filter((p,i)=>p.hp>0&&!Game.permanentDead[i]).length;Game.skillLimit=i=>1;
 "use strict";
 Game.audio=null;Game.bgm=null;Game.bgmPhase2=null;Game.musicTimer=null;Game.musicStep=0;Game.sfxGain=4.5;Game.phase2MusicStarted=false;
 
@@ -347,7 +363,7 @@ Game.updateBullets=function(dt){
  G.bullets.push(...pending.slice(0,Math.max(0,120-G.bullets.length)));G.bullets=G.bullets.filter(b=>b&&(b.life===undefined||b.life>0)&&b.x>G.arena.x-180&&b.x<G.arena.x+G.arena.w+180&&b.y>G.arena.y-180&&b.y<G.arena.y+G.arena.h+180);if(G.bullets.length>(G.introMode?150:120))G.bullets.length=(G.introMode?150:120);
 };
 "use strict";
-Game.reset=function(){const G=Game;G.party.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(G.boss,{hp:G.boss.max,phase:1,armor:850});G.items.herb=1;G.turn=0;G.active=0;G.bond=0;G.score=0;G.talkCount=0;G.talkRoute=false;G.trueReady=false;G.skillUsed=[0,0,0,0,0,0];G.permanentDead=[false,false,false,false,false,false];G.timeStopTurns=G.barrierTurns=G.critTurns=G.slowTurns=G.oniTurns=0;G.attackBoost=[1,1,1,1,1,1];G.stunTurns=[0,0,0,0,0,0];G.bullets=[];G.particles=[];G.damageText=[];G.trails=[];G.shake=G.flash=0;G.initSpace();G.setState("MENU");G.say(["――空から、壊れた神が落ちてきた。","機械天使の生命値は1,000,000。共有のやくそうは一つ。","倒すこともできる。三十回、言葉を届けることもできる。","ただし言葉を選んだ瞬間から、敵の攻撃力は二倍になる。"],()=>G.setState("MENU"))};
+Game.reset=function(){const G=Game;G.party.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(G.boss,{hp:G.boss.max,phase:1,armor:850});G.items.herb=1;G.turn=0;G.active=0;G.bond=0;G.score=0;G.talkCount=0;G.talkRoute=false;G.trueReady=false;G.skillUsed=[0,0,0,0,0,0];G.permanentDead=[false,false,false,false,false,false];G.timeStopTurns=G.barrierTurns=G.critTurns=G.slowTurns=G.oniTurns=0;G.attackBoost=[1,1,1,1,1,1];G.stunTurns=[0,0,0,0,0,0];G.bullets=[];G.particles=[];G.damageText=[];G.trails=[];G.shake=G.flash=0;G.initSpace();G.setState("MENU");G.say(["――空から、壊れた神が落ちてきた。","機械天使の生命値は1,200,000。共有のやくそうは一つ。","倒すこともできる。三十回、言葉を届けることもできる。","ただし言葉を選んだ瞬間から、敵の攻撃力は二倍になる。"],()=>G.setState("MENU"))};
 Game.chooseAction=function(i){const a=Game.actions()[i];if(a==="こうげき"){Game.setState("ATTACK");Game.attackX=70;Game.attackDir=1;Game.attackTime=3.8;Game.attackHits=0;Game.attackTotal=0;Game.attackEnded=false}if(a==="わざ")Game.setState("SKILL");if(a==="どうぐ")Game.setState("ITEM");if(a==="はなす"||a==="手を差し伸べる")Game.talk();if(a==="こうたい")Game.setState("SWITCH")};
 Game.useSkill=function(){const G=Game,p=G.current(),i=G.active,lim=G.skillLimit(i);if(G.skillUsed[i]>=lim){G.toast("この必殺技はもう使えない",1);G.setState("MENU");return}G.skillUsed[i]++;const names=["ザ・ワールド","ワールド・イズ・マイン","ピラミッド・ハート","鳳翼天翔","領域展開・鬼","虫の知らせ"],quotes=["止まれ、世界。仲間の鼓動だけは進め。","この三ターン、すべてを会心に変える。","全員で帰る場所を守る。","この命を、みんなの朝に変える。","攻撃回数を倍にする。守るための鬼だ。","敵の時間だけを遅くする。"];G.startCinematic(["clock","slash","pyramid","phoenix","oni","future"][i],names[i],quotes[i],p.c);G.setState("SKILL_CINEMA");setTimeout(()=>{if(i===0){G.timeStopTurns=6;p.mp=0;G.say(["宇宙から音が消えた。","六回の敵ターンが停止する。"],G.nextTurn);return}if(i===1){G.critTurns=3;G.say(["宇宙に巨大な亀裂が走った。","三ターン、通常攻撃が必ずクリティカルになる。"],G.beginDefense);return}if(i===2){G.barrierTurns=Math.max(G.barrierTurns,3);G.party.forEach((a,j)=>{if(!G.permanentDead[j])a.hp=Math.min(a.max,a.hp+55)});G.say(["巨大な黄金のピラミッドが仲間を包んだ。","全員回復。三回の敵攻撃を大幅軽減する。"],G.beginDefense);return}if(i===3){G.party.forEach((a,j)=>{if(j!==i&&!G.permanentDead[j])a.hp=a.max});p.hp=0;G.permanentDead[i]=true;G.say(["鳳凰が宇宙を横切り、仲間の傷をすべて消した。","ケイタ「これで、みんな帰れる。」"],G.nextTurn);return}if(i===4){G.oniTurns=4;G.attackBoost[i]=2;G.say(["赤黒い領域が開いた。","四ターン、イサジの攻撃可能回数が倍になる。"],G.beginDefense);return}if(i===5){G.slowTurns=Math.max(G.slowTurns,4);G.say([`虫の知らせ ${G.skillUsed[i]}/1。`,"四回の敵攻撃で、弾速と予備動作が遅くなる。"],G.beginDefense);return}},1500)};
 Game.useItem=function(){if(Game.items.herb<=0){Game.toast("やくそうはもうない",.9);Game.setState("MENU");return}Game.items.herb--;const p=Game.current();p.hp=Math.min(p.max,p.hp+80);Game.toast(`${p.name} HP+80`,1);Game.beginDefense()};
@@ -1837,7 +1853,7 @@ Game.draw=function(){
   g.globalAlpha=Math.min(1,(1-t)*4,t*3);
   g.fillStyle="rgba(0,4,14,.76)";g.fillRect(45,220,450,150);
   g.strokeStyle=G.current().c;g.lineWidth=3;g.shadowColor=G.current().c;g.shadowBlur=28;g.strokeRect(57,232,426,126);g.shadowBlur=0;
-  G.T("TOTAL DAMAGE",270,267,18,"#dffbff","center");
+  G.T("DAMAGE",270,267,18,"#dffbff","center");
   G.T(G.rapidTotalValue.toLocaleString(),270,326,48,"#ffd75f","center");
   g.restore();
  };
@@ -2029,406 +2045,5 @@ Game.draw=function(){
   G.weapons[1].effect="次の攻撃1回を会心化";
   G.weapons[4].effect="次のイサジ攻撃1回を強化";
  }
-})();
-</script>
-
-<script>
-"use strict";
-/* REBIRTH 36 - simple weapons / smooth total damage / no defense spawn invincibility */
-(function(){
- const G=Game;
- G.simpleTotalFx=0;
- G.simpleTotalValue=0;
-
- /* Distinct one-shot weapon power for each character. Only Keita keeps a special effect. */
- if(G.weapons){
-  const bases=[42000,56000,39000,51000,60000,44500];
-  const effects=["攻撃のみ","攻撃のみ","攻撃のみ","攻撃＋倒れた仲間を1人蘇生","攻撃のみ","攻撃のみ"];
-  G.weapons.forEach((w,i)=>{w.base=bases[i];w.effect=effects[i]});
- }
-
- /* Remove all weapon-granted status effects. Keita revival is handled in fireWeapon. */
- G.applyWeaponEffect=function(){ };
- G.weaponCritCharge=0;
- G.weaponOniCharge=0;
-
- const reset36=G.reset;
- G.reset=function(){
-  reset36.apply(G,arguments);
-  G.weaponCritCharge=0;G.weaponOniCharge=0;G.attackWeaponCrit=false;G.attackWeaponOni=false;
-  G.simpleTotalFx=0;G.simpleTotalValue=0;
- };
-
- /* Normal attack: per-tap damage has only a small random range. */
- G.attackTap=function(){
-  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
-  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
-  G.rapidStrikeSound(1.45);
-  const p=G.current();
-  const base=820+p.pow*4;
-  let shown=Math.round(base*G.rnd(.96,1.04));
-  const isCrit=G.critTurns>0;
-  if(isCrit)shown=Math.floor(shown*1.45);
-  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
-  shown=Math.max(1,shown);
-  G.attackTotal+=shown;
-  G.damageBoss(G.boss.armor+shown);
-  const d=G.damageText[G.damageText.length-1];
-  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=isCrit;d.total=false}
-  G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),p.c,7,.65);
- };
-
- /* End the normal attack by letting one large total number flow in naturally, with no panel/frame. */
- G.finishAttack=function(){
-  if(G.attackEnded||G.weaponMode)return;
-  G.attackEnded=true;G.shake=22;G.flash=.14;
-  G.simpleTotalValue=Math.max(0,Math.floor(G.attackTotal));
-  G.simpleTotalFx=1.35;
-  try{G.sfxAttack(true,true)}catch(e){}
-  if(G.active===4&&G.oniTurns>0){G.oniTurns--;if(G.oniTurns<=0){G.oniTurns=0;G.attackBoost[4]=1}}
-  if(G.boss.hp>0)setTimeout(()=>{if(G.boss.hp>0)G.beginDefense()},1300);
- };
-
- /* Weapons are pure damage except Keita. Kazuaki's active critical skill also boosts weapon damage. */
- G.fireWeapon=function(){
-  if(G.weaponStopped)return;
-  G.weaponStopped=true;G.attackEnded=true;
-  const i=G.active,w=G.weapons[i],dist=Math.abs(G.weaponCursor-270),accuracy=Math.max(0,1-dist/200);
-  const mult=.72+accuracy*.46;
-  let damage=Math.floor(w.base*mult);
-  const skillCritical=G.critTurns>0;
-  if(skillCritical)damage=Math.floor(damage*1.45);
-  G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
-  try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
-  for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
-  setTimeout(()=>{
-   if(G.boss.hp<=0)return;
-   G.damageBoss(damage);
-   const d=G.damageText[G.damageText.length-1];
-   if(d)d.crit=skillCritical;
-   if(G.boss.hp<=0)return;
-   /* Keita alone keeps the selectable revival effect. */
-   if(i===3){
-    G.reviveCandidates=[];
-    G.party.forEach((p,j)=>{if(j!==3&&(p.hp<=0||G.permanentDead[j]))G.reviveCandidates.push(j)});
-    if(G.reviveCandidates.length){G.pendingWeaponDefense=true;G.setState("REVIVE_SELECT");G.toast("蘇生する仲間を選択",1.2);return}
-   }
-   G.finishWeaponFlow();
-  },420);
- };
-
- /* Remove the free invincibility window at the start of every enemy turn. */
- const defense36=G.beginDefense;
- G.beginDefense=function(){
-  const out=defense36.apply(G,arguments);
-  if(G.state==="DEFENSE")G.heart.inv=0;
-  return out;
- };
-
- const update36=G.update;
- G.update=function(dt){
-  update36.call(G,dt);
-  if(G.simpleTotalFx>0)G.simpleTotalFx=Math.max(0,G.simpleTotalFx-dt);
- };
-
- const draw36=G.draw;
- G.draw=function(){
-  draw36.call(G);
-  if(G.simpleTotalFx<=0)return;
-  const g=G.ctx,t=G.simpleTotalFx/1.35;
-  const appear=Math.min(1,(1-t)*7),fade=Math.min(1,t*4);
-  const a=Math.min(appear,fade);
-  g.save();g.globalAlpha=a;
-  const scale=1+Math.max(0,t-.72)*.16;
-  g.translate(270,292);g.scale(scale,scale);
-  G.T(G.simpleTotalValue.toLocaleString(),0,18,58,"#ff183d","center");
-  g.restore();
- };
-})();
-</script>
-
-<script>
-"use strict";
-/* REBIRTH 37 - exact weapon balance / zero heart invincibility / red damage finish */
-(function(){
- const G=Game;
- G.redWeaponFx=0;
- G.redWeaponValue=0;
-
- /* Requested fixed weapon damage by character:
-    Toshiyuki 70k / Kazuaki 60k / Mappy 35k / Keita 40k / Isaji 55k / Ryogo 70k. */
- if(G.weapons){
-  const bases=[70000,60000,35000,40000,55000,70000];
-  G.weapons.forEach((w,i)=>{
-   w.base=bases[i];
-   w.effect=(i===3)?"倒れた仲間を選んで1人蘇生":"";
-  });
- }
-
- /* 9-10 normal taps land at roughly 15,000 total, with only a small random spread. */
- G.attackTap=function(){
-  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
-  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
-  G.rapidStrikeSound(1.45);
-  const p=G.current();
-  let shown=Math.round(1575*G.rnd(.97,1.03));
-  const isCrit=G.critTurns>0;
-  if(isCrit)shown=Math.floor(shown*1.45);
-  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
-  shown=Math.max(1,shown);
-  G.attackTotal+=shown;
-  G.damageBoss(G.boss.armor+shown);
-  const d=G.damageText[G.damageText.length-1];
-  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=isCrit;d.total=false}
-  G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),p.c,7,.65);
- };
-
- /* Weapon damage is the character's fixed value. The center-lock remains visual/timing only.
-    Kazuaki's active critical skill still multiplies weapon damage. */
- G.fireWeapon=function(){
-  if(G.weaponStopped)return;
-  G.weaponStopped=true;G.attackEnded=true;
-  const i=G.active,w=G.weapons[i];
-  let damage=w.base;
-  const skillCritical=G.critTurns>0;
-  if(skillCritical)damage=Math.floor(damage*1.45);
-  G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
-  try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
-  for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
-  setTimeout(()=>{
-   if(G.boss.hp<=0)return;
-   G.damageBoss(G.boss.armor+damage);
-   /* Suppress the normal damage-number color and redraw this weapon hit in red. */
-   const d=G.damageText[G.damageText.length-1];
-   if(d)d.l=0;
-   G.redWeaponValue=damage;
-   G.redWeaponFx=1.45;
-   if(G.boss.hp<=0)return;
-   if(i===3){
-    G.reviveCandidates=[];
-    G.party.forEach((p,j)=>{if(j!==3&&(p.hp<=0||G.permanentDead[j]))G.reviveCandidates.push(j)});
-    if(G.reviveCandidates.length){G.pendingWeaponDefense=true;G.setState("REVIVE_SELECT");G.toast("蘇生する仲間を選択",1.2);return}
-   }
-   G.finishWeaponFlow();
-  },420);
- };
-
- /* No heart invincibility at all during enemy turns, including after a hit. */
- const update37=G.update;
- G.update=function(dt){
-  update37.call(G,dt);
-  if(G.state==="DEFENSE")G.heart.inv=0;
-  if(G.redWeaponFx>0)G.redWeaponFx=Math.max(0,G.redWeaponFx-dt);
- };
- const begin37=G.beginDefense;
- G.beginDefense=function(){
-  const out=begin37.apply(G,arguments);
-  G.heart.inv=0;
-  return out;
- };
- const intro37=G.startIntroAttack;
- G.startIntroAttack=function(){
-  const out=intro37.apply(G,arguments);
-  G.heart.inv=0;
-  return out;
- };
-
- /* Red weapon damage. */
- const draw37=G.draw;
- G.draw=function(){
-  draw37.call(G);
-  if(G.redWeaponFx>0){
-   const g=G.ctx,t=G.redWeaponFx/1.45;
-   const a=Math.min(1,(1-t)*8,t*4);
-   g.save();g.globalAlpha=Math.max(0,a);g.shadowColor="#ff183d";g.shadowBlur=34;
-   G.T(G.redWeaponValue.toLocaleString(),270,245,62,"#ff183d","center");
-   g.restore();
-  }
- };
-})();
-</script>
-
-
-<script>
-"use strict";
-/* REBIRTH 38 - wider normal damage spread / Isaji charge fix / clearer skill explanations */
-(function(){
- const G=Game;
-
- /* Keep about 15,000 total at 9-10 taps, but make each hit feel less uniform. */
- G.attackTap=function(){
-  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
-  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
-  G.rapidStrikeSound(1.45);
-  const p=G.current();
-  /* Average stays 1,575, range is widened to roughly 1,260-1,890 per tap. */
-  let shown=Math.round(1575*G.rnd(.80,1.20));
-  const isCrit=G.critTurns>0;
-  if(isCrit)shown=Math.floor(shown*1.45);
-  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
-  shown=Math.max(1,shown);
-  G.attackTotal+=shown;
-  G.damageBoss(G.boss.armor+shown);
-  const d=G.damageText[G.damageText.length-1];
-  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=isCrit;d.total=false}
-  G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),p.c,7,.65);
- };
-
- /* oniTurns means remaining boosted Isaji ATTACKS, not turns.
-    finishAttack already consumes one, so cancel the old nextTurn decrement. */
- const next38=G.nextTurn;
- G.nextTurn=function(){
-  const preserveOni=(G.active===4&&G.oniTurns>0);
-  if(preserveOni)G.oniTurns++;
-  return next38.apply(G,arguments);
- };
-
- /* Clear, explicit post-skill explanations for the five non-Isaji skills. */
- const say38=G.say;
- G.say=function(lines,next){
-  let out=Array.isArray(lines)?lines.slice():[lines];
-  if(G.state==="SKILL_CINEMA" && !out.some(x=>String(x).includes("効果："))){
-   const extra=[
-    "効果：敵の攻撃ターンを6回まるごと停止。停止中も味方側は行動できる。",
-    "効果：会心状態が続いている間、通常攻撃と武器攻撃のダメージが大きく上がる。",
-    "効果：生きている仲間を回復し、その後の敵攻撃を結界で軽減する。",
-    "効果：ケイタ以外の仲間を全回復。その代わりケイタは戦闘から永久離脱する。",
-    "効果：次の3回のイサジの通常攻撃だけ、連打できる時間が1.4秒から5.6秒になる。",
-    "効果：しばらくの間、敵弾の速度と攻撃前の動きを遅くして避けやすくする。"
-   ][G.active];
-   if(extra)out.push(extra);
-  }
-  return say38.call(G,out,next);
- };
-
- /* Isaji's latest skill implementation had only a one-line explanation. */
- const use38=G.useSkill;
- G.useSkill=function(){
-  if(G.active!==4)return use38.apply(G,arguments);
-  const i=4,p=G.current();
-  if(G.skillUsed[i]>=1){G.toast("この必殺技はもう使えない",1.1);G.setState("MENU");return}
-  G.skillUsed[i]++;
-  G.startCinematic("oni","領域展開・鬼","次の3回の攻撃を、長時間の連打攻撃へ変える。",p.c);
-  G.setState("SKILL_CINEMA");
-  setTimeout(()=>{
-   G.oniTurns=3;G.attackBoost[i]=1;
-   G.say([
-    "領域展開・鬼 発動。",
-    "次の3回のイサジの通常攻撃だけ、連打時間が1.4秒から5.6秒になる。",
-    "1回攻撃するごとに残り回数が1ずつ減る。発動直後はそのままイサジがもう一度行動できる。"
-   ],()=>{G.setState("MENU");G.toast("鬼の攻撃　残り3回",1.1)});
-  },1500);
- };
-})();
-</script>
-
-<script>
-"use strict";
-/* REBIRTH 39 - hit grace restored / yellow TOTAL + weapon damage / Isaji text cleanup */
-(function(){
- const G=Game;
- G.hitGrace=0;
-
- /* Enemy-turn start has no free invulnerability. A hit itself grants ~0.7 sec grace. */
- const hurt39=G.hurt;
- G.hurt=function(n){
-  if(G.state==="DEFENSE" && G.hitGrace>0)return;
-  const before=G.current().hp;
-  hurt39.call(G,n);
-  if(G.state==="DEFENSE" && before!==G.current().hp){
-   G.hitGrace=.7;
-   G.heart.inv=.7;
-  }else if(G.state==="DEFENSE"){
-   /* Even if the damaged character fell and active changed, the collision was a real hit. */
-   G.hitGrace=.7;
-   G.heart.inv=.7;
-  }
- };
-
- const begin39=G.beginDefense;
- G.beginDefense=function(){
-  G.hitGrace=0;
-  const out=begin39.apply(G,arguments);
-  if(G.state==="DEFENSE"){
-   G.safeSpawn=0;
-   G.heart.inv=0;
-  }
-  return out;
- };
- const intro39=G.startIntroAttack;
- G.startIntroAttack=function(){
-  G.hitGrace=0;
-  const out=intro39.apply(G,arguments);
-  if(G.state==="DEFENSE"){
-   G.safeSpawn=0;
-   G.heart.inv=0;
-  }
-  return out;
- };
-
- /* The older layer zeroed heart.inv every frame. Restore it only after a real hit. */
- const update39=G.update;
- G.update=function(dt){
-  update39.call(G,dt);
-  if(G.state==="DEFENSE"){
-   if(G.hitGrace>0){
-    G.hitGrace=Math.max(0,G.hitGrace-dt);
-    G.heart.inv=G.hitGrace;
-   }else{
-    G.heart.inv=0;
-   }
-  }else{
-   G.hitGrace=0;
-  }
- };
-
- /* Remove only the unwanted final explanatory sentence after Isaji's special. */
- const say39=G.say;
- G.say=function(lines,next){
-  let arr=Array.isArray(lines)?lines.slice():[lines];
-  arr=arr.filter(line=>!String(line).includes("1回攻撃するごとに残り回数が1ずつ減る"));
-  if(arr.length===0){ if(next)next(); return; }
-  return say39.call(G,arr,next);
- };
-
- /* Hide the old red result layers, then redraw the requested yellow results. */
- const draw39=G.draw;
- G.draw=function(){
-  const totalFx=G.simpleTotalFx||0;
-  const weaponFx=G.redWeaponFx||0;
-  const totalValue=G.simpleTotalValue||0;
-  const weaponValue=G.redWeaponValue||0;
-
-  if(totalFx>0)G.simpleTotalFx=0;
-  if(weaponFx>0)G.redWeaponFx=0;
-  draw39.call(G);
-  G.simpleTotalFx=totalFx;
-  G.redWeaponFx=weaponFx;
-
-  const g=G.ctx;
-  if(totalFx>0){
-   const t=totalFx/1.35;
-   const a=Math.max(0,Math.min(1,(1-t)*7,t*4));
-   g.save();
-   g.globalAlpha=a;
-   g.shadowColor="#ffd84e";
-   g.shadowBlur=32;
-   const scale=1+Math.max(0,t-.72)*.15;
-   g.translate(270,205);
-   g.scale(scale,scale);
-   G.T(`TOTAL ${Number(totalValue).toLocaleString()}`,0,18,54,"#ffd84e","center");
-   g.restore();
-  }
-  if(weaponFx>0){
-   const t=weaponFx/1.45;
-   const a=Math.max(0,Math.min(1,(1-t)*8,t*4));
-   g.save();
-   g.globalAlpha=a;
-   g.shadowColor="#ffd84e";
-   g.shadowBlur=34;
-   G.T(Number(weaponValue).toLocaleString(),270,245,62,"#ffd84e","center");
-   g.restore();
-  }
- };
 })();
 </script>
