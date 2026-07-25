@@ -852,13 +852,13 @@ Game.draw=function(){
  const G=Game,A=G.arena;
  G.guardItem=null;G.guardPulse=0;G.guardReflected=0;
  G.field={mode:"normal",lane:0};
- G.homingLasers=[];G.homingCooldown=0;
+ G.homingLasers=[];G.homingCooldown=0;G.homingChargeStart=0;G.homingCharging=false;
 
  const oldReset=G.reset;
  G.reset=function(){
-  G.items.mae=6;G.items.ura=6;G.guardItem=null;G.guardPulse=0;G.guardReflected=0;
-  G.field={mode:"normal",lane:0};G.homingLasers=[];G.homingCooldown=0;
-  oldReset();G.items.mae=6;G.items.ura=6;
+  G.items.mae=6;G.items.ura=6;G.items.rifle=1;G.guardItem=null;G.guardPulse=0;G.guardReflected=0;G.droneRifleReady=false;
+  G.field={mode:"normal",lane:0};G.homingLasers=[];G.homingCooldown=0;G.homingChargeStart=0;G.homingCharging=false;
+  oldReset();G.items.mae=6;G.items.ura=6;G.items.rifle=1;G.droneRifleReady=false;
  };
 
  /* 「どうぐ」を一回押した時点で、必ず三種類の一覧を開く */
@@ -872,12 +872,12 @@ Game.draw=function(){
  G.useItem=G.openItemTarget;
 
  G.chooseGuardItem=function(kind){
-  if(G.guardItem){G.toast("すでに使用している",1.15);return}
+  if(G.guardItem||G.droneRifleReady){G.toast("すでに使用している",1.15);return}
   if((G.items[kind]||0)<=0){G.toast(kind==="mae"?"マエバリアンはもうない":"ウラバリアンはもうない",1);return}
   G.items[kind]--;G.guardItem=kind;G.guardReflected=0;G.guardPulse=1;
   /* バリア装着後も行動可能。攻撃／はなす等を選ぶまでMENUへ戻す */
   G.setState("MENU");
-  G.toast(kind==="mae"?"マエバリアン装着。続けて行動を選べる":"ウラバリアン装着。続けて行動を選べる",1.35);
+  G.toast(kind==="mae"?"マエバリアン装着":"ウラバリアン装着",1.2);
  };
 
  const oldBegin=G.beginDefense;
@@ -885,10 +885,8 @@ Game.draw=function(){
   oldBegin();
   if(G.state==="DEFENSE"){
    G.defenseTotal=G.defenseTime;
-   /* 55%通常、25%半分、20%三分の一。領域は動かない */
-   const r=Math.random();
-   G.field.mode=r<.20?"third":r<.45?"half":"normal";
-   G.field.lane=G.field.mode==="third"?Math.floor(Math.random()*3):Math.floor(Math.random()*2);
+   G.field.mode="normal";
+   G.field.lane=0;
    constrainHeart();
   }
  };
@@ -896,7 +894,7 @@ Game.draw=function(){
  const oldNext=G.nextTurn;
  G.nextTurn=function(){
   if(G.guardItem&&G.guardReflected>0)G.toast(`${G.guardReflected}発反射した！`,.8);
-  G.guardItem=null;G.guardPulse=0;G.homingLasers=[];
+  G.guardItem=null;G.guardPulse=0;G.droneRifleReady=false;G.homingLasers=[];G.homingCharging=false;G.homingChargeStart=0;
   oldNext();
  };
 
@@ -916,7 +914,7 @@ Game.draw=function(){
      const l=d||1,sp=Math.max(280,Math.hypot(b.vx||0,b.vy||0)*1.18);
      b.x=G.heart.x+dx/l*38;b.y=G.heart.y+dy/l*38;b.vx=dx/l*sp;b.vy=dy/l*sp;
      b.reflected=true;b.c=G.guardItem==="mae"?"#62efff":"#ff73dd";
-     G.guardPulse=1;G.guardReflected++;G.damageBoss(750+G.effectivePhase()*250);
+     G.guardPulse=1;G.guardReflected++;G.damageBoss(25+Math.floor(Math.random()*36));
      G.particle(b.x,b.y,b.c,8,1);G.tone(920,.05,"square",.028,0,260);
     }
    }
@@ -926,14 +924,6 @@ Game.draw=function(){
 
  function laneBounds(){
   const pad=15;
-  if(G.field.mode==="half"){
-   const w=A.w/2;
-   return {x:A.x+G.field.lane*w+pad,y:A.y+pad,w:w-pad*2,h:A.h-pad*2};
-  }
-  if(G.field.mode==="third"){
-   const w=A.w/3;
-   return {x:A.x+G.field.lane*w+pad,y:A.y+pad,w:w-pad*2,h:A.h-pad*2};
-  }
   return {x:A.x+pad,y:A.y+pad,w:A.w-pad*2,h:A.h-pad*2};
  }
  function constrainHeart(){
@@ -942,12 +932,26 @@ Game.draw=function(){
   G.heart.y=G.clamp(G.heart.y,b.y,b.y+b.h);
  }
 
- /* 防御中、画面タップのたびに敵へ必ず届く小ダメージの追尾レーザー */
- G.fireHomingLaser=function(){
+ /* 防御中の追尾攻撃。ダメージは必ず着弾時にだけ発生する */
+ G.fireHomingLaser=function(mode){
   if(G.state!=="DEFENSE"||G.homingCooldown>0)return;
-  G.homingCooldown=.055;
-  G.homingLasers.push({x:G.heart.x,y:G.heart.y,tx:270,ty:205,t:0,life:.34,trail:[]});
-  G.tone(1040,.035,"sine",.018,0,300);
+  if(G.guardItem){G.toast("バリアン発動中は攻撃できない",.8);return}
+  const charged=mode==="buster",rifle=mode==="rifle";
+  G.homingCooldown=rifle?.85:charged?.42:.09;
+  const dmg=rifle
+   ? 65000+Math.floor(Math.random()*15001)+G.effectivePhase()*1200
+   : charged
+    ? 7000+Math.floor(Math.random()*2501)+G.effectivePhase()*450
+    : 18+Math.floor(Math.random()*18);
+  const target={x:270,y:220};
+  G.homingLasers.push({x:G.heart.x,y:G.heart.y,tx:target.x,ty:target.y,t:0,life:rifle?2.1:charged?1.65:1.35,trail:[],charged,rifle,hit:false,damage:dmg});
+  G.tone(rifle?120:charged?380:1040,rifle?.3:charged?.16:.035,rifle?"sawtooth":charged?"sawtooth":"sine",rifle?.08:charged?.055:.018,0,rifle?980:charged?720:300);
+ };
+
+ G.useDroneRifle=function(){
+  if(G.guardItem||G.droneRifleReady){G.toast("すでに使用している",1.15);return}
+  if((G.items.rifle||0)<=0){G.toast("ポジドローンライフルはもうない",1);return}
+  G.items.rifle--;G.droneRifleReady=true;G.setState("MENU");G.toast("ポジドローンライフル装着",1.2);
  };
 
  const oldUpdate=G.update;
@@ -959,12 +963,14 @@ Game.draw=function(){
    l.t+=dt;l.life-=dt;l.trail.push({x:l.x,y:l.y});if(l.trail.length>8)l.trail.shift();
    const dx=l.tx-l.x,dy=l.ty-l.y,d=Math.hypot(dx,dy)||1;
    const speed=1250;l.x+=dx/d*speed*dt;l.y+=dy/d*speed*dt;
-   if(d<28&&!l.hit){
-    l.hit=true;l.life=.09;
-    const dmg=120+Math.floor(Math.random()*91)+G.effectivePhase()*20;
-    G.boss.hp=Math.max(0,G.boss.hp-dmg);G.bossFx.hit=.18;G.shake=Math.max(G.shake,3);
-    G.damageText.push({x:270+G.rnd(-24,24),y:185,n:String(dmg),l:.55,crit:false});
-    G.particle(270,205,"#72efff",7,1);G.tone(1320,.04,"square",.02,0,-350);
+   if(d<(l.rifle?38:l.charged?28:24)&&!l.hit){
+    l.hit=true;l.life=l.rifle?.34:l.charged?.22:.09;
+    G.boss.hp=Math.max(0,G.boss.hp-l.damage);G.bossFx.hit=l.rifle?.75:l.charged?.42:.14;G.shake=Math.max(G.shake,l.rifle?24:l.charged?13:2);
+    G.damageText.push({x:270+G.rnd(-20,20),y:190,n:String(l.damage),l:l.rifle?1.5:l.charged?1.05:.45,crit:!!(l.rifle||l.charged)});
+    const col=l.rifle?"#ff4dff":l.charged?"#fff18a":"#72efff";
+    G.particle(l.tx,l.ty,col,l.rifle?60:l.charged?34:7,l.rifle?3.2:l.charged?2.2:1);
+    G.tone(l.rifle?90:l.charged?520:1320,l.rifle?.32:l.charged?.12:.04,"square",l.rifle?.09:l.charged?.045:.02,0,l.rifle?1200:-350);
+    if(l.rifle){G.flash=.32;G.droneRifleReady=false}
     if(G.boss.hp<=0)G.winByFight();
    }
   }
@@ -984,44 +990,59 @@ Game.draw=function(){
     if(r.custom==="herb")G.openHerbTarget();
     if(r.custom==="mae")G.chooseGuardItem("mae");
     if(r.custom==="ura")G.chooseGuardItem("ura");
+    if(r.custom==="rifle")G.useDroneRifle();
     if(r.custom==="back")G.setState("MENU");
     return;
    }
    e.preventDefault();e.stopImmediatePropagation();return;
   }
-  if(G.state==="DEFENSE")G.fireHomingLaser();
+  if(G.state==="DEFENSE"){
+   if(G.guardItem){G.toast("バリアン発動中は攻撃できない",.7);return}
+   G.homingCharging=true;G.homingChargeStart=performance.now();G.homingChargeMode=G.droneRifleReady?"rifle":"normal";
+  }
  },true);
+ G.canvas.addEventListener("pointerup",e=>{
+  if(G.state!=="DEFENSE"||!G.homingCharging)return;
+  e.preventDefault();
+  const held=(performance.now()-G.homingChargeStart)/1000;
+  G.homingCharging=false;G.homingChargeStart=0;
+  if(G.homingChargeMode==="rifle"){if(held>=5.8)G.fireHomingLaser("rifle");else G.toast("チャージ不足",.75)}else G.fireHomingLaser(held>=1.85?"buster":"normal");
+  G.homingChargeMode=null;
+ },true);
+ G.canvas.addEventListener("pointercancel",()=>{G.homingCharging=false;G.homingChargeStart=0},true);
 
  const oldDraw=G.draw;
  G.draw=function(){
   oldDraw();const g=G.ctx;
   if(G.state==="ITEM_SELECT"&&G.sub!=="dialog"){
-   G.panel(24,690,492,242,"#7de3ff","#02060cf5");G.T("どうぐ",270,718,19,"#fff","center");
+   G.panel(24,652,492,280,"#7de3ff","#02060cf5");G.T("どうぐ",270,678,19,"#fff","center");
    const rows=[
-    {y:732,k:"herb",name:`完全回復やくそう ×${G.items.herb}`,c:"#7de3a0",d:"仲間ひとりを完全回復"},
-    {y:782,k:"mae",name:`マエバリアン ×${G.items.mae}`,c:"#62efff",d:"敵攻撃の前半を反射"},
-    {y:832,k:"ura",name:`ウラバリアン ×${G.items.ura}`,c:"#ff73dd",d:"敵攻撃の後半を反射"}
+    {y:692,k:"herb",name:`完全回復やくそう ×${G.items.herb}`,c:"#7de3a0",d:"仲間ひとりを完全回復"},
+    {y:742,k:"mae",name:`マエバリアン ×${G.items.mae}`,c:"#62efff",d:"敵攻撃の前半を反射"},
+    {y:792,k:"ura",name:`ウラバリアン ×${G.items.ura}`,c:"#ff73dd",d:"敵攻撃の後半を反射"},
+    {y:842,k:"rifle",name:`ポジドローンライフル ×${G.items.rifle}`,c:"#ff4dff",d:"約6秒チャージで60000以上"}
    ];
    rows.forEach(r=>{G.hitRects.push({x:42,y:r.y,w:456,h:44,custom:r.k});G.R(42,r.y,456,44,"#0a1019");G.R(48,r.y+6,8,32,r.c);G.T(r.name,68,r.y+19,15,"#fff");G.T(r.d,68,r.y+37,10,"#b8c7d8")});
-   G.hitRects.push({x:180,y:886,w:180,h:32,custom:"back"});G.R(180,886,180,32,"#10131a");G.T("← もどる",270,908,13,"#fff","center");
+   G.hitRects.push({x:180,y:895,w:180,h:28,custom:"back"});G.R(180,895,180,28,"#10131a");G.T("← もどる",270,915,13,"#fff","center");
   }
   if(G.state==="DEFENSE"){
-   /* 領域名は表示しない。壁だけを強く表示 */
-   if(G.field.mode==="half"){
-    const x=A.x+A.w/2;g.save();g.strokeStyle="#ff4773";g.lineWidth=12;g.shadowColor="#ff315f";g.shadowBlur=22;g.beginPath();g.moveTo(x,A.y);g.lineTo(x,A.y+A.h);g.stroke();g.restore();
-    const blocked=G.field.lane===0?{x:x,y:A.y,w:A.w/2,h:A.h}:{x:A.x,y:A.y,w:A.w/2,h:A.h};g.fillStyle="rgba(255,25,70,.19)";g.fillRect(blocked.x,blocked.y,blocked.w,blocked.h);
-   }else if(G.field.mode==="third"){
-    const x1=A.x+A.w/3,x2=A.x+A.w*2/3;g.save();g.strokeStyle="#ff4773";g.lineWidth=10;g.shadowColor="#ff315f";g.shadowBlur=20;for(const x of[x1,x2]){g.beginPath();g.moveTo(x,A.y);g.lineTo(x,A.y+A.h);g.stroke()}g.restore();
-    g.fillStyle="rgba(255,25,70,.19)";for(let i=0;i<3;i++)if(i!==G.field.lane)g.fillRect(A.x+i*A.w/3,A.y,A.w/3,A.h);
-   }
-   if(G.guardItem){
-    const active=G.guardActive(),col=G.guardItem==="mae"?"#62efff":"#ff73dd",rr=31+Math.sin(G.time*12)*4+G.guardPulse*12;
-    g.save();g.globalAlpha=active?1:.28;g.strokeStyle=col;g.lineWidth=5;g.shadowColor=col;g.shadowBlur=26;
+   /* 回避領域は常に通常サイズ */
+   if(G.guardItem&&G.guardActive()){
+    const col=G.guardItem==="mae"?"#62efff":"#ff73dd",rr=31+Math.sin(G.time*12)*4+G.guardPulse*12;
+    g.save();g.globalAlpha=1;g.strokeStyle=col;g.lineWidth=5;g.shadowColor=col;g.shadowBlur=26;
     g.beginPath();g.arc(G.heart.x,G.heart.y,rr,0,Math.PI*2);g.stroke();g.beginPath();g.arc(G.heart.x,G.heart.y,rr+9,G.time*2,G.time*2+Math.PI*1.25);g.stroke();g.restore();
    }
+   if(G.homingCharging&&!G.guardItem){
+    const rifle=G.homingChargeMode==="rifle",need=rifle?5.8:1.85,cap=rifle?6.2:2.2;
+    const held=Math.min(cap,(performance.now()-G.homingChargeStart)/1000),rate=Math.min(1,held/need),rr=(rifle?24:18)+rate*(rifle?54:30);
+    g.save();const col=rifle?(rate>=1?"#ffffff":"#ff4dff"):(rate>=1?"#fff18a":"#72efff");g.strokeStyle=col;g.lineWidth=(rifle?5:3)+rate*(rifle?9:5);g.shadowColor=col;g.shadowBlur=(rifle?26:18)+rate*(rifle?52:28);g.globalAlpha=.6+Math.sin(G.time*(rifle?30:20))*.2;
+    for(let i=0;i<(rifle?3:1);i++){g.beginPath();g.arc(G.heart.x,G.heart.y,rr+i*12,G.time*(i%2? -3:3),G.time*(i%2? -3:3)+Math.PI*2*rate);g.stroke()}
+    if(rifle){for(let i=0;i<8;i++){const a=G.time*5+i*Math.PI/4,x=G.heart.x+Math.cos(a)*(20+rate*55),y=G.heart.y+Math.sin(a)*(20+rate*55);g.fillStyle=i%2?"#fff":"#ff4dff";g.fillRect(x-3,y-3,6,6)}G.T(`${held.toFixed(1)} / 5.8`,G.heart.x,G.heart.y-90,12,col,"center")}
+    g.restore();
+   }
    for(const l of G.homingLasers){
-    g.save();g.strokeStyle="#73efff";g.lineWidth=4;g.shadowColor="#73efff";g.shadowBlur=18;g.beginPath();
-    if(l.trail.length){g.moveTo(l.trail[0].x,l.trail[0].y);for(const q of l.trail)g.lineTo(q.x,q.y)}g.lineTo(l.x,l.y);g.stroke();g.fillStyle="#fff";g.beginPath();g.arc(l.x,l.y,5,0,Math.PI*2);g.fill();g.restore();
+    g.save();const lc=l.rifle?"#ff4dff":l.charged?"#fff18a":"#73efff";g.strokeStyle=lc;g.lineWidth=l.rifle?24:l.charged?14:4;g.shadowColor=lc;g.shadowBlur=l.rifle?60:l.charged?38:18;g.beginPath();
+    if(l.trail.length){g.moveTo(l.trail[0].x,l.trail[0].y);for(const q of l.trail)g.lineTo(q.x,q.y)}g.lineTo(l.x,l.y);g.stroke();g.fillStyle="#fff";g.beginPath();g.arc(l.x,l.y,l.rifle?23:l.charged?15:5,0,Math.PI*2);g.fill();g.restore();
    }
   }
  };
