@@ -1926,3 +1926,108 @@ Game.draw=function(){
  G.rapidTotalFx=0;
 })();
 </script>
+<script>
+"use strict";
+/* REBIRTH 35 - independent persistent Kazuaki / Isaji weapon charges */
+(function(){
+ const G=Game;
+
+ /* These are completely independent from the skill counters. */
+ if(typeof G.weaponCritCharge!=="number")G.weaponCritCharge=0;
+ if(typeof G.weaponOniCharge!=="number")G.weaponOniCharge=0;
+ G.attackWeaponCrit=false;
+ G.attackWeaponOni=false;
+
+ const resetBefore=G.reset;
+ G.reset=function(){
+  resetBefore.apply(G,arguments);
+  G.weaponCritCharge=0;
+  G.weaponOniCharge=0;
+  G.attackWeaponCrit=false;
+  G.attackWeaponOni=false;
+ };
+
+ /* Never add weapon charges directly to critTurns / oniTurns. */
+ const applyBefore=G.applyWeaponEffect;
+ G.applyWeaponEffect=function(i){
+  if(i===1){G.weaponCritCharge=1;return}
+  if(i===4){G.weaponOniCharge=1;return}
+  return applyBefore.call(G,i);
+ };
+
+ /* Consume a stored charge only when the matching skill is NOT already active. */
+ const chooseBefore=G.chooseAction;
+ G.chooseAction=function(i){
+  const action=(G.state==="MENU"&&G.actions)?G.actions()[i]:null;
+  if(action==="こうげき"){
+   G.attackWeaponCrit=false;
+   G.attackWeaponOni=false;
+   if(G.critTurns<=0&&G.weaponCritCharge>0){
+    G.attackWeaponCrit=true;
+    G.weaponCritCharge=0;
+   }
+   if(G.active===4&&G.oniTurns<=0&&G.weaponOniCharge>0){
+    G.attackWeaponOni=true;
+    G.weaponOniCharge=0;
+   }
+   const out=chooseBefore.call(G,i);
+   if(G.attackWeaponOni&&G.state==="ATTACK"&&!G.weaponMode){
+    G.attackTime=Math.max(G.attackTime,5.6);
+   }
+   return out;
+  }
+  return chooseBefore.call(G,i);
+ };
+
+ /* Definitive weapon firing flow: a stored Kazuaki charge is used only if the skill is inactive. */
+ G.fireWeapon=function(){
+  if(G.weaponStopped)return;
+  G.weaponStopped=true;G.attackEnded=true;
+  const i=G.active,w=G.weapons[i],dist=Math.abs(G.weaponCursor-270),accuracy=Math.max(0,1-dist/200);
+  const mult=.72+accuracy*.46;
+  const useStoredCrit=G.critTurns<=0&&G.weaponCritCharge>0;
+  if(useStoredCrit)G.weaponCritCharge=0;
+  let damage=Math.floor(w.base*mult);
+  if(G.critTurns>0||useStoredCrit)damage=Math.floor(damage*1.45);
+  G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
+  try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
+  for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
+  setTimeout(()=>{
+   if(G.boss.hp<=0)return;
+   G.damageBoss(damage);
+   G.damageText.push({x:270,y:245,l:1.5,n:accuracy>.88?"CORE PERFECT":"WEAPON IMPACT",crit:true,total:true});
+   if(G.boss.hp<=0)return;
+   if(i===3){
+    G.reviveCandidates=[];
+    G.party.forEach((p,j)=>{if(j!==3&&(p.hp<=0||G.permanentDead[j]))G.reviveCandidates.push(j)});
+    if(G.reviveCandidates.length){G.pendingWeaponDefense=true;G.setState("REVIVE_SELECT");G.toast("蘇生する仲間を選択",1.2);return}
+    G.toast("蘇生できる仲間はいない",1.1);G.finishWeaponFlow();return;
+   }
+   G.applyWeaponEffect(i);
+   G.finishWeaponFlow();
+  },420);
+ };
+
+ /* Per-tap critical check respects the separately consumed Kazuaki charge. */
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
+  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
+  G.rapidStrikeSound(1.45);
+  let shown=820+G.current().pow*4;
+  const isCrit=G.critTurns>0||G.attackWeaponCrit;
+  if(isCrit)shown=Math.floor(shown*1.45);
+  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
+  shown=Math.max(1,Math.floor(shown));
+  G.attackTotal+=shown;
+  G.damageBoss(G.boss.armor+shown);
+  const d=G.damageText[G.damageText.length-1];
+  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=isCrit;d.total=false}
+  G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),G.current().c,7,.65);
+ };
+
+ if(G.weapons){
+  G.weapons[1].effect="次の攻撃1回を会心化";
+  G.weapons[4].effect="次のイサジ攻撃1回を強化";
+ }
+})();
+</script>
