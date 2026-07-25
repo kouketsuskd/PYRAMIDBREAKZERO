@@ -14,7 +14,7 @@
     if(t)t.textContent='エラー: '+(e.message||'不明なエラー');if(f)f.classList.remove('hidden');
   });
 })();
-</script><script>"use strict";window.Game={W:540,H:960,canvas:null,ctx:null,arena:{x:34,y:305,w:472,h:405},state:"BOOT",sub:"none",last:0,time:0,turn:0,active:0,bond:0,score:0,talkCount:0,talkRoute:false,trueReady:false,dialogue:[],dialogueIndex:0,dialogueNext:null,attackX:70,attackDir:1,attackTime:0,attackHits:0,attackTotal:0,attackEnded:false,bullets:[],particles:[],damageText:[],trails:[],hitRects:[],defenseTime:0,patternId:0,patternClock:0,dragging:false,shake:0,flash:0,message:"",messageTime:0,timeStopTurns:0,barrierTurns:0,critTurns:0,slowTurns:0,oniTurns:0,skillUsed:[0,0,0,0,0,0],permanentDead:[false,false,false,false,false,false],attackBoost:[1,1,1,1,1,1],stunTurns:[0,0,0,0,0,0],bossFx:{hover:0,wing:0,hit:0,transform:0,handL:0,handR:0,dash:0,reach:0,eyeBeam:0,coreOpen:0,cinema:0,cinemaType:"",cinemaName:"",cinemaQuote:"",cinemaColor:"#fff"},heart:{x:270,y:515,r:10,inv:0,ox:0,oy:0},party:[{name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#725fbd",skill:"ザ・ワールド",pow:22},{name:"カズアキ",max:195,hp:195,mp:50,mm:50,c:"#805044",skill:"ワールド・イズ・マイン",pow:39},{name:"マッピー",max:125,hp:125,mp:90,mm:90,c:"#d0aa60",skill:"ピラミッド・ハート",pow:18},{name:"ケイタ",max:135,hp:135,mp:78,mm:78,c:"#ef9432",skill:"鳳翼天翔",pow:29},{name:"イサジ",max:185,hp:185,mp:46,mm:46,c:"#edc650",skill:"領域展開・鬼",pow:36},{name:"リョウゴ",max:140,hp:140,mp:82,mm:82,c:"#438fca",skill:"虫の知らせ",pow:26}],boss:{name:"機械天使 アルカ・セラフ 完全体",max:1000000,hp:1000000,phase:1,armor:850},items:{herb:1},stars:[],nebulae:[],meteors:[]};Game.clamp=(v,a,b)=>Math.max(a,Math.min(b,v));Game.rnd=(a,b)=>a+Math.random()*(b-a);Game.actions=()=>Game.trueReady?["こうげき","わざ","どうぐ","手を差し伸べる","こうたい"]:["こうげき","わざ","どうぐ","はなす","こうたい"];Game.current=function(){if(Game.party[Game.active].hp<=0||Game.permanentDead[Game.active]){const i=Game.party.findIndex((p,j)=>p.hp>0&&!Game.permanentDead[j]);Game.active=i<0?0:i}return Game.party[Game.active]};Game.aliveCount=()=>Game.party.filter((p,i)=>p.hp>0&&!Game.permanentDead[i]).length;Game.skillLimit=i=>i===5?2:1;
+</script><script>"use strict";window.Game={W:540,H:960,canvas:null,ctx:null,arena:{x:34,y:305,w:472,h:405},state:"BOOT",sub:"none",last:0,time:0,turn:0,active:0,bond:0,score:0,talkCount:0,talkRoute:false,trueReady:false,dialogue:[],dialogueIndex:0,dialogueNext:null,attackX:70,attackDir:1,attackTime:0,attackHits:0,attackTotal:0,attackEnded:false,bullets:[],particles:[],damageText:[],trails:[],hitRects:[],defenseTime:0,patternId:0,patternClock:0,dragging:false,shake:0,flash:0,message:"",messageTime:0,timeStopTurns:0,barrierTurns:0,critTurns:0,slowTurns:0,oniTurns:0,skillUsed:[0,0,0,0,0,0],permanentDead:[false,false,false,false,false,false],attackBoost:[1,1,1,1,1,1],stunTurns:[0,0,0,0,0,0],bossFx:{hover:0,wing:0,hit:0,transform:0,handL:0,handR:0,dash:0,reach:0,eyeBeam:0,coreOpen:0,cinema:0,cinemaType:"",cinemaName:"",cinemaQuote:"",cinemaColor:"#fff"},heart:{x:270,y:515,r:10,inv:0,ox:0,oy:0},party:[{name:"トシユキ",max:120,hp:120,mp:75,mm:75,c:"#725fbd",skill:"ザ・ワールド",pow:22},{name:"カズアキ",max:195,hp:195,mp:50,mm:50,c:"#805044",skill:"ワールド・イズ・マイン",pow:39},{name:"マッピー",max:125,hp:125,mp:90,mm:90,c:"#d0aa60",skill:"ピラミッド・ハート",pow:18},{name:"ケイタ",max:135,hp:135,mp:78,mm:78,c:"#ef9432",skill:"鳳翼天翔",pow:29},{name:"イサジ",max:185,hp:185,mp:46,mm:46,c:"#edc650",skill:"領域展開・鬼",pow:36},{name:"リョウゴ",max:140,hp:140,mp:82,mm:82,c:"#438fca",skill:"虫の知らせ",pow:26}],boss:{name:"機械天使 アルカ・セラフ 完全体",max:1000000,hp:1000000,phase:1,armor:850},items:{herb:1},stars:[],nebulae:[],meteors:[]};Game.clamp=(v,a,b)=>Math.max(a,Math.min(b,v));Game.rnd=(a,b)=>a+Math.random()*(b-a);Game.actions=()=>Game.trueReady?["こうげき","わざ","どうぐ","手を差し伸べる","こうたい"]:["こうげき","わざ","どうぐ","はなす","こうたい"];Game.current=function(){if(Game.party[Game.active].hp<=0||Game.permanentDead[Game.active]){const i=Game.party.findIndex((p,j)=>p.hp>0&&!Game.permanentDead[j]);Game.active=i<0?0:i}return Game.party[Game.active]};Game.aliveCount=()=>Game.party.filter((p,i)=>p.hp>0&&!Game.permanentDead[i]).length;Game.skillLimit=i=>1;
 "use strict";
 Game.audio=null;Game.bgm=null;Game.bgmPhase2=null;Game.musicTimer=null;Game.musicStep=0;Game.sfxGain=4.5;Game.phase2MusicStarted=false;
 
@@ -349,7 +349,7 @@ Game.updateBullets=function(dt){
 "use strict";
 Game.reset=function(){const G=Game;G.party.forEach(p=>{p.hp=p.max;p.mp=p.mm});Object.assign(G.boss,{hp:G.boss.max,phase:1,armor:850});G.items.herb=1;G.turn=0;G.active=0;G.bond=0;G.score=0;G.talkCount=0;G.talkRoute=false;G.trueReady=false;G.skillUsed=[0,0,0,0,0,0];G.permanentDead=[false,false,false,false,false,false];G.timeStopTurns=G.barrierTurns=G.critTurns=G.slowTurns=G.oniTurns=0;G.attackBoost=[1,1,1,1,1,1];G.stunTurns=[0,0,0,0,0,0];G.bullets=[];G.particles=[];G.damageText=[];G.trails=[];G.shake=G.flash=0;G.initSpace();G.setState("MENU");G.say(["――空から、壊れた神が落ちてきた。","機械天使の生命値は1,000,000。共有のやくそうは一つ。","倒すこともできる。三十回、言葉を届けることもできる。","ただし言葉を選んだ瞬間から、敵の攻撃力は二倍になる。"],()=>G.setState("MENU"))};
 Game.chooseAction=function(i){const a=Game.actions()[i];if(a==="こうげき"){Game.setState("ATTACK");Game.attackX=70;Game.attackDir=1;Game.attackTime=3.8;Game.attackHits=0;Game.attackTotal=0;Game.attackEnded=false}if(a==="わざ")Game.setState("SKILL");if(a==="どうぐ")Game.setState("ITEM");if(a==="はなす"||a==="手を差し伸べる")Game.talk();if(a==="こうたい")Game.setState("SWITCH")};
-Game.useSkill=function(){const G=Game,p=G.current(),i=G.active,lim=G.skillLimit(i);if(G.skillUsed[i]>=lim){G.toast("この必殺技はもう使えない",1);G.setState("MENU");return}G.skillUsed[i]++;const names=["ザ・ワールド","ワールド・イズ・マイン","ピラミッド・ハート","鳳翼天翔","領域展開・鬼","虫の知らせ"],quotes=["止まれ、世界。仲間の鼓動だけは進め。","この三ターン、すべてを会心に変える。","全員で帰る場所を守る。","この命を、みんなの朝に変える。","攻撃回数を倍にする。守るための鬼だ。","敵の時間だけを遅くする。"];G.startCinematic(["clock","slash","pyramid","phoenix","oni","future"][i],names[i],quotes[i],p.c);G.setState("SKILL_CINEMA");setTimeout(()=>{if(i===0){G.timeStopTurns=6;p.mp=0;G.say(["宇宙から音が消えた。","六回の敵ターンが停止する。"],G.nextTurn);return}if(i===1){G.critTurns=3;G.say(["宇宙に巨大な亀裂が走った。","三ターン、通常攻撃が必ずクリティカルになる。"],G.beginDefense);return}if(i===2){G.barrierTurns=Math.max(G.barrierTurns,3);G.party.forEach((a,j)=>{if(!G.permanentDead[j])a.hp=Math.min(a.max,a.hp+55)});G.say(["巨大な黄金のピラミッドが仲間を包んだ。","全員回復。三回の敵攻撃を大幅軽減する。"],G.beginDefense);return}if(i===3){G.party.forEach((a,j)=>{if(j!==i&&!G.permanentDead[j])a.hp=a.max});p.hp=0;G.permanentDead[i]=true;G.say(["鳳凰が宇宙を横切り、仲間の傷をすべて消した。","ケイタ「これで、みんな帰れる。」"],G.nextTurn);return}if(i===4){G.oniTurns=4;G.attackBoost[i]=2;G.say(["赤黒い領域が開いた。","四ターン、イサジの攻撃可能回数が倍になる。"],G.beginDefense);return}if(i===5){G.slowTurns=Math.max(G.slowTurns,4);G.say([`虫の知らせ ${G.skillUsed[i]}/2。`,"四回の敵攻撃で、弾速と予備動作が遅くなる。"],G.beginDefense);return}},1500)};
+Game.useSkill=function(){const G=Game,p=G.current(),i=G.active,lim=G.skillLimit(i);if(G.skillUsed[i]>=lim){G.toast("この必殺技はもう使えない",1);G.setState("MENU");return}G.skillUsed[i]++;const names=["ザ・ワールド","ワールド・イズ・マイン","ピラミッド・ハート","鳳翼天翔","領域展開・鬼","虫の知らせ"],quotes=["止まれ、世界。仲間の鼓動だけは進め。","この三ターン、すべてを会心に変える。","全員で帰る場所を守る。","この命を、みんなの朝に変える。","攻撃回数を倍にする。守るための鬼だ。","敵の時間だけを遅くする。"];G.startCinematic(["clock","slash","pyramid","phoenix","oni","future"][i],names[i],quotes[i],p.c);G.setState("SKILL_CINEMA");setTimeout(()=>{if(i===0){G.timeStopTurns=6;p.mp=0;G.say(["宇宙から音が消えた。","六回の敵ターンが停止する。"],G.nextTurn);return}if(i===1){G.critTurns=3;G.say(["宇宙に巨大な亀裂が走った。","三ターン、通常攻撃が必ずクリティカルになる。"],G.beginDefense);return}if(i===2){G.barrierTurns=Math.max(G.barrierTurns,3);G.party.forEach((a,j)=>{if(!G.permanentDead[j])a.hp=Math.min(a.max,a.hp+55)});G.say(["巨大な黄金のピラミッドが仲間を包んだ。","全員回復。三回の敵攻撃を大幅軽減する。"],G.beginDefense);return}if(i===3){G.party.forEach((a,j)=>{if(j!==i&&!G.permanentDead[j])a.hp=a.max});p.hp=0;G.permanentDead[i]=true;G.say(["鳳凰が宇宙を横切り、仲間の傷をすべて消した。","ケイタ「これで、みんな帰れる。」"],G.nextTurn);return}if(i===4){G.oniTurns=4;G.attackBoost[i]=2;G.say(["赤黒い領域が開いた。","四ターン、イサジの攻撃可能回数が倍になる。"],G.beginDefense);return}if(i===5){G.slowTurns=Math.max(G.slowTurns,4);G.say([`虫の知らせ ${G.skillUsed[i]}/1。`,"四回の敵攻撃で、弾速と予備動作が遅くなる。"],G.beginDefense);return}},1500)};
 Game.useItem=function(){if(Game.items.herb<=0){Game.toast("やくそうはもうない",.9);Game.setState("MENU");return}Game.items.herb--;const p=Game.current();p.hp=Math.min(p.max,p.hp+80);Game.toast(`${p.name} HP+80`,1);Game.beginDefense()};
 Game.attackTap=function(){const G=Game;if(G.state!=="ATTACK"||G.attackEnded)return;const q=1-Math.abs(270-G.attackX)/200;let mult=55;if(G.critTurns>0)mult*=2;if(G.bossFx.coreOpen>0)mult*=1.6;const hit=Math.floor(G.current().pow*(.34+G.clamp(q,0,1)*.95)*(1+G.attackHits*.1)*mult);G.attackHits++;G.attackTotal+=hit;G.damageBoss(hit);G.attackDir*=-1;G.attackX=G.clamp(G.attackX+(Math.random()<.5?-28:28),70,470);if(G.attackHits>=7*(G.oniTurns>0&&G.active===4?2:1))G.finishAttack()};
 Game.finishAttack=function(){
@@ -464,7 +464,7 @@ Game.useSkill=function(){
    });return
   }
   if(i===4){G.oniTurns=Math.max(G.oniTurns,3);G.attackBoost[i]=2;G.say(["赤黒い領域が開き、イサジの背後に『鬼』が立った。","三回のイサジの行動で、攻撃回数が二倍になる。"],backSame);return}
-  if(i===5){G.slowTurns=Math.max(G.slowTurns,5);G.say([`虫の知らせ ${G.skillUsed[i]}/2。`,`五回の敵攻撃で、弾速と予備動作が遅くなる。`],backSame);return}
+  if(i===5){G.slowTurns=Math.max(G.slowTurns,5);G.say([`虫の知らせ ${G.skillUsed[i]}/1。`,`五回の敵攻撃で、弾速と予備動作が遅くなる。`],backSame);return}
  },2500);
 };
 
@@ -858,9 +858,9 @@ Game.draw=function(){
 
  const oldReset=G.reset;
  G.reset=function(){
-  G.items.mae=6;G.items.ura=6;G.items.rifle=2;G.guardItem=null;G.guardPulse=0;G.guardReflected=0;G.droneRifleReady=false;
+  G.items.mae=3;G.items.ura=3;G.items.rifle=2;G.guardItem=null;G.guardPulse=0;G.guardReflected=0;G.droneRifleReady=false;
   G.field={mode:"normal",lane:0};G.homingLasers=[];G.homingCooldown=0;G.homingChargeStart=0;G.homingCharging=false;
-  oldReset();G.items.mae=6;G.items.ura=6;G.items.rifle=2;G.droneRifleReady=false;
+  oldReset();G.items.mae=3;G.items.ura=3;G.items.rifle=2;G.droneRifleReady=false;
  };
 
  /* 「どうぐ」を一回押した時点で、必ず三種類の一覧を開く */
@@ -1007,7 +1007,7 @@ Game.draw=function(){
   e.preventDefault();
   const held=(performance.now()-G.homingChargeStart)/1000;
   G.homingCharging=false;G.homingChargeStart=0;
-  if(G.homingChargeMode==="rifle"){if(held>=5.8)G.fireHomingLaser("rifle");else G.toast("チャージ不足",.75)}else G.fireHomingLaser(held>=1.85?"buster":"normal");
+  if(G.homingChargeMode==="rifle"){if(held>=5.0)G.fireHomingLaser("rifle");else G.toast("チャージ不足",.75)}else G.fireHomingLaser(held>=1.85?"buster":"normal");
   G.homingChargeMode=null;
  },true);
  G.canvas.addEventListener("pointercancel",()=>{G.homingCharging=false;G.homingChargeStart=0},true);
@@ -1021,7 +1021,7 @@ Game.draw=function(){
     {y:692,k:"herb",name:`完全回復やくそう ×${G.items.herb}`,c:"#7de3a0",d:"仲間ひとりを完全回復"},
     {y:742,k:"mae",name:`マエバリアン ×${G.items.mae}`,c:"#62efff",d:"敵攻撃の前半を反射"},
     {y:792,k:"ura",name:`ウラバリアン ×${G.items.ura}`,c:"#ff73dd",d:"敵攻撃の後半を反射"},
-    {y:842,k:"rifle",name:`ポジドローンライフル ×${G.items.rifle}`,c:"#ff4dff",d:"約6秒チャージで60000以上"}
+    {y:842,k:"rifle",name:`ポジドローンライフル ×${G.items.rifle}`,c:"#ff4dff",d:"約5秒チャージで60000以上"}
    ];
    rows.forEach(r=>{G.hitRects.push({x:42,y:r.y,w:456,h:44,custom:r.k});G.R(42,r.y,456,44,"#0a1019");G.R(48,r.y+6,8,32,r.c);G.T(r.name,68,r.y+19,15,"#fff");G.T(r.d,68,r.y+37,10,"#b8c7d8")});
    G.hitRects.push({x:180,y:895,w:180,h:28,custom:"back"});G.R(180,895,180,28,"#10131a");G.T("← もどる",270,915,13,"#fff","center");
@@ -1034,11 +1034,11 @@ Game.draw=function(){
     g.beginPath();g.arc(G.heart.x,G.heart.y,rr,0,Math.PI*2);g.stroke();g.beginPath();g.arc(G.heart.x,G.heart.y,rr+9,G.time*2,G.time*2+Math.PI*1.25);g.stroke();g.restore();
    }
    if(G.homingCharging){
-    const rifle=G.homingChargeMode==="rifle",need=rifle?5.8:1.85,cap=rifle?6.2:2.2;
+    const rifle=G.homingChargeMode==="rifle",need=rifle?5.0:1.85,cap=rifle?5.4:2.2;
     const held=Math.min(cap,(performance.now()-G.homingChargeStart)/1000),rate=Math.min(1,held/need),rr=(G.guardItem?58:(rifle?24:18))+rate*(rifle?54:30);
     g.save();const col=rifle?(rate>=1?"#ffffff":"#ff4dff"):(rate>=1?"#fff18a":"#72efff");g.strokeStyle=col;g.lineWidth=(rifle?5:3)+rate*(rifle?9:5);g.shadowColor=col;g.shadowBlur=(rifle?26:18)+rate*(rifle?52:28);g.globalAlpha=.6+Math.sin(G.time*(rifle?30:20))*.2;
     for(let i=0;i<(rifle?3:1);i++){g.beginPath();g.arc(G.heart.x,G.heart.y,rr+i*12,G.time*(i%2? -3:3),G.time*(i%2? -3:3)+Math.PI*2*rate);g.stroke()}
-    if(rifle){for(let i=0;i<8;i++){const a=G.time*5+i*Math.PI/4,x=G.heart.x+Math.cos(a)*(20+rate*55),y=G.heart.y+Math.sin(a)*(20+rate*55);g.fillStyle=i%2?"#fff":"#ff4dff";g.fillRect(x-3,y-3,6,6)}G.T(`${held.toFixed(1)} / 5.8`,G.heart.x,G.heart.y-90,12,col,"center")}
+    if(rifle){for(let i=0;i<8;i++){const a=G.time*5+i*Math.PI/4,x=G.heart.x+Math.cos(a)*(20+rate*55),y=G.heart.y+Math.sin(a)*(20+rate*55);g.fillStyle=i%2?"#fff":"#ff4dff";g.fillRect(x-3,y-3,6,6)}G.T(`${held.toFixed(1)} / 5.0`,G.heart.x,G.heart.y-90,12,col,"center")}
     g.restore();
    }
    for(const l of G.homingLasers){
@@ -1054,73 +1054,107 @@ Game.draw=function(){
 "use strict";
 (function(){
  const G=Game;
- /* REBIRTH 25: charge sounds + combo rush */
+ /* REBIRTH 26: louder charge audio + TIME ATTACK RUSH */
  G.chargeSoundTimer=null;
  G.stopChargeSound=function(){if(G.chargeSoundTimer){clearInterval(G.chargeSoundTimer);G.chargeSoundTimer=null}};
  G.startChargeSound=function(){
-  G.stopChargeSound();
-  let step=0;
+  G.stopChargeSound();let step=0;
   G.chargeSoundTimer=setInterval(()=>{
    if(G.state!=="DEFENSE"||!G.homingCharging){G.stopChargeSound();return}
    const held=(performance.now()-G.homingChargeStart)/1000;
-   const rifle=G.homingChargeMode==="rifle";
-   const rate=Math.min(1,held/(rifle?5.8:1.85));
-   const base=rifle?105:250;
-   G.tone(base+rate*(rifle?780:1050)+(step%3)*18,rifle?.14:.09,rifle?"sawtooth":"triangle",rifle?.025:.018,0,rifle?90:180);
-   if(rifle&&rate>.78)G.tone(55+rate*90,.12,"square",.018,0,40);
+   const rifle=G.homingChargeMode==="rifle",rate=Math.min(1,held/(rifle?5.0:1.85));
+   const base=rifle?92:235;
+   G.tone(base+rate*(rifle?900:1250)+(step%4)*22,rifle?.16:.11,rifle?"sawtooth":"triangle",rifle?.065:.052,0,rifle?120:220);
+   if(rifle){G.tone(48+rate*150,.15,"square",.04,0,65);if(rate>.72)G.tone(780+rate*720,.08,"triangle",.03,0,160)}
+   else if(rate>.65)G.tone(620+rate*1000,.07,"sine",.028,0,240);
    step++;
-  },rifleSafeDelay());
+  },115);
  };
- function rifleSafeDelay(){return 145}
  G.canvas.addEventListener("pointerdown",()=>{if(G.state==="DEFENSE")setTimeout(()=>{if(G.homingCharging)G.startChargeSound()},0)},true);
  ["pointerup","pointercancel","pointerout"].forEach(n=>G.canvas.addEventListener(n,()=>G.stopChargeSound(),true));
 
- /* New normal attack: six-beat COMBO RUSH. Tap when the ring reaches the core. */
- const oldChoose=G.chooseAction;
+ const priorChoose=G.chooseAction;
  G.chooseAction=function(i){
-  const a=G.actions()[i];oldChoose(i);
+  const a=G.actions()[i];priorChoose(i);
   if(a==="こうげき"&&G.state==="ATTACK"){
-   G.attackTime=99;G.attackHits=0;G.attackTotal=0;G.attackEnded=false;
-   G.rushBeat=0;G.rushPhase=0;G.rushWindow=1;G.rushScore=[];G.rushMax=(G.oniTurns>0&&G.active===4)?10:6;
+   G.attackTime=4.2;G.attackHits=0;G.attackTotal=0;G.attackEnded=false;G.rapidStreak=0;G.rapidPulse=0;G.rapidBest=0;
   }
  };
  G.attackTap=function(){
-  if(G.state!=="ATTACK"||G.attackEnded)return;
-  const phase=G.rushPhase||0;
-  const accuracy=Math.max(0,1-Math.abs(phase-.82)/.82);
-  const grade=accuracy>.88?"PERFECT":accuracy>.62?"GREAT":accuracy>.32?"GOOD":"MISS";
-  const gradeMul=grade==="PERFECT"?1.55:grade==="GREAT"?1.18:grade==="GOOD"?.78:.18;
+  if(G.state!=="ATTACK"||G.attackEnded||G.attackTime<=0)return;
+  G.attackHits++;G.rapidStreak++;G.rapidBest=Math.max(G.rapidBest,G.rapidStreak);G.rapidPulse=1;
   let crit=G.critTurns>0?2:1;if(G.bossFx.coreOpen>0)crit*=1.6;
-  const combo=1+(G.rushBeat||0)*.07;
-  const hit=Math.floor(G.current().pow*54*gradeMul*crit*combo);
-  G.attackHits++;G.attackTotal+=hit;G.damageBoss(hit);G.rushScore.push(grade);G.rushBeat++;G.rushPhase=0;
-  G.toast(grade,grade==="MISS"?.35:.45);G.sfxAttack(grade==="PERFECT",false);G.shake=grade==="PERFECT"?9:3;
-  if(G.rushBeat>=G.rushMax)G.finishAttack();
+  const frenzy=1+Math.min(1.8,G.attackHits*.045);
+  const hit=Math.floor(G.current().pow*17*frenzy*crit*(G.oniTurns>0&&G.active===4?1.18:1));
+  G.attackTotal+=hit;G.damageBoss(hit);G.sfxAttack(G.attackHits%10===0,false);G.shake=G.attackHits%10===0?9:3;
+  if(G.attackHits%10===0){G.toast(`${G.attackHits} HIT!`,.35);G.flash=.07}
  };
- const oldUpdate=G.update;
+ const priorUpdate=G.update;
  G.update=function(dt){
-  oldUpdate(dt);
+  priorUpdate(dt);
   if(G.state==="ATTACK"&&!G.attackEnded){
-   G.attackTime=99;
-   G.rushPhase=(G.rushPhase||0)+dt*(1.15+(G.rushBeat||0)*.085);
-   if(G.rushPhase>1.28){G.rushScore.push("MISS");G.attackHits++;G.rushBeat++;G.rushPhase=0;G.toast("MISS",.35);if(G.rushBeat>=G.rushMax)G.finishAttack()}
+   G.attackTime=Math.max(0,G.attackTime-dt);G.rapidPulse=Math.max(0,(G.rapidPulse||0)-dt*5);
+   if(G.attackTime<=0)G.finishAttack();
   }
  };
- const oldDraw=G.draw;
+ const priorDraw=G.draw;
  G.draw=function(){
-  oldDraw();
-  if(G.state!=="ATTACK")return;
-  const g=G.ctx;
-  /* cover the former oversized gauge */
-  g.save();g.fillStyle="#02050bf2";g.fillRect(36,744,468,132);g.strokeStyle="#dcecff";g.lineWidth=3;g.strokeRect(36,744,468,132);
-  G.T("COMBO RUSH",270,766,16,"#fff","center");
-  const max=G.rushMax||6,beat=G.rushBeat||0;
-  for(let i=0;i<max;i++){const x=75+i*(390/(max-1));g.fillStyle=i<beat?"#ffd84e":"#263043";g.beginPath();g.arc(x,792,8,0,Math.PI*2);g.fill()}
-  const phase=G.rushPhase||0,cx=270,cy=834,outer=58-(Math.min(1,phase)*43);
-  g.strokeStyle=phase>.72&&phase<.94?"#ffd84e":"#72efff";g.lineWidth=5;g.shadowColor=g.strokeStyle;g.shadowBlur=18;g.beginPath();g.arc(cx,cy,Math.max(14,outer),0,Math.PI*2);g.stroke();
-  g.fillStyle="#fff";g.beginPath();g.arc(cx,cy,13,0,Math.PI*2);g.fill();g.shadowBlur=0;
-  G.T("輪が中心に重なった瞬間にタップ",270,868,12,"#cfe8ff","center");g.restore();
+  priorDraw();if(G.state!=="ATTACK")return;const g=G.ctx;
+  g.save();g.fillStyle="#02050bf5";g.fillRect(30,730,480,158);g.strokeStyle="#dcecff";g.lineWidth=3;g.strokeRect(30,730,480,158);
+  G.T("TIME ATTACK RUSH",270,754,17,"#fff","center");
+  const remain=Math.max(0,G.attackTime||0),rate=remain/4.2;G.R(54,772,432,16,"#182233");G.R(54,772,432*rate,16,rate<.25?"#ff4f72":"#63e8ff");
+  const pulse=1+(G.rapidPulse||0)*.18;g.save();g.translate(270,827);g.scale(pulse,pulse);g.fillStyle="#fff";g.shadowColor="#72efff";g.shadowBlur=28;g.beginPath();g.arc(0,0,38,0,Math.PI*2);g.fill();g.restore();
+  G.T(String(G.attackHits||0),270,839,35,"#08101a","center");G.T("時間内にできるだけ連打！",270,875,13,"#d7f5ff","center");g.restore();
  };
+})();
+</script>
+
+<script>
+"use strict";
+(function(){
+ const G=Game;
+ /* REBIRTH 26 rules and ending safety */
+ const baseGuard=G.chooseGuardItem;
+ G.chooseGuardItem=function(kind){
+  if(G.timeStopTurns>0){G.toast("時間停止中はバリアンを使用できない",1.5);return}
+  baseGuard(kind);
+ };
+ const baseRifle=G.useDroneRifle;
+ G.useDroneRifle=function(){
+  if(G.timeStopTurns>0){G.toast("時間停止中はポジドローンライフルを使用できない",1.7);return}
+  baseRifle();
+ };
+ const baseBegin=G.beginDefense;
+ G.beginDefense=function(){
+  const skipped=G.timeStopTurns>0;
+  if(!skipped)G.rifleFiredThisDefense=false;
+  if(skipped)G.timeStopSkipPending=true;
+  baseBegin();
+ };
+ const baseNext=G.nextTurn;
+ G.nextTurn=function(){
+  const preserve=!!G.timeStopSkipPending,b=G.barrierTurns,s=G.slowTurns;G.timeStopSkipPending=false;
+  baseNext();
+  if(preserve){G.barrierTurns=b;G.slowTurns=s}
+ };
+ const baseFire=G.fireHomingLaser;
+ G.fireHomingLaser=function(mode){
+  if(mode==="rifle"){
+   if(G.rifleFiredThisDefense){G.toast("ポジドローンライフルは1回の敵ターンに1発だけ",1.5);return}
+   G.rifleFiredThisDefense=true;
+  }
+  baseFire(mode);
+ };
+ /* Prevent repeated/undefined ending calls when damage lands during bullet updates. */
+ let endingQueued=false;
+ const originalNormal=G.normalEnding;
+ G.normalEnding=function(){
+  if(endingQueued||G.deathSequenceStarted)return;endingQueued=true;
+  G.bullets=[];G.homingLasers=[];G.homingCharging=false;G.stopChargeSound&&G.stopChargeSound();
+  setTimeout(()=>{if(!G.deathSequenceStarted)originalNormal.call(G)},60);
+ };
+ G.winByFight=function(){G.normalEnding()};
+ const reset2=G.reset;G.reset=function(){endingQueued=false;G.rifleFiredThisDefense=false;G.timeStopSkipPending=false;reset2()};
 })();
 </script>
 
