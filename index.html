@@ -1227,4 +1227,124 @@ Game.draw=function(){
 })();
 </script>
 
+
+<script>
+"use strict";
+(function(){
+ const G=Game;
+ /* REBIRTH 29: verified full-screen rapid attack + Isaji duration skill */
+ G.rapidBaseDuration=4.2;
+ G.rapidOniDuration=7.2;
+
+ /* Compensate for the older chained update that reduced attack time twice. */
+ const prevUpdate29=G.update;
+ G.update=function(dt){
+   if(G.state==="ATTACK"&&!G.attackEnded)G.attackTime+=dt;
+   return prevUpdate29.call(G,dt);
+ };
+
+ const prevChoose29=G.chooseAction;
+ G.chooseAction=function(i){
+   const a=G.actions()[i];
+   const isOni=a==="こうげき"&&G.active===4&&G.oniTurns>0;
+   const r=prevChoose29.call(G,i);
+   if(a==="こうげき"&&G.state==="ATTACK"){
+     G.attackTime=isOni?G.rapidOniDuration:G.rapidBaseDuration;
+     G.attackDuration=G.attackTime;
+     G.attackHits=0;G.attackTotal=0;G.attackEnded=false;G.rapidPulse=0;
+   }
+   return r;
+ };
+
+ G.rapidImpactSound=function(power){
+   const k=Math.min(1,power/45);
+   G.noise(.10,.095);
+   G.tone(72+k*35,.20,"sawtooth",.105,0,-35);
+   G.tone(180+k*110,.105,"square",.075,0,-120);
+   G.tone(620+k*420,.075,"triangle",.055,.015,-260);
+   if(power%6===0){G.noise(.16,.13);G.tone(48,.28,"square",.11,0,-18);G.flash=.09;G.shake=12}
+ };
+
+ /* Every tap deals a visible real amount; boss armor can no longer turn it into 1. */
+ G.attackTap=function(){
+   if(G.state!=="ATTACK"||G.attackEnded||G.attackTime<=0)return;
+   G.attackHits++;
+   G.rapidPulse=1;
+   let mult=1;
+   if(G.critTurns>0)mult*=2;
+   if(G.bossFx.coreOpen>0)mult*=1.6;
+   const acceleration=1+Math.min(.9,G.attackHits*.025);
+   const visible=Math.max(180,Math.floor(G.current().pow*12.5*acceleration*mult));
+   G.attackTotal+=visible;
+   /* damageBoss subtracts armor, so include it once to make the shown value equal visible. */
+   G.damageBoss(visible+G.boss.armor);
+   G.rapidImpactSound(G.attackHits);
+   G.shake=Math.max(G.shake,5);
+ };
+
+ /* Hide party parameters completely while the rapid attack is active. */
+ const prevDrawParty29=G.drawParty;
+ G.drawParty=function(){if(G.state==="ATTACK")return;return prevDrawParty29.apply(G,arguments)};
+
+ const prevDraw29=G.draw;
+ G.draw=function(){
+   prevDraw29.call(G);
+   if(G.state!=="ATTACK")return;
+   const g=G.ctx, remain=Math.max(0,G.attackTime||0);
+   const duration=Math.max(.1,G.attackDuration||G.rapidBaseDuration);
+   const rate=Math.min(1,remain/duration);
+   g.save();
+   /* Cover the entire lower half, including old command/parameter UI. */
+   g.fillStyle="rgba(1,3,10,.97)";g.fillRect(0,480,540,480);
+   const grad=g.createLinearGradient(0,480,0,950);
+   grad.addColorStop(0,"rgba(48,8,15,.88)");grad.addColorStop(.48,"rgba(8,22,48,.96)");grad.addColorStop(1,"rgba(1,3,10,1)");
+   g.fillStyle=grad;g.fillRect(18,500,504,430);
+   g.strokeStyle="#fff";g.lineWidth=4;g.strokeRect(18,500,504,430);
+   g.shadowColor="#ff405f";g.shadowBlur=24;
+   G.T("RAPID ATTACK",270,545,24,"#fff","center");
+   g.shadowBlur=0;
+   G.T("画面を連打して攻撃！",270,590,27,"#ffd84e","center");
+   G.R(48,620,444,25,"#172131");
+   G.R(48,620,444*rate,25,rate<.22?"#ff355d":"#66efff");
+   G.T(`残り ${remain.toFixed(1)} 秒`,270,680,21,"#fff","center");
+   const pulse=1+(G.rapidPulse||0)*.24;
+   g.save();g.translate(270,790);g.scale(pulse,pulse);
+   g.fillStyle="#fff";g.shadowColor="#6defff";g.shadowBlur=50;
+   g.beginPath();g.arc(0,0,94,0,Math.PI*2);g.fill();
+   g.strokeStyle="#ff3e63";g.lineWidth=10;g.beginPath();g.arc(0,0,116+Math.sin(G.time*10)*7,0,Math.PI*2);g.stroke();
+   g.restore();
+   G.T("連 打 !!",270,805,43,"#090d18","center");
+   G.T("タップするたびにダメージ",270,900,16,"#d7f5ff","center");
+   g.restore();
+ };
+
+ /* Make Isaji's technique extend attack time instead of multiplying attack count. */
+ const prevUseSkill29=G.useSkill;
+ G.useSkill=function(){
+   if(G.active!==4)return prevUseSkill29.apply(G,arguments);
+   const i=4,lim=G.skillLimit(i),p=G.current();
+   if(G.skillUsed[i]>=lim){G.toast("この必殺技はもう使えない",1);G.setState("MENU");return}
+   G.skillUsed[i]++;
+   G.startCinematic("oni","領域展開・鬼","連打できる時間を引き延ばす。守るための鬼だ。",p.c);
+   G.setState("SKILL_CINEMA");
+   setTimeout(()=>{
+     G.oniTurns=Math.max(G.oniTurns,3);
+     G.attackBoost[i]=1;
+     G.say(["赤黒い領域が開き、イサジの背後に『鬼』が立った。","次の三回のイサジの攻撃は、連打時間が4.2秒から7.2秒に延長される。"],G.beginDefense);
+   },1500);
+ };
+
+ /* Replace the old skill explanation only while the skill screen is visible. */
+ const prevDrawFinal29=G.draw;
+ G.draw=function(){
+   prevDrawFinal29.call(G);
+   if(G.state==="SKILL"&&G.active===4&&G.sub!=="dialog"){
+     const g=G.ctx;
+     g.fillStyle="#17120a";g.fillRect(55,795,430,42);
+     G.T("次の3回、連打時間 4.2秒 → 7.2秒",270,820,14,"#ddd","center");
+   }
+ };
+})();
+</script>
+
 </body></html>
