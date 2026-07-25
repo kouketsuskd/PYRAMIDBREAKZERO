@@ -1850,3 +1850,79 @@ Game.draw=function(){
 </script>
 
 </body></html>
+<script>
+"use strict";
+/* REBIRTH 34 - clean result / persistent weapon charge correction */
+(function(){
+ const G=Game;
+
+ /* Remove the total-damage result overlay and finish the rapid attack cleanly. */
+ G.rapidTotalFx=0;G.rapidTotalValue=0;
+ G.finishAttack=function(){
+  if(G.attackEnded||G.weaponMode)return;
+  G.attackEnded=true;G.shake=20;G.flash=.12;G.attackWeaponCrit=false;
+  if(G.active===4&&G.oniTurns>0){
+   G.oniTurns--;
+   if(G.oniTurns<=0){G.oniTurns=0;G.attackBoost[4]=1}
+  }
+  if(G.boss.hp>0)setTimeout(()=>{if(G.boss.hp>0)G.beginDefense()},650);
+ };
+
+ /* Kazuaki/Isaji weapon effects: add to an active skill, otherwise store exactly one future charge. */
+ const priorApply=G.applyWeaponEffect;
+ G.applyWeaponEffect=function(i){
+  if(i===1){
+   if(G.critTurns>0)G.critTurns+=1;
+   else G.weaponCritCharge=1;
+   G.toast("会心効果を1回付与",1.15);
+   return;
+  }
+  if(i===4){
+   if(G.oniTurns>0)G.oniTurns+=1;
+   else G.weaponOniCharge=1;
+   G.toast("鬼の力を1回付与",1.15);
+   return;
+  }
+  return priorApply.call(G,i);
+ };
+
+ /* Spend stored effects only when the matching action actually starts. */
+ const priorChoose=G.chooseAction;
+ G.chooseAction=function(i){
+  const action=(G.state==="MENU"&&G.actions)?G.actions()[i]:null;
+  if(action==="こうげき"){
+   G.attackWeaponCrit=G.weaponCritCharge>0;
+   if(G.attackWeaponCrit)G.weaponCritCharge=0;
+   const oniCharge=G.active===4&&G.weaponOniCharge>0;
+   if(oniCharge)G.weaponOniCharge=0;
+   const out=priorChoose.call(G,i);
+   if(oniCharge&&G.state==="ATTACK"&&!G.weaponMode)G.attackTime=Math.max(G.attackTime,5.6);
+   return out;
+  }
+  return priorChoose.call(G,i);
+ };
+
+ /* Isaji skill returns to commands without explanatory follow-up text. */
+ const priorSkill=G.useSkill;
+ G.useSkill=function(){
+  if(G.active!==4)return priorSkill.apply(G,arguments);
+  const i=4,p=G.current();
+  if(G.skillUsed[i]>=1){G.toast("この必殺技はもう使えない",1.1);G.setState("MENU");return}
+  G.skillUsed[i]++;
+  G.startCinematic("oni","領域展開・鬼","鬼の領域を解放する。",p.c);
+  G.setState("SKILL_CINEMA");
+  setTimeout(()=>{
+   G.oniTurns=Math.max(G.oniTurns,3);G.attackBoost[i]=1;
+   G.say(["領域展開・鬼 発動。"],()=>G.setState("MENU"));
+  },1500);
+ };
+
+ if(G.weapons){
+  G.weapons[1].effect="会心効果を1回付与";
+  G.weapons[4].effect="鬼の力を1回付与";
+ }
+
+ /* Prevent the previous total overlay wrapper from drawing anything. */
+ G.rapidTotalFx=0;
+})();
+</script>
