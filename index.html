@@ -917,7 +917,7 @@ Game.draw=function(){
      const l=d||1,sp=Math.max(280,Math.hypot(b.vx||0,b.vy||0)*1.18);
      b.x=G.heart.x+dx/l*38;b.y=G.heart.y+dy/l*38;b.vx=dx/l*sp;b.vy=dy/l*sp;
      b.reflected=true;b.c=G.guardItem==="mae"?"#62efff":"#ff73dd";
-     G.guardPulse=1;G.guardReflected++;G.damageBoss(25+Math.floor(Math.random()*36));
+     G.guardPulse=1;G.guardReflected++;G.damageBoss(G.boss.armor+20+Math.floor(Math.random()*80));
      G.particle(b.x,b.y,b.c,8,1);G.tone(920,.05,"square",.028,0,260);
     }
    }
@@ -1596,6 +1596,141 @@ Game.draw=function(){
    if(G.state==="ATTACK"&&G.weaponMode){e.preventDefault();e.stopImmediatePropagation();G.ensureAudio();G.fireWeapon();return}
   },true);
  },0);
+})();
+</script>
+
+
+<script>
+"use strict";
+/* REBIRTH 32 - per tap damage / weapon effect rules / selectable revival */
+(function(){
+ const G=Game;
+ G.skillLimit=function(){return 1};
+ G.reviveCandidates=[];
+ G.pendingWeaponDefense=false;
+
+ /* Each rapid tap now causes and displays real damage immediately. */
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
+  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
+  G.rapidStrikeSound(1.45);
+  let shown=820+G.current().pow*4;
+  if(G.critTurns>0)shown=Math.floor(shown*1.45);
+  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
+  shown=Math.max(1,Math.floor(shown));
+  G.attackTotal+=shown;
+  G.damageBoss(G.boss.armor+shown);
+  const d=G.damageText[G.damageText.length-1];
+  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=G.critTurns>0;d.total=false}
+  const c=G.current().c;G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),c,7,.65);
+ };
+ G.finishAttack=function(){
+  if(G.attackEnded||G.weaponMode)return;G.attackEnded=true;
+  G.shake=20;G.flash=.12;
+  if(G.active===4&&G.oniTurns>0){G.oniTurns--;if(G.oniTurns<=0){G.oniTurns=0;G.attackBoost[4]=1}}
+  if(G.boss.hp>0)setTimeout(G.beginDefense,650);
+ };
+
+ /* Isaji's skill grants another command instead of immediately starting enemy attack. */
+ const previousSkill=G.useSkill;
+ G.useSkill=function(){
+  if(G.active!==4)return previousSkill.apply(G,arguments);
+  const i=4,p=G.current(),lim=1;
+  if(G.skillUsed[i]>=lim){G.toast("虫の知らせを含む必殺技は各1回のみ",1.2);G.setState("MENU");return}
+  G.skillUsed[i]++;
+  G.startCinematic("oni","領域展開・鬼","次の三回、連打可能時間を約4倍へ引き延ばす。",p.c);
+  G.setState("SKILL_CINEMA");
+  setTimeout(()=>{
+   G.oniTurns=Math.max(G.oniTurns,3);G.attackBoost[i]=1;
+   G.say(["赤黒い領域が開き、イサジの背後に『鬼』が立った。","次の三回のイサジの攻撃は、連打時間が1.4秒から5.6秒へ延長される。","イサジはそのまま、もう一度行動できる。"],()=>{G.setState("MENU");G.toast("もう一度行動できる",.9)});
+  },1500);
+ };
+
+ G.applyWeaponEffect=function(i){
+  /* Toshiyuki, Kazuaki and Isaji grant one future use; active skill duration gains +1. */
+  if(i===0)G.timeStopTurns=(G.timeStopTurns>0?G.timeStopTurns+1:1);
+  if(i===1)G.critTurns=(G.critTurns>0?G.critTurns+1:1);
+  /* Mappy and Ryogo last only for the immediately following enemy turn. */
+  if(i===2){
+   G.party.forEach((p,j)=>{if(p.hp>0&&!G.permanentDead[j])p.hp=Math.min(p.max,p.hp+Math.ceil(p.max*.25))});
+   G.barrierTurns=Math.max(G.barrierTurns,1);
+  }
+  if(i===4)G.oniTurns=(G.oniTurns>0?G.oniTurns+1:1);
+  if(i===5)G.slowTurns=Math.max(G.slowTurns,1);
+ };
+
+ G.finishWeaponFlow=function(){
+  G.pendingWeaponDefense=false;
+  if(G.boss.hp>0)setTimeout(G.beginDefense,500);
+ };
+
+ G.fireWeapon=function(){
+  if(G.weaponStopped)return;G.weaponStopped=true;G.attackEnded=true;
+  const i=G.active,w=G.weapons[i],dist=Math.abs(G.weaponCursor-270),accuracy=Math.max(0,1-dist/200);
+  const mult=.72+accuracy*.46;
+  let damage=Math.floor(w.base*mult);
+  /* Kazuaki's critical skill applies to every ally's limited weapon too. */
+  if(G.critTurns>0)damage=Math.floor(damage*1.45);
+  G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
+  try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
+  for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
+  setTimeout(()=>{
+   if(G.boss.hp<=0)return;
+   G.damageBoss(damage);
+   G.damageText.push({x:270,y:245,l:1.5,n:accuracy>.88?"CORE PERFECT":"WEAPON IMPACT",crit:true,total:true});
+   if(G.boss.hp<=0)return;
+   if(i===3){
+    G.reviveCandidates=[];
+    G.party.forEach((p,j)=>{if(j!==3&&(p.hp<=0||G.permanentDead[j]))G.reviveCandidates.push(j)});
+    if(G.reviveCandidates.length){G.pendingWeaponDefense=true;G.setState("REVIVE_SELECT");G.toast("蘇生する仲間を選択",1.2);return}
+    G.toast("蘇生できる仲間はいない。攻撃のみ発動",1.4);G.finishWeaponFlow();return;
+   }
+   G.applyWeaponEffect(i);
+   G.finishWeaponFlow();
+  },420);
+ };
+
+ const previousChoose=G.chooseAction;
+ G.chooseAction=function(i){
+  if(G.state==="REVIVE_SELECT"){
+   const target=G.reviveCandidates[i];
+   if(target===undefined)return;
+   G.permanentDead[target]=false;
+   G.party[target].hp=Math.max(1,Math.ceil(G.party[target].max*.45));
+   G.particle(270,650,G.party[target].c,55,1.35);G.flash=.2;G.shake=18;
+   G.toast(`${G.party[target].name}を蘇生した`,1.5);
+   G.reviveCandidates=[];G.finishWeaponFlow();return;
+  }
+  return previousChoose.call(G,i);
+ };
+
+ const previousDraw=G.draw;
+ G.draw=function(){
+  previousDraw.call(G);
+  if(G.state!=="REVIVE_SELECT"||G.sub==="dialog")return;
+  const g=G.ctx;g.save();
+  g.fillStyle="rgba(0,2,10,.97)";g.fillRect(18,610,504,320);
+  g.strokeStyle="#ff9a47";g.lineWidth=3;g.shadowColor="#ff7d32";g.shadowBlur=24;g.strokeRect(30,625,480,285);g.shadowBlur=0;
+  G.T("PHOENIX REVIVAL",270,665,22,"#ffb36f","center");
+  G.T("蘇生する仲間を選択",270,700,17,"#fff","center");
+  G.reviveCandidates.forEach((idx,k)=>{
+   const p=G.party[idx],x=55+(k%2)*225,y=730+Math.floor(k/2)*58,w=205,h=46;
+   G.hitRects.push({x,y,w,h,type:"action",i:k});
+   G.R(x,y,w,h,"#17121a");G.R(x+6,y+6,7,h-12,p.c);
+   G.T(p.name,x+112,y+29,16,"#fff","center");
+  });
+  g.restore();
+ };
+
+ /* Clarify skill panel text and weapon effects. */
+ if(G.weapons){
+  G.weapons[0].effect="次の敵行動を1回停止（時間停止中なら＋1回）";
+  G.weapons[1].effect="次の攻撃を1回会心化（必殺中なら＋1回）";
+  G.weapons[2].effect="全員25%回復＋次の敵攻撃1回軽減";
+  G.weapons[3].effect="倒れた仲間を選んで1人蘇生";
+  G.weapons[4].effect="次のイサジ攻撃1回延長（必殺中なら＋1回）";
+  G.weapons[5].effect="直後の敵攻撃だけ低速化";
+ }
 })();
 </script>
 
