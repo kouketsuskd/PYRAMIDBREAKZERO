@@ -2141,8 +2141,183 @@ Game.draw=function(){
   g.save();g.globalAlpha=a;
   const scale=1+Math.max(0,t-.72)*.16;
   g.translate(270,292);g.scale(scale,scale);
-  G.T(G.simpleTotalValue.toLocaleString(),0,18,58,"#fff","center");
+  G.T(G.simpleTotalValue.toLocaleString(),0,18,58,"#ff183d","center");
   g.restore();
+ };
+})();
+</script>
+
+<script>
+"use strict";
+/* REBIRTH 37 - exact weapon balance / zero heart invincibility / red damage finish */
+(function(){
+ const G=Game;
+ G.redWeaponFx=0;
+ G.redWeaponValue=0;
+
+ /* Requested fixed weapon damage by character:
+    Toshiyuki 70k / Kazuaki 60k / Mappy 35k / Keita 40k / Isaji 55k / Ryogo 70k. */
+ if(G.weapons){
+  const bases=[70000,60000,35000,40000,55000,70000];
+  G.weapons.forEach((w,i)=>{
+   w.base=bases[i];
+   w.effect=(i===3)?"倒れた仲間を選んで1人蘇生":"";
+  });
+ }
+
+ /* 9-10 normal taps land at roughly 15,000 total, with only a small random spread. */
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
+  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
+  G.rapidStrikeSound(1.45);
+  const p=G.current();
+  let shown=Math.round(1575*G.rnd(.97,1.03));
+  const isCrit=G.critTurns>0;
+  if(isCrit)shown=Math.floor(shown*1.45);
+  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
+  shown=Math.max(1,shown);
+  G.attackTotal+=shown;
+  G.damageBoss(G.boss.armor+shown);
+  const d=G.damageText[G.damageText.length-1];
+  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=isCrit;d.total=false}
+  G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),p.c,7,.65);
+ };
+
+ /* Weapon damage is the character's fixed value. The center-lock remains visual/timing only.
+    Kazuaki's active critical skill still multiplies weapon damage. */
+ G.fireWeapon=function(){
+  if(G.weaponStopped)return;
+  G.weaponStopped=true;G.attackEnded=true;
+  const i=G.active,w=G.weapons[i];
+  let damage=w.base;
+  const skillCritical=G.critTurns>0;
+  if(skillCritical)damage=Math.floor(damage*1.45);
+  G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
+  try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
+  for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
+  setTimeout(()=>{
+   if(G.boss.hp<=0)return;
+   G.damageBoss(G.boss.armor+damage);
+   /* Suppress the normal damage-number color and redraw this weapon hit in red. */
+   const d=G.damageText[G.damageText.length-1];
+   if(d)d.l=0;
+   G.redWeaponValue=damage;
+   G.redWeaponFx=1.45;
+   if(G.boss.hp<=0)return;
+   if(i===3){
+    G.reviveCandidates=[];
+    G.party.forEach((p,j)=>{if(j!==3&&(p.hp<=0||G.permanentDead[j]))G.reviveCandidates.push(j)});
+    if(G.reviveCandidates.length){G.pendingWeaponDefense=true;G.setState("REVIVE_SELECT");G.toast("蘇生する仲間を選択",1.2);return}
+   }
+   G.finishWeaponFlow();
+  },420);
+ };
+
+ /* No heart invincibility at all during enemy turns, including after a hit. */
+ const update37=G.update;
+ G.update=function(dt){
+  update37.call(G,dt);
+  if(G.state==="DEFENSE")G.heart.inv=0;
+  if(G.redWeaponFx>0)G.redWeaponFx=Math.max(0,G.redWeaponFx-dt);
+ };
+ const begin37=G.beginDefense;
+ G.beginDefense=function(){
+  const out=begin37.apply(G,arguments);
+  G.heart.inv=0;
+  return out;
+ };
+ const intro37=G.startIntroAttack;
+ G.startIntroAttack=function(){
+  const out=intro37.apply(G,arguments);
+  G.heart.inv=0;
+  return out;
+ };
+
+ /* Red weapon damage. */
+ const draw37=G.draw;
+ G.draw=function(){
+  draw37.call(G);
+  if(G.redWeaponFx>0){
+   const g=G.ctx,t=G.redWeaponFx/1.45;
+   const a=Math.min(1,(1-t)*8,t*4);
+   g.save();g.globalAlpha=Math.max(0,a);g.shadowColor="#ff183d";g.shadowBlur=34;
+   G.T(G.redWeaponValue.toLocaleString(),270,245,62,"#ff183d","center");
+   g.restore();
+  }
+ };
+})();
+</script>
+
+
+<script>
+"use strict";
+/* REBIRTH 38 - wider normal damage spread / Isaji charge fix / clearer skill explanations */
+(function(){
+ const G=Game;
+
+ /* Keep about 15,000 total at 9-10 taps, but make each hit feel less uniform. */
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
+  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
+  G.rapidStrikeSound(1.45);
+  const p=G.current();
+  /* Average stays 1,575, range is widened to roughly 1,260-1,890 per tap. */
+  let shown=Math.round(1575*G.rnd(.80,1.20));
+  const isCrit=G.critTurns>0;
+  if(isCrit)shown=Math.floor(shown*1.45);
+  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
+  shown=Math.max(1,shown);
+  G.attackTotal+=shown;
+  G.damageBoss(G.boss.armor+shown);
+  const d=G.damageText[G.damageText.length-1];
+  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=isCrit;d.total=false}
+  G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),p.c,7,.65);
+ };
+
+ /* oniTurns means remaining boosted Isaji ATTACKS, not turns.
+    finishAttack already consumes one, so cancel the old nextTurn decrement. */
+ const next38=G.nextTurn;
+ G.nextTurn=function(){
+  const preserveOni=(G.active===4&&G.oniTurns>0);
+  if(preserveOni)G.oniTurns++;
+  return next38.apply(G,arguments);
+ };
+
+ /* Clear, explicit post-skill explanations for the five non-Isaji skills. */
+ const say38=G.say;
+ G.say=function(lines,next){
+  let out=Array.isArray(lines)?lines.slice():[lines];
+  if(G.state==="SKILL_CINEMA" && !out.some(x=>String(x).includes("効果："))){
+   const extra=[
+    "効果：敵の攻撃ターンを6回まるごと停止。停止中も味方側は行動できる。",
+    "効果：会心状態が続いている間、通常攻撃と武器攻撃のダメージが大きく上がる。",
+    "効果：生きている仲間を回復し、その後の敵攻撃を結界で軽減する。",
+    "効果：ケイタ以外の仲間を全回復。その代わりケイタは戦闘から永久離脱する。",
+    "効果：次の3回のイサジの通常攻撃だけ、連打できる時間が1.4秒から5.6秒になる。",
+    "効果：しばらくの間、敵弾の速度と攻撃前の動きを遅くして避けやすくする。"
+   ][G.active];
+   if(extra)out.push(extra);
+  }
+  return say38.call(G,out,next);
+ };
+
+ /* Isaji's latest skill implementation had only a one-line explanation. */
+ const use38=G.useSkill;
+ G.useSkill=function(){
+  if(G.active!==4)return use38.apply(G,arguments);
+  const i=4,p=G.current();
+  if(G.skillUsed[i]>=1){G.toast("この必殺技はもう使えない",1.1);G.setState("MENU");return}
+  G.skillUsed[i]++;
+  G.startCinematic("oni","領域展開・鬼","次の3回の攻撃を、長時間の連打攻撃へ変える。",p.c);
+  G.setState("SKILL_CINEMA");
+  setTimeout(()=>{
+   G.oniTurns=3;G.attackBoost[i]=1;
+   G.say([
+    "領域展開・鬼 発動。",
+    "次の3回のイサジの通常攻撃だけ、連打時間が1.4秒から5.6秒になる。",
+    "1回攻撃するごとに残り回数が1ずつ減る。発動直後はそのままイサジがもう一度行動できる。"
+   ],()=>{G.setState("MENU");G.toast("鬼の攻撃　残り3回",1.1)});
+  },1500);
  };
 })();
 </script>
