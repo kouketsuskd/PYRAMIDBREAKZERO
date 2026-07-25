@@ -2031,3 +2031,89 @@ Game.draw=function(){
  }
 })();
 </script>
+<script>
+"use strict";
+/* REBIRTH 36 - SIMPLE WEAPONS / NO DEFENSE START INVINCIBILITY */
+(function(){
+ const G=Game;
+
+ /* One-shot weapon damage. Only Keita keeps the revival ability. */
+ if(G.weapons){
+  const bases=[70000,60000,35000,40000,55000,70000];
+  const effects=[
+   "高威力の武器攻撃",
+   "高威力の武器攻撃",
+   "武器攻撃",
+   "倒れた仲間を選んで1人蘇生",
+   "高威力の武器攻撃",
+   "最高威力の武器攻撃"
+  ];
+  for(let i=0;i<G.weapons.length;i++){
+   G.weapons[i].base=bases[i];
+   G.weapons[i].effect=effects[i];
+  }
+ }
+
+ /* Remove every stored weapon-only special effect from older patches. */
+ G.weaponCritCharge=0;
+ G.weaponOniCharge=0;
+ G.attackWeaponCrit=false;
+ G.attackWeaponOni=false;
+ G.applyWeaponEffect=function(){};
+
+ const resetBefore=G.reset;
+ G.reset=function(){
+  resetBefore.apply(G,arguments);
+  G.weaponCritCharge=0;G.weaponOniCharge=0;
+  G.attackWeaponCrit=false;G.attackWeaponOni=false;
+ };
+
+ /* Weapon attacks are damage only. Kazuaki's active skill critical also applies here. */
+ G.fireWeapon=function(){
+  if(G.weaponStopped)return;
+  G.weaponStopped=true;G.attackEnded=true;
+  const i=G.active,w=G.weapons[i];
+  const dist=Math.abs(G.weaponCursor-270);
+  const accuracy=Math.max(0,1-dist/200);
+  const mult=.72+accuracy*.46;
+  const isCrit=G.critTurns>0;
+  let damage=Math.floor(w.base*mult);
+  if(isCrit)damage=Math.floor(damage*1.45);
+  if(G.bossFx&&G.bossFx.coreOpen>0)damage=Math.floor(damage*1.25);
+
+  G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
+  try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
+  for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
+
+  setTimeout(()=>{
+   if(G.boss.hp<=0)return;
+   G.damageBoss(damage);
+   G.damageText.push({x:270,y:245,l:1.5,n:isCrit?"CRITICAL WEAPON":"WEAPON IMPACT",crit:true,total:true});
+   if(G.boss.hp<=0)return;
+
+   if(i===3){
+    G.reviveCandidates=[];
+    G.party.forEach((p,j)=>{if(j!==3&&(p.hp<=0||G.permanentDead[j]))G.reviveCandidates.push(j)});
+    if(G.reviveCandidates.length){
+     G.pendingWeaponDefense=true;
+     G.setState("REVIVE_SELECT");
+     G.toast("蘇生する仲間を選択",1.2);
+     return;
+    }
+   }
+   G.finishWeaponFlow();
+  },420);
+ };
+
+ /* No grace period when an enemy turn starts. */
+ const beginBefore=G.beginDefense;
+ G.beginDefense=function(){
+  const out=beginBefore.apply(G,arguments);
+  if(G.state==="DEFENSE"){
+   G.heart.inv=0;
+   G.safeSpawn=0;
+  }
+  return out;
+ };
+})();
+</script>
