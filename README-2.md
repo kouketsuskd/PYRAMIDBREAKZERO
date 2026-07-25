@@ -1,7 +1,11 @@
-PYRAMID BREAK ZERO DAYBREAK - REBIRTH 36
+PYRAMID BREAK ZERO DAYBREAK XXXI — WEAPON IMPACT
 
-- Weapons are now simple one-use attacks.
-- Only Keita's weapon retains its selectable revival effect.
-- Ryogo and Toshiyuki weapon base damage: 70,000.
-- Kazuaki skill critical applies to weapon attacks.
-- Enemy turns begin with no heart invincibility/grace time.
+- 通常連打時間を1.4秒へ短縮、平均約20,000ダメージへ再調整
+- イサジ「領域展開・鬼」中は連打時間5.6秒（通常の約4倍）
+- コマンド「武器を使用」を追加
+- 各キャラクター専用武器は1回限定
+- 武器攻撃は中央で止める一発タイミング方式
+- 武器ごとに約40,000〜48,000ダメージと特殊効果
+- ケイタ：倒れた仲間を1人蘇生
+- リョウゴ：次の敵攻撃を1回だけ低速化
+- 専用発光、衝撃波、画面揺れ、専用効果音を追加

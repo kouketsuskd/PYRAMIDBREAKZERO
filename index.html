@@ -2031,89 +2031,118 @@ Game.draw=function(){
  }
 })();
 </script>
+
 <script>
 "use strict";
-/* REBIRTH 36 - SIMPLE WEAPONS / NO DEFENSE START INVINCIBILITY */
+/* REBIRTH 36 - simple weapons / smooth total damage / no defense spawn invincibility */
 (function(){
  const G=Game;
+ G.simpleTotalFx=0;
+ G.simpleTotalValue=0;
 
- /* One-shot weapon damage. Only Keita keeps the revival ability. */
+ /* Distinct one-shot weapon power for each character. Only Keita keeps a special effect. */
  if(G.weapons){
-  const bases=[70000,60000,35000,40000,55000,70000];
-  const effects=[
-   "高威力の武器攻撃",
-   "高威力の武器攻撃",
-   "武器攻撃",
-   "倒れた仲間を選んで1人蘇生",
-   "高威力の武器攻撃",
-   "最高威力の武器攻撃"
-  ];
-  for(let i=0;i<G.weapons.length;i++){
-   G.weapons[i].base=bases[i];
-   G.weapons[i].effect=effects[i];
-  }
+  const bases=[42000,56000,39000,51000,60000,44500];
+  const effects=["攻撃のみ","攻撃のみ","攻撃のみ","攻撃＋倒れた仲間を1人蘇生","攻撃のみ","攻撃のみ"];
+  G.weapons.forEach((w,i)=>{w.base=bases[i];w.effect=effects[i]});
  }
 
- /* Remove every stored weapon-only special effect from older patches. */
+ /* Remove all weapon-granted status effects. Keita revival is handled in fireWeapon. */
+ G.applyWeaponEffect=function(){ };
  G.weaponCritCharge=0;
  G.weaponOniCharge=0;
- G.attackWeaponCrit=false;
- G.attackWeaponOni=false;
- G.applyWeaponEffect=function(){};
 
- const resetBefore=G.reset;
+ const reset36=G.reset;
  G.reset=function(){
-  resetBefore.apply(G,arguments);
-  G.weaponCritCharge=0;G.weaponOniCharge=0;
-  G.attackWeaponCrit=false;G.attackWeaponOni=false;
+  reset36.apply(G,arguments);
+  G.weaponCritCharge=0;G.weaponOniCharge=0;G.attackWeaponCrit=false;G.attackWeaponOni=false;
+  G.simpleTotalFx=0;G.simpleTotalValue=0;
  };
 
- /* Weapon attacks are damage only. Kazuaki's active skill critical also applies here. */
+ /* Normal attack: per-tap damage has only a small random range. */
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
+  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
+  G.rapidStrikeSound(1.45);
+  const p=G.current();
+  const base=820+p.pow*4;
+  let shown=Math.round(base*G.rnd(.96,1.04));
+  const isCrit=G.critTurns>0;
+  if(isCrit)shown=Math.floor(shown*1.45);
+  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
+  shown=Math.max(1,shown);
+  G.attackTotal+=shown;
+  G.damageBoss(G.boss.armor+shown);
+  const d=G.damageText[G.damageText.length-1];
+  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=isCrit;d.total=false}
+  G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),p.c,7,.65);
+ };
+
+ /* End the normal attack by letting one large total number flow in naturally, with no panel/frame. */
+ G.finishAttack=function(){
+  if(G.attackEnded||G.weaponMode)return;
+  G.attackEnded=true;G.shake=22;G.flash=.14;
+  G.simpleTotalValue=Math.max(0,Math.floor(G.attackTotal));
+  G.simpleTotalFx=1.35;
+  try{G.sfxAttack(true,true)}catch(e){}
+  if(G.active===4&&G.oniTurns>0){G.oniTurns--;if(G.oniTurns<=0){G.oniTurns=0;G.attackBoost[4]=1}}
+  if(G.boss.hp>0)setTimeout(()=>{if(G.boss.hp>0)G.beginDefense()},1300);
+ };
+
+ /* Weapons are pure damage except Keita. Kazuaki's active critical skill also boosts weapon damage. */
  G.fireWeapon=function(){
   if(G.weaponStopped)return;
   G.weaponStopped=true;G.attackEnded=true;
-  const i=G.active,w=G.weapons[i];
-  const dist=Math.abs(G.weaponCursor-270);
-  const accuracy=Math.max(0,1-dist/200);
+  const i=G.active,w=G.weapons[i],dist=Math.abs(G.weaponCursor-270),accuracy=Math.max(0,1-dist/200);
   const mult=.72+accuracy*.46;
-  const isCrit=G.critTurns>0;
   let damage=Math.floor(w.base*mult);
-  if(isCrit)damage=Math.floor(damage*1.45);
-  if(G.bossFx&&G.bossFx.coreOpen>0)damage=Math.floor(damage*1.25);
-
+  const skillCritical=G.critTurns>0;
+  if(skillCritical)damage=Math.floor(damage*1.45);
   G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
   try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
   for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
-
   setTimeout(()=>{
    if(G.boss.hp<=0)return;
    G.damageBoss(damage);
-   G.damageText.push({x:270,y:245,l:1.5,n:isCrit?"CRITICAL WEAPON":"WEAPON IMPACT",crit:true,total:true});
+   const d=G.damageText[G.damageText.length-1];
+   if(d)d.crit=skillCritical;
    if(G.boss.hp<=0)return;
-
+   /* Keita alone keeps the selectable revival effect. */
    if(i===3){
     G.reviveCandidates=[];
     G.party.forEach((p,j)=>{if(j!==3&&(p.hp<=0||G.permanentDead[j]))G.reviveCandidates.push(j)});
-    if(G.reviveCandidates.length){
-     G.pendingWeaponDefense=true;
-     G.setState("REVIVE_SELECT");
-     G.toast("蘇生する仲間を選択",1.2);
-     return;
-    }
+    if(G.reviveCandidates.length){G.pendingWeaponDefense=true;G.setState("REVIVE_SELECT");G.toast("蘇生する仲間を選択",1.2);return}
    }
    G.finishWeaponFlow();
   },420);
  };
 
- /* No grace period when an enemy turn starts. */
- const beginBefore=G.beginDefense;
+ /* Remove the free invincibility window at the start of every enemy turn. */
+ const defense36=G.beginDefense;
  G.beginDefense=function(){
-  const out=beginBefore.apply(G,arguments);
-  if(G.state==="DEFENSE"){
-   G.heart.inv=0;
-   G.safeSpawn=0;
-  }
+  const out=defense36.apply(G,arguments);
+  if(G.state==="DEFENSE")G.heart.inv=0;
   return out;
+ };
+
+ const update36=G.update;
+ G.update=function(dt){
+  update36.call(G,dt);
+  if(G.simpleTotalFx>0)G.simpleTotalFx=Math.max(0,G.simpleTotalFx-dt);
+ };
+
+ const draw36=G.draw;
+ G.draw=function(){
+  draw36.call(G);
+  if(G.simpleTotalFx<=0)return;
+  const g=G.ctx,t=G.simpleTotalFx/1.35;
+  const appear=Math.min(1,(1-t)*7),fade=Math.min(1,t*4);
+  const a=Math.min(appear,fade);
+  g.save();g.globalAlpha=a;
+  const scale=1+Math.max(0,t-.72)*.16;
+  g.translate(270,292);g.scale(scale,scale);
+  G.T(G.simpleTotalValue.toLocaleString(),0,18,58,"#fff","center");
+  g.restore();
  };
 })();
 </script>

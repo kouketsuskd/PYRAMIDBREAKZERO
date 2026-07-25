@@ -1,0 +1,331 @@
+     G.T("次の3回、連打時間 2.1秒 → 6.2秒",270,821,14,"#ddd","center");
+   }
+ };
+})();
+</script>
+
+
+<script>
+"use strict";
+/* REBIRTH 31 - WEAPON IMPACT / short rapid rush */
+(function(){
+ const G=Game;
+ G.weaponUsed=[false,false,false,false,false,false];
+ G.weaponMode=false;G.weaponCursor=70;G.weaponDir=1;G.weaponStopped=false;G.weaponFx=0;
+ G.weapons=[
+  {name:"クロノエッジ",base:44000,color:"#bca9ff",effect:"敵の行動を3回停止"},
+  {name:"ワールドブレイカー",base:48000,color:"#86d7ff",effect:"全員の攻撃を2ターン会心化"},
+  {name:"ピラミッドレールガン",base:42000,color:"#ffd36b",effect:"全員を25%回復＋2回軽減"},
+  {name:"エクスプロイデットソード",base:40000,color:"#ff8b36",effect:"倒れた仲間を1人だけ蘇生"},
+  {name:"鬼哭ナックル",base:45000,color:"#ff405e",effect:"イサジの連打時間を2回延長"},
+  {name:"インセクト・スナイパー",base:41000,color:"#65c9ff",effect:"次の敵攻撃を1回だけ低速化"}
+ ];
+ const oldReset=G.reset;
+ G.reset=function(){oldReset.apply(G,arguments);G.weaponUsed=[false,false,false,false,false,false];G.weaponMode=false;G.weaponStopped=false;};
+ G.actions=()=>G.trueReady?["こうげき","わざ","武器を使用","どうぐ","手を差し伸べる","こうたい"]:["こうげき","わざ","武器を使用","どうぐ","はなす","こうたい"];
+ const oldChoose=G.chooseAction;
+ G.chooseAction=function(i){
+  if(G.state==="WEAPON_SELECT"){
+   if(i===0)return G.startWeaponAttack();
+   return;
+  }
+  const a=G.actions()[i];
+  if(a==="武器を使用"){G.setState("WEAPON_SELECT");return}
+  if(a==="こうげき"){
+   G.weaponMode=false;G.setState("ATTACK");G.attackTime=(G.active===4&&G.oniTurns>0)?5.6:1.4;
+   G.attackHits=0;G.attackTotal=0;G.attackEnded=false;G.attackPulse=0;return;
+  }
+  return oldChoose.call(G,i);
+ };
+ G.startWeaponAttack=function(){
+  const i=G.active,w=G.weapons[i];
+  if(G.weaponUsed[i]){G.toast(`${w.name}はすでに使用済み`,1.2);G.setState("MENU");return}
+  G.weaponMode=true;G.weaponStopped=false;G.weaponCursor=70;G.weaponDir=1;G.weaponFx=0;G.attackEnded=false;G.setState("ATTACK");
+  G.toast("中央のコアで一度だけタップ！",1.2);
+ };
+ G.rapidStrikeSound=function(power=1){
+  try{G.ensureAudio();if(G.playRapidHit)G.playRapidHit();else{G.beep(62,.09,"sawtooth",.2*power);G.beep(135,.06,"square",.16*power)}}catch(e){}
+ };
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded)return;
+  if(G.weaponMode)return G.fireWeapon();
+  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
+  G.rapidStrikeSound(1.4);
+  const c=G.current().c;G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),c,7,.65);
+ };
+ G.finishAttack=function(){
+  if(G.attackEnded||G.weaponMode)return;G.attackEnded=true;
+  let perTap=1060+G.current().pow*3;
+  let raw=Math.floor(G.attackHits*perTap);
+  if(G.critTurns>0)raw=Math.floor(raw*1.45);
+  if(G.bossFx.coreOpen>0)raw=Math.floor(raw*1.25);
+  raw=Math.max(0,raw);
+  G.attackTotal=raw;
+  if(raw>0)G.damageBoss(raw);
+  G.shake=24;G.flash=.18;
+  if(G.active===4&&G.oniTurns>0){G.oniTurns--;if(G.oniTurns<=0){G.oniTurns=0;G.attackBoost[4]=1}}
+  if(G.boss.hp>0)setTimeout(G.beginDefense,850);
+ };
+ G.fireWeapon=function(){
+  if(G.weaponStopped)return;G.weaponStopped=true;G.attackEnded=true;
+  const i=G.active,w=G.weapons[i],dist=Math.abs(G.weaponCursor-270),accuracy=Math.max(0,1-dist/200);
+  const mult=.72+accuracy*.46,damage=Math.floor(w.base*mult);
+  G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
+  try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
+  for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
+  setTimeout(()=>{
+   if(G.boss.hp<=0)return;G.damageBoss(damage);G.applyWeaponEffect(i);
+   G.damageText.push({x:270,y:245,l:1.5,n:accuracy>.88?"CORE PERFECT":"WEAPON IMPACT",crit:true,total:true});
+   if(G.boss.hp>0)setTimeout(G.beginDefense,1000);
+  },420);
+ };
+ G.applyWeaponEffect=function(i){
+  if(i===0)G.timeStopTurns=Math.max(G.timeStopTurns,3);
+  if(i===1)G.critTurns=Math.max(G.critTurns,2);
+  if(i===2){G.party.forEach((p,j)=>{if(p.hp>0&&!G.permanentDead[j])p.hp=Math.min(p.max,p.hp+Math.ceil(p.max*.25))});G.barrierTurns=Math.max(G.barrierTurns,2)}
+  if(i===3){const d=G.party.findIndex((p,j)=>p.hp<=0||G.permanentDead[j]);if(d>=0){G.permanentDead[d]=false;G.party[d].hp=Math.max(1,Math.ceil(G.party[d].max*.45));G.toast(`${G.party[d].name}が蘇生した`,1.5)}else G.toast("倒れている仲間はいなかった",1.2)}
+  if(i===4)G.oniTurns=Math.max(G.oniTurns,2);
+  if(i===5)G.slowTurns=Math.max(G.slowTurns,1);
+ };
+ const oldUpdate=G.update;
+ G.update=function(dt){
+  oldUpdate.call(G,dt);
+  if(G.state==="ATTACK"&&G.weaponMode&&!G.weaponStopped){G.weaponCursor+=G.weaponDir*560*dt;if(G.weaponCursor>=470){G.weaponCursor=470;G.weaponDir=-1}if(G.weaponCursor<=70){G.weaponCursor=70;G.weaponDir=1}}
+  if(G.attackPulse>0)G.attackPulse=Math.max(0,G.attackPulse-dt*6);
+  if(G.weaponFx>0)G.weaponFx=Math.max(0,G.weaponFx-dt);
+ };
+ const oldDraw=G.draw;
+ G.draw=function(){
+  oldDraw.call(G);const g=G.ctx;
+  if(G.state==="WEAPON_SELECT"&&G.sub!=="dialog"){
+   const w=G.weapons[G.active],used=G.weaponUsed[G.active];
+   g.save();g.fillStyle="rgba(1,4,12,.97)";g.fillRect(25,720,490,200);g.strokeStyle=w.color;g.lineWidth=3;g.shadowColor=w.color;g.shadowBlur=22;g.strokeRect(35,735,470,165);g.shadowBlur=0;
+   G.T("LIMITED WEAPON",270,766,18,w.color,"center");G.T(w.name,270,802,23,used?"#666":"#fff","center");
+   G.T(`一発威力 約${w.base.toLocaleString()}`,270,832,14,"#ffd970","center");G.T(w.effect,270,858,13,"#d7e8ff","center");
+   G.hitRects.push({x:55,y:870,w:300,h:36,type:"action",i:0});G.R(55,870,300,36,used?"#181818":"#102133");G.T(used?"使用済み":"武器を構える",205,894,16,used?"#666":"#fff","center");
+   G.hitRects.push({x:370,y:870,w:115,h:36,type:"back"});G.R(370,870,115,36,"#161923");G.T("もどる",427,894,14,"#fff","center");g.restore();
+  }
+  if(G.state==="ATTACK"&&!G.weaponMode){
+   const duration=(G.active===4&&G.oniTurns>0)?5.6:1.4,remain=Math.max(0,G.attackTime),pulse=1+(G.attackPulse||0)*.1;
+   g.save();const bg=g.createLinearGradient(0,430,0,960);bg.addColorStop(0,"rgba(2,5,15,.96)");bg.addColorStop(1,"rgba(0,0,4,1)");g.fillStyle=bg;g.fillRect(0,420,540,540);
+   g.strokeStyle=G.current().c;g.lineWidth=3;g.shadowColor=G.current().c;g.shadowBlur=26;g.strokeRect(28,455,484,430);g.shadowBlur=0;
+   G.T("RAPID // DRIVE",270,505,24,"#fff","center");G.T("TAP TO STRIKE",270,548,17,G.current().c,"center");
+   G.R(65,585,410,8,"#202735");G.R(65,585,410*Math.max(0,remain/duration),8,remain<duration*.22?"#ff4268":"#71e8ff");
+   g.translate(270,735);g.scale(pulse,pulse);for(let n=0;n<4;n++){g.strokeStyle=n%2?"rgba(255,62,105,.72)":"rgba(100,230,255,.55)";g.lineWidth=n===1?5:2;g.beginPath();g.arc(0,0,105+n*22+Math.sin(G.time*(5+n))*5,0,Math.PI*2);g.stroke()}g.fillStyle="#f7fdff";g.shadowColor="#71e8ff";g.shadowBlur=48;g.beginPath();g.arc(0,0,90,0,Math.PI*2);g.fill();g.shadowBlur=0;G.T(String(G.attackHits),0,23,72,"#07101b","center");G.T("TAPS",0,68,13,"#1b4054","center");g.restore();
+  }
+  if(G.state==="ATTACK"&&G.weaponMode){
+   const w=G.weapons[G.active],d=Math.abs(G.weaponCursor-270),acc=Math.max(0,1-d/200);
+   g.save();g.fillStyle="rgba(0,2,9,.97)";g.fillRect(0,420,540,540);g.strokeStyle=w.color;g.lineWidth=3;g.shadowColor=w.color;g.shadowBlur=30;g.strokeRect(26,455,488,410);g.shadowBlur=0;
+   G.T(w.name,270,505,24,w.color,"center");G.T("CENTER LOCK — ONE SHOT",270,545,15,"#fff","center");
+   G.R(70,675,400,24,"#17202d");G.R(250,650,40,74,acc>.88?"#fff":"#ffcf58");G.R(G.weaponCursor-8,640,16,94,w.color);
+   for(let n=0;n<3;n++){g.strokeStyle=n===1?w.color:"rgba(255,255,255,.45)";g.lineWidth=2+n;g.beginPath();g.arc(270,685,75+n*35+Math.sin(G.time*(6+n))*8,0,Math.PI*2);g.stroke()}
+   G.T(G.weaponStopped?"IMPACT":"中央でタップ",270,790,27,G.weaponStopped?"#fff":"#ffd970","center");
+   if(G.weaponStopped){g.globalAlpha=Math.max(0,G.weaponFx/1.8);g.fillStyle=w.color;g.beginPath();g.arc(270,685,210*(1-G.weaponFx/1.8)+30,0,Math.PI*2);g.fill();g.globalAlpha=1}
+   g.restore();
+  }
+  if(G.state==="SKILL"&&G.active===4&&G.sub!=="dialog"){
+   g.fillStyle="#17120a";g.fillRect(52,792,436,48);G.T("次の3回、連打時間 1.4秒 → 5.6秒",270,821,14,"#ddd","center");
+  }
+ };
+ // Update Isaji's skill wording/effect to roughly four times normal duration.
+ const oldUseSkill=G.useSkill;
+ G.useSkill=function(){
+  if(G.active!==4)return oldUseSkill.apply(G,arguments);
+  const i=4,p=G.current(),lim=G.skillLimit(i);if(G.skillUsed[i]>=lim){G.toast("この必殺技はもう使えない",1);G.setState("MENU");return}
+  G.skillUsed[i]++;G.startCinematic("oni","領域展開・鬼","連打可能時間を約4倍まで引き延ばす。",p.c);G.setState("SKILL_CINEMA");
+  setTimeout(()=>{G.oniTurns=Math.max(G.oniTurns,3);G.attackBoost[i]=1;G.say(["赤黒い領域が開き、イサジの背後に『鬼』が立った。","次の三回のイサジの攻撃は、連打時間が1.4秒から5.6秒へ延長される。"],G.beginDefense)},1500);
+ };
+ // Capture pointer events for weapon selection/attack before the original handler.
+ setTimeout(()=>{
+  if(!G.canvas)return;
+  G.canvas.addEventListener("pointerdown",function(e){
+   if(G.state==="ATTACK"&&G.weaponMode){e.preventDefault();e.stopImmediatePropagation();G.ensureAudio();G.fireWeapon();return}
+  },true);
+ },0);
+})();
+</script>
+
+
+<script>
+"use strict";
+/* REBIRTH 32 - per tap damage / weapon effect rules / selectable revival */
+(function(){
+ const G=Game;
+ G.skillLimit=function(){return 1};
+ G.reviveCandidates=[];
+ G.pendingWeaponDefense=false;
+
+ /* Each rapid tap now causes and displays real damage immediately. */
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
+  G.attackHits++;G.attackPulse=1;G.shake=Math.min(18,5+G.attackHits*.35);G.flash=.025;
+  G.rapidStrikeSound(1.45);
+  let shown=820+G.current().pow*4;
+  if(G.critTurns>0)shown=Math.floor(shown*1.45);
+  if(G.bossFx.coreOpen>0)shown=Math.floor(shown*1.25);
+  shown=Math.max(1,Math.floor(shown));
+  G.attackTotal+=shown;
+  G.damageBoss(G.boss.armor+shown);
+  const d=G.damageText[G.damageText.length-1];
+  if(d){d.x=270+G.rnd(-72,72);d.y=200+G.rnd(-18,28);d.l=.72;d.crit=G.critTurns>0;d.total=false}
+  const c=G.current().c;G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),c,7,.65);
+ };
+ G.finishAttack=function(){
+  if(G.attackEnded||G.weaponMode)return;G.attackEnded=true;
+  G.shake=20;G.flash=.12;
+  if(G.active===4&&G.oniTurns>0){G.oniTurns--;if(G.oniTurns<=0){G.oniTurns=0;G.attackBoost[4]=1}}
+  if(G.boss.hp>0)setTimeout(G.beginDefense,650);
+ };
+
+ /* Isaji's skill grants another command instead of immediately starting enemy attack. */
+ const previousSkill=G.useSkill;
+ G.useSkill=function(){
+  if(G.active!==4)return previousSkill.apply(G,arguments);
+  const i=4,p=G.current(),lim=1;
+  if(G.skillUsed[i]>=lim){G.toast("虫の知らせを含む必殺技は各1回のみ",1.2);G.setState("MENU");return}
+  G.skillUsed[i]++;
+  G.startCinematic("oni","領域展開・鬼","次の三回、連打可能時間を約4倍へ引き延ばす。",p.c);
+  G.setState("SKILL_CINEMA");
+  setTimeout(()=>{
+   G.oniTurns=Math.max(G.oniTurns,3);G.attackBoost[i]=1;
+   G.say(["赤黒い領域が開き、イサジの背後に『鬼』が立った。","次の三回のイサジの攻撃は、連打時間が1.4秒から5.6秒へ延長される。","イサジはそのまま、もう一度行動できる。"],()=>{G.setState("MENU");G.toast("もう一度行動できる",.9)});
+  },1500);
+ };
+
+ G.applyWeaponEffect=function(i){
+  /* Toshiyuki, Kazuaki and Isaji grant one future use; active skill duration gains +1. */
+  if(i===0)G.timeStopTurns=(G.timeStopTurns>0?G.timeStopTurns+1:1);
+  if(i===1)G.critTurns=(G.critTurns>0?G.critTurns+1:1);
+  /* Mappy and Ryogo last only for the immediately following enemy turn. */
+  if(i===2){
+   G.party.forEach((p,j)=>{if(p.hp>0&&!G.permanentDead[j])p.hp=Math.min(p.max,p.hp+Math.ceil(p.max*.25))});
+   G.barrierTurns=Math.max(G.barrierTurns,1);
+  }
+  if(i===4)G.oniTurns=(G.oniTurns>0?G.oniTurns+1:1);
+  if(i===5)G.slowTurns=Math.max(G.slowTurns,1);
+ };
+
+ G.finishWeaponFlow=function(){
+  G.pendingWeaponDefense=false;
+  if(G.boss.hp>0)setTimeout(G.beginDefense,500);
+ };
+
+ G.fireWeapon=function(){
+  if(G.weaponStopped)return;G.weaponStopped=true;G.attackEnded=true;
+  const i=G.active,w=G.weapons[i],dist=Math.abs(G.weaponCursor-270),accuracy=Math.max(0,1-dist/200);
+  const mult=.72+accuracy*.46;
+  let damage=Math.floor(w.base*mult);
+  /* Kazuaki's critical skill applies to every ally's limited weapon too. */
+  if(G.critTurns>0)damage=Math.floor(damage*1.45);
+  G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
+  try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
+  for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
+  setTimeout(()=>{
+   if(G.boss.hp<=0)return;
+   G.damageBoss(damage);
+   G.damageText.push({x:270,y:245,l:1.5,n:accuracy>.88?"CORE PERFECT":"WEAPON IMPACT",crit:true,total:true});
+   if(G.boss.hp<=0)return;
+   if(i===3){
+    G.reviveCandidates=[];
+    G.party.forEach((p,j)=>{if(j!==3&&(p.hp<=0||G.permanentDead[j]))G.reviveCandidates.push(j)});
+    if(G.reviveCandidates.length){G.pendingWeaponDefense=true;G.setState("REVIVE_SELECT");G.toast("蘇生する仲間を選択",1.2);return}
+    G.toast("蘇生できる仲間はいない。攻撃のみ発動",1.4);G.finishWeaponFlow();return;
+   }
+   G.applyWeaponEffect(i);
+   G.finishWeaponFlow();
+  },420);
+ };
+
+ const previousChoose=G.chooseAction;
+ G.chooseAction=function(i){
+  if(G.state==="REVIVE_SELECT"){
+   const target=G.reviveCandidates[i];
+   if(target===undefined)return;
+   G.permanentDead[target]=false;
+   G.party[target].hp=Math.max(1,Math.ceil(G.party[target].max*.45));
+   G.particle(270,650,G.party[target].c,55,1.35);G.flash=.2;G.shake=18;
+   G.toast(`${G.party[target].name}を蘇生した`,1.5);
+   G.reviveCandidates=[];G.finishWeaponFlow();return;
+  }
+  return previousChoose.call(G,i);
+ };
+
+ const previousDraw=G.draw;
+ G.draw=function(){
+  previousDraw.call(G);
+  if(G.state!=="REVIVE_SELECT"||G.sub==="dialog")return;
+  const g=G.ctx;g.save();
+  g.fillStyle="rgba(0,2,10,.97)";g.fillRect(18,610,504,320);
+  g.strokeStyle="#ff9a47";g.lineWidth=3;g.shadowColor="#ff7d32";g.shadowBlur=24;g.strokeRect(30,625,480,285);g.shadowBlur=0;
+  G.T("PHOENIX REVIVAL",270,665,22,"#ffb36f","center");
+  G.T("蘇生する仲間を選択",270,700,17,"#fff","center");
+  G.reviveCandidates.forEach((idx,k)=>{
+   const p=G.party[idx],x=55+(k%2)*225,y=730+Math.floor(k/2)*58,w=205,h=46;
+   G.hitRects.push({x,y,w,h,type:"action",i:k});
+   G.R(x,y,w,h,"#17121a");G.R(x+6,y+6,7,h-12,p.c);
+   G.T(p.name,x+112,y+29,16,"#fff","center");
+  });
+  g.restore();
+ };
+
+ /* Clarify skill panel text and weapon effects. */
+ if(G.weapons){
+  G.weapons[0].effect="次の敵行動を1回停止（時間停止中なら＋1回）";
+  G.weapons[1].effect="次の攻撃を1回会心化（必殺中なら＋1回）";
+  G.weapons[2].effect="全員25%回復＋次の敵攻撃1回軽減";
+  G.weapons[3].effect="倒れた仲間を選んで1人蘇生";
+  G.weapons[4].effect="次のイサジ攻撃1回延長（必殺中なら＋1回）";
+  G.weapons[5].effect="直後の敵攻撃だけ低速化";
+ }
+})();
+</script>
+
+
+<script>
+"use strict";
+/* REBIRTH 33 - persistent Kazuaki/Isaji weapon effects + rapid total result */
+(function(){
+ const G=Game;
+ G.weaponCritCharge=0;
+ G.weaponOniCharge=0;
+ G.attackWeaponCrit=false;
+ G.rapidTotalFx=0;
+ G.rapidTotalValue=0;
+
+ const oldReset=G.reset;
+ G.reset=function(){
+  oldReset.apply(G,arguments);
+  G.weaponCritCharge=0;G.weaponOniCharge=0;G.attackWeaponCrit=false;
+  G.rapidTotalFx=0;G.rapidTotalValue=0;
+ };
+
+ /* Weapon effects are stored separately so the following enemy turn cannot erase them. */
+ const oldApply=G.applyWeaponEffect;
+ G.applyWeaponEffect=function(i){
+  if(i===1){
+   G.weaponCritCharge+=1;
+   G.toast("次の攻撃を1回クリティカル化",1.35);
+   return;
+  }
+  if(i===4){
+   G.weaponOniCharge+=1;
+   G.toast("次のイサジ攻撃を1回延長",1.35);
+   return;
+  }
+  return oldApply.call(G,i);
+ };
+
+ const oldChoose=G.chooseAction;
+ G.chooseAction=function(i){
+  const action=(G.state==="MENU"&&G.actions)?G.actions()[i]:null;
+  if(action==="こうげき"){
+   G.attackWeaponCrit=G.weaponCritCharge>0;
+   if(G.attackWeaponCrit)G.weaponCritCharge--;
+   const useWeaponOni=G.active===4&&G.weaponOniCharge>0;
+   if(useWeaponOni)G.weaponOniCharge--;
+   const r=oldChoose.call(G,i);
+   if(useWeaponOni&&G.state==="ATTACK"&&!G.weaponMode)G.attackTime=Math.max(G.attackTime,5.6);
+   return r;
+  }
+  return oldChoose.call(G,i);
+ };
