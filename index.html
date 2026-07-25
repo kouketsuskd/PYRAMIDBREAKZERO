@@ -1347,4 +1347,115 @@ Game.draw=function(){
 })();
 </script>
 
+
+<script>
+"use strict";
+(function(){
+ const G=Game;
+ /* REBIRTH 30: compact stylish rapid counter */
+ G.rapidBaseDuration=2.1;
+ G.rapidOniDuration=6.2;
+
+ G.attackTap=function(){
+   if(G.state!=="ATTACK"||G.attackEnded||G.attackTime<=0)return;
+   G.attackHits++;
+   G.rapidPulse=1;
+   let mult=1;
+   if(G.critTurns>0)mult*=2;
+   if(G.bossFx.coreOpen>0)mult*=1.35;
+   /* Around 20,000 total for an ordinary two-second rapid tap sequence. */
+   const perTap=Math.floor((650+G.current().pow*5)*(1+Math.min(.18,G.attackHits*.006))*mult);
+   G.attackTotal+=perTap;
+   G.damageBoss(perTap+G.boss.armor);
+   G.rapidImpactSound(G.attackHits+10);
+   G.shake=Math.max(G.shake,G.attackHits%5===0?11:6);
+   if(G.attackHits%5===0)G.flash=Math.max(G.flash,.055);
+ };
+
+ const previousDraw30=G.draw;
+ G.draw=function(){
+   previousDraw30.call(G);
+   if(G.state!=="ATTACK")return;
+   const g=G.ctx;
+   const remain=Math.max(0,G.attackTime||0);
+   const duration=Math.max(.1,G.attackDuration||G.rapidBaseDuration);
+   const progress=1-Math.min(1,remain/duration);
+   const pulse=1+(G.rapidPulse||0)*.2;
+   g.save();
+   /* Fully replace the older rapid panel. */
+   g.fillStyle="rgba(2,4,11,.99)";g.fillRect(0,480,540,480);
+   const bg=g.createRadialGradient(270,760,20,270,760,350);
+   bg.addColorStop(0,"rgba(23,59,88,.95)");
+   bg.addColorStop(.48,"rgba(21,12,36,.98)");
+   bg.addColorStop(1,"rgba(2,4,11,1)");
+   g.fillStyle=bg;g.fillRect(0,480,540,480);
+
+   g.globalAlpha=.18;
+   for(let i=0;i<11;i++){
+     const y=535+i*36;
+     g.fillStyle=i%2?"#70eaff":"#ff476d";
+     g.fillRect(32,y,476,1);
+   }
+   g.globalAlpha=1;
+
+   g.strokeStyle="rgba(132,236,255,.8)";g.lineWidth=2;
+   g.strokeRect(28,510,484,410);
+   g.strokeStyle="rgba(255,66,105,.9)";g.lineWidth=5;
+   g.beginPath();g.moveTo(28,510);g.lineTo(142,510);g.moveTo(398,920);g.lineTo(512,920);g.stroke();
+
+   G.T("RAPID // DRIVE",270,556,21,"#dffbff","center");
+   G.T("TAP  TO  STRIKE",270,594,15,"#ff718d","center");
+
+   /* Time is shown only as a clean energy line, not as seconds. */
+   G.R(66,625,408,8,"rgba(255,255,255,.12)");
+   const lineW=408*(1-progress);
+   if(lineW>0)G.R(66,625,lineW,8,remain<duration*.24?"#ff3e69":"#73eaff");
+
+   g.save();g.translate(270,770);g.scale(pulse,pulse);
+   for(let i=0;i<3;i++){
+     g.strokeStyle=i===1?"rgba(255,65,105,.65)":"rgba(106,235,255,.5)";
+     g.lineWidth=i===1?5:2;
+     g.beginPath();
+     g.arc(0,0,112+i*21+Math.sin(G.time*(5+i))*5,0,Math.PI*2);
+     g.stroke();
+   }
+   g.fillStyle="rgba(245,253,255,.98)";
+   g.shadowColor="#73eaff";g.shadowBlur=48;
+   g.beginPath();g.arc(0,0,91,0,Math.PI*2);g.fill();
+   g.restore();
+
+   /* The former white '連打!!' area is now the live tap counter. */
+   G.T(String(G.attackHits||0),270,794,66,"#07101b","center");
+   G.T("TAPS",270,842,14,"#d9f8ff","center");
+   g.restore();
+ };
+
+ /* Update Isaji wording and make the duration close to triple. */
+ const previousUseSkill30=G.useSkill;
+ G.useSkill=function(){
+   if(G.active!==4)return previousUseSkill30.apply(G,arguments);
+   const i=4,lim=G.skillLimit(i),p=G.current();
+   if(G.skillUsed[i]>=lim){G.toast("この必殺技はもう使えない",1);G.setState("MENU");return}
+   G.skillUsed[i]++;
+   G.startCinematic("oni","領域展開・鬼","連打時間を約3倍まで引き延ばす。",p.c);
+   G.setState("SKILL_CINEMA");
+   setTimeout(()=>{
+     G.oniTurns=Math.max(G.oniTurns,3);
+     G.attackBoost[i]=1;
+     G.say(["赤黒い領域が開き、イサジの背後に『鬼』が立った。","次の三回のイサジの攻撃は、連打時間が2.1秒から6.2秒に延長される。"],G.beginDefense);
+   },1500);
+ };
+
+ const previousDrawSkill30=G.draw;
+ G.draw=function(){
+   previousDrawSkill30.call(G);
+   if(G.state==="SKILL"&&G.active===4&&G.sub!=="dialog"){
+     const g=G.ctx;
+     g.fillStyle="#17120a";g.fillRect(52,793,436,47);
+     G.T("次の3回、連打時間 2.1秒 → 6.2秒",270,821,14,"#ddd","center");
+   }
+ };
+})();
+</script>
+
 </body></html>
