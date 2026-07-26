@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK XLVIII 700K AUDIO LOOP FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XLVIII<br>700K AUDIO LOOP FIX</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK L<br>BARRIER PERFECT FIX</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -3076,5 +3076,48 @@ Game.draw=function(){
  G.startPhase2Music=function(){G.syncThresholdMusic(false)};
  const reset45=G.reset;
  G.reset=function(){reset45.apply(G,arguments);G._appliedMusicTier=-99;G.syncThresholdMusic(true)};
+})();
+</script>
+
+<script>
+"use strict";
+/* DAYBREAK L - perfect barrier damage lock / Mae x9 / all weapons +20,000 */
+(function(){
+ const G=Game;
+
+ /* Requested item count. Apply now and after every reset. */
+ G.items.mae=9;
+ const resetL=G.reset;
+ G.reset=function(){
+  const out=resetL.apply(G,arguments);
+  G.items.mae=9;
+  return out;
+ };
+
+ /*
+  Reflection can miss a fast bullet for one frame. This final damage gate makes
+  both barriers absolute while their valid time window is active.
+ */
+ const hurtL=G.hurt;
+ G.hurt=function(n){
+  if(G.state==="DEFENSE" && typeof G.guardActive==="function" && G.guardActive()){
+   G.guardPulse=1;
+   G.heart.inv=Math.max(G.heart.inv||0,.12);
+   try{G.particle(G.heart.x,G.heart.y,G.guardItem==="full"?"#fff18a":"#62efff",10,.7)}catch(e){}
+   return;
+  }
+  return hurtL.call(G,n);
+ };
+
+ /* Every character weapon receives exactly +20,000 fixed damage. */
+ const boosted=[90000,80000,55000,60000,75000,90000];
+ if(G.weapons)G.weapons.forEach((w,i)=>{if(boosted[i]!=null)w.base=boosted[i]});
+
+ /* Re-apply after any older reset/setup layer touches weapon data. */
+ const startMusicL=G.startMusic;
+ G.startMusic=function(){
+  if(G.weapons)G.weapons.forEach((w,i)=>{if(boosted[i]!=null)w.base=boosted[i]});
+  return startMusicL&&startMusicL.apply(G,arguments);
+ };
 })();
 </script>
