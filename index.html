@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK XIV REBIRTH 5 REBIRTH 3 REBIRTH</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XIV REBIRTH 3 REBIRTH</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>PYRAMID BREAK ZERO — REBIRTH 51 700K LIGHTWEIGHT FINAL</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>REBIRTH 51<br>700K LIGHTWEIGHT FINAL</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は REBIRTH 51／70万以下軽量化・はなす完全削除版です。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -2091,6 +2091,8 @@ Game.draw=function(){
  };
 })();
 </script>
+
+
 </body></html>
 <script>
 "use strict";
@@ -3116,6 +3118,88 @@ Game.draw=function(){
   finalReset.apply(G,arguments);
   G.finalMusicActivated=false;G.worldUnlockPending=false;G.worldUnlockedAnnounced=false;
   G.rebirth44Tier=-1;G.syncThresholdMusic(true);
+ };
+})();
+</script>
+<script>
+"use strict";
+/* REBIRTH 51 700K LIGHTWEIGHT FINAL — remove TALK route and all legacy extra defense scheduling */
+(function(){
+ const G=Game, RAGE_HP=1200000;
+
+ /* TALK route is completely removed from UI and logic. */
+ G.actions=()=>["こうげき","わざ","武器を使用","どうぐ","こうたい"];
+ G.talkCount=0;G.talkRoute=false;G.trueReady=false;
+ G.talk=function(){G.setState("MENU")};
+ G.talkAttackMultiplier=function(){return G.boss.hp<=RAGE_HP?1.18:1};
+
+ const oldChoose=G.chooseAction;
+ G.chooseAction=function(i){
+  const a=G.actions()[i];
+  if(a==="こうげき"){G.setState("ATTACK");G.attackX=70;G.attackDir=1;G.attackTime=3.8;G.attackHits=0;G.attackTotal=0;G.attackEnded=false;return}
+  if(a==="わざ"){G.setState("SKILL");return}
+  if(a==="武器を使用"){G.setState("WEAPON");return}
+  if(a==="どうぐ"){G.setState("ITEM");return}
+  if(a==="こうたい"){G.setState("SWITCH");return}
+  return oldChoose.call(G,i);
+ };
+
+ /* HP 700k never changes the attack phase. Only the 1.2M tier exists after opening. */
+ G.effectivePhase=function(){return G.boss.hp<=RAGE_HP?4:1};
+
+ /* Replace every wrapped/legacy beginDefense with one clean implementation.
+    No duplicate delayed patterns, no talk-based patterns, no Phase 5 scheduling. */
+ G.beginDefense=function(){
+  if(G.boss.hp<=0)return;
+  if(G.timeStopTurns>0){
+   G.timeStopTurns--;
+   G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);
+   return setTimeout(G.nextTurn,650);
+  }
+  G.setState("DEFENSE");
+  const ep=G.effectivePhase();
+  G.defenseTime=ep>=4?9.2:7.5;
+  G.patternClock=0;
+  G.bullets=[];G.trails=[];G.particles=[];
+  G.heart.x=270;G.heart.y=515;G.heart.inv=.5;
+  G.patternId=(G.turn*7+ep*9)%40;
+  if(G.introMode){
+   G.spawnPattern(2);
+   setTimeout(()=>G.state==="DEFENSE"&&G.introMode&&G.bullets.length<52&&G.spawnPattern(8),700);
+  }else{
+   G.spawnPattern(G.patternId);
+  }
+ };
+
+ /* Strict limits for iPhone rendering. */
+ const oldSpawn=G.spawnPattern;
+ G.spawnPattern=function(id){
+  if(G.state==="DEFENSE"&&G.bullets.length>=58)return;
+  oldSpawn.call(G,id);
+  if(G.bullets.length>68)G.bullets.splice(68);
+ };
+ const oldUB=G.updateBullets;
+ G.updateBullets=function(dt){
+  G.talkCount=0;G.talkRoute=false;
+  oldUB.call(G,dt);
+  if(G.bullets.length>68)G.bullets.splice(0,G.bullets.length-68);
+  if(G.particles.length>72)G.particles.splice(0,G.particles.length-72);
+  if(G.trails.length>8)G.trails.splice(0,G.trails.length-8);
+  if(G.damageText.length>16)G.damageText.splice(0,G.damageText.length-16);
+ };
+
+ /* Remove TALK wording from the opening explanation. */
+ const oldSay=G.say;
+ G.say=function(lines,next){
+  let arr=Array.isArray(lines)?lines:[lines];
+  arr=arr.filter(x=>!String(x).includes("三十回")&&!String(x).includes("言葉を選んだ瞬間"));
+  return oldSay.call(G,arr,next);
+ };
+
+ const oldReset=G.reset;
+ G.reset=function(){
+  oldReset.apply(G,arguments);
+  G.talkCount=0;G.talkRoute=false;G.trueReady=false;
  };
 })();
 </script>
