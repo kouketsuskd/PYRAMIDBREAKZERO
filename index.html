@@ -2920,3 +2920,75 @@ Game.draw=function(){
  document.addEventListener("click",()=>G.syncThresholdMusic(false),{passive:true});
 })();
 </script>
+<script>
+"use strict";
+/* REBIRTH 47 PERFORMANCE + MUSIC BALANCE HOTFIX */
+(function(){
+ const G=Game, RAGE_HP=1200000, FINAL_HP=700000;
+
+ /* Prevent the many legacy beginDefense extensions from stacking too many patterns. */
+ G._phasePatternBudget=99;
+ const originalSpawn=G.spawnPattern;
+ G.spawnPattern=function(id){
+  if(G.state==="DEFENSE"&&!G.introMode){
+   if(G._phasePatternBudget<=0)return;
+   G._phasePatternBudget--;
+  }
+  return originalSpawn.apply(G,arguments);
+ };
+ const originalBegin=G.beginDefense;
+ G.beginDefense=function(){
+  const hp=G.boss.hp;
+  G._phasePatternBudget=hp<=FINAL_HP?5:hp<=RAGE_HP?4:99;
+  return originalBegin.apply(G,arguments);
+ };
+
+ /* Hard bullet ceiling for mobile Safari. Keep challenge through speed, not runaway object count. */
+ const originalUpdate=G.update;
+ G.update=function(dt){
+  originalUpdate.call(G,dt);
+  if(G.state==="DEFENSE"&&!G.introMode&&Array.isArray(G.bullets)){
+   const final=G.boss.hp<=FINAL_HP, rage=!final&&G.boss.hp<=RAGE_HP;
+   const cap=final?88:rage?104:120;
+   if(G.bullets.length>cap)G.bullets.splice(0,G.bullets.length-cap);
+  }
+ };
+
+ /* Lightweight final-phase bullet renderer: no per-bullet gradients or oversized shadows. */
+ const richDraw=G.drawBullets;
+ G.drawBullets=function(){
+  if(G.boss.hp>FINAL_HP||G.state!=="DEFENSE")return richDraw.apply(G,arguments);
+  const g=G.ctx;
+  for(const b of G.bullets){
+   if(b.warn>0){
+    const q=.5+.35*Math.sin(G.time*16);
+    g.save();g.globalAlpha=.35+q*.3;g.strokeStyle=b.c||"#ff3659";g.lineWidth=2.5;
+    g.beginPath();g.arc(b.x,b.y,b.r+10+q*4,0,Math.PI*2);g.stroke();g.restore();continue;
+   }
+   g.save();
+   if(b.fake)g.globalAlpha=.28;
+   g.fillStyle=b.c;
+   g.shadowColor=b.c;g.shadowBlur=b.r>=14?8:3;
+   g.beginPath();
+   if(["hand","grab"].includes(b.k))g.roundRect(b.x-b.r*1.5,b.y-b.r*.62,b.r*3,b.r*1.24,9);
+   else g.arc(b.x,b.y,b.r,0,Math.PI*2);
+   g.fill();
+   if(b.r>=8){g.shadowBlur=0;g.globalAlpha*=.65;g.fillStyle="#fff";g.beginPath();g.arc(b.x-b.r*.2,b.y-b.r*.2,Math.max(1,b.r*.22),0,Math.PI*2);g.fill()}
+   g.restore();
+  }
+ };
+
+ /* Raise only the second and third tracks. */
+ const oldSync=G.syncThresholdMusic;
+ G.syncThresholdMusic=function(force){
+  oldSync.call(G,force);
+  const t=G.boss.hp<=FINAL_HP?2:G.boss.hp<=RAGE_HP?1:0;
+  const active=t===0?G.bgm:t===1?G.bgmPhase2:G.bgmFinal;
+  const target=t===0?.15:t===1?.29:.31;
+  if(active&&!active.paused){
+   const key=t===0?"_phase1Fade":t===1?"_phase2Fade":"_finalFade";
+   if(typeof G.fadeTrack==="function")G.fadeTrack(active,target,.45,key);else active.volume=target;
+  }
+ };
+})();
+</script>
