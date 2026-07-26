@@ -1,5 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>PYRAMID BREAK ZERO — DAYBREAK LIV REBIRTH 54</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK LIV</b><br><span style="display:inline-block;margin-top:12px;font-size:clamp(16px,4.5vw,26px);color:#65d9ff;letter-spacing:.08em">REBIRTH 54 — PHASE 5 REMOVED</span></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>フェーズ5削除・フェーズ4継続版<br><strong style="color:#ffd75a;font-size:15px">VERSION 54</strong></p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
-window.PYRAMID_BREAK_VERSION="54";console.log("PYRAMID BREAK ZERO — DAYBREAK LIV / REBIRTH 54 PHASE 5 REMOVED");
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>PYRAMID BREAK ZERO DAYBREAK XLVII REBIRTH 47 PHASE4 CONTINUE</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XLVII REBIRTH 47</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -1987,137 +1986,22 @@ Game.draw=function(){
 
 <script>
 "use strict";
-/* REBIRTH 50: complete final-phase rebuild.
-   All legacy pattern schedulers are rejected below 700,000 HP. */
+/* REBIRTH 47: below 700,000 keeps Phase 4 attacks; only music and Toshiyuki unlock change. */
 (function(){
  const G=Game, FINAL_HP=700000;
- const legacySpawn=G.spawnPattern;
- const legacyBegin=G.beginDefense;
- const legacyUpdate=G.update;
- G._v50Token=0;
- G._v50Final=false;
- G._v50Cap=56;
-
- function isFinal(){return G.boss&&G.boss.hp>0&&G.boss.hp<=FINAL_HP&&!G.introMode}
-
- /* This is the decisive gate: old delayed callbacks can no longer create attacks. */
- G.spawnPattern=function(id){
-  if(isFinal()&&!G._v50AllowLegacy)return null;
-  return legacySpawn.apply(G,arguments);
- };
-
- function bullet(x,y,vx,vy,r,c){
-  if(G.state!=="DEFENSE"||!isFinal()||G.bullets.length>=G._v50Cap)return;
-  G.addBullet(x,y,vx,vy,r,c,"v50",{warn:.18});
- }
- function radial(n,speed,offset){
-  const cx=270,cy=300;
-  for(let i=0;i<n;i++){const a=offset+i*Math.PI*2/n;bullet(cx,cy,Math.cos(a)*speed,Math.sin(a)*speed,i%5===0?10:6,i%3?"#fff":"#ff365f")}
- }
- function sideLanes(reverse){
-  const A=G.arena, gap=(G.turn*53)%5;
-  for(let i=0;i<8;i++){if(i===gap||i===gap+1)continue;const y=A.y+30+i*(A.h-60)/7;bullet(reverse?A.x+A.w+18:A.x-18,y,reverse?-260:260,(i%3-1)*22,8,i%2?"#79ddff":"#ff5472")}
- }
- function rain(){
-  const A=G.arena, gap=(G.turn*71)%7;
-  for(let i=0;i<10;i++){if(i===gap||i===gap+1)continue;const x=A.x+24+i*(A.w-48)/9;bullet(x,A.y-20,(i%2?32:-32),270,7,i%3?"#ffe278":"#fff")}
- }
- function aimed(){
-  const A=G.arena,hx=G.heart.x,hy=G.heart.y;
-  for(let i=0;i<7;i++){const x=A.x+25+i*(A.w-50)/6,y=A.y-18;const a=Math.atan2(hy-y,hx-x)+(i-3)*.035;bullet(x,y,Math.cos(a)*245,Math.sin(a)*245,7,i%2?"#ff6688":"#fff")}
- }
- function schedule(token,delay,fn){setTimeout(()=>{if(token===G._v50Token&&G.state==="DEFENSE"&&isFinal())fn()},delay)}
-
- G.beginDefense=function(){
-  if(!isFinal())return legacyBegin.apply(G,arguments);
-  if(G.timeStopTurns>0){G.timeStopTurns--;G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);return setTimeout(G.nextTurn,650)}
-  const token=++G._v50Token;
-  G.setState("DEFENSE");G.defenseTime=8.6;G.patternClock=-999;G.bullets=[];G.trails=[];
-  G.heart.x=270;G.heart.y=515;G.heart.inv=.65;
-  const mode=(G.turn+G.active+G.talkCount)%4;
-  schedule(token,120,()=>{if(mode===0)radial(18,205,G.time*.2);else if(mode===1)sideLanes(false);else if(mode===2)rain();else aimed()});
-  schedule(token,2850,()=>{if(mode===0)sideLanes(true);else if(mode===1)rain();else if(mode===2)aimed();else radial(20,220,.22)});
-  schedule(token,5550,()=>{if(mode%2)radial(16,235,.45);else sideLanes(mode===2)});
- };
-
- /* Clean transition and enforce a small, stable object ceiling every frame. */
- G.update=function(dt){
-  const now=isFinal();
-  if(now&&!G._v50Final){G._v50Final=true;G._v50Token++;G.bullets=[];G.trails=[];G.patternClock=-999}
-  if(!now&&G._v50Final){G._v50Final=false;G._v50Token++}
-  legacyUpdate.call(G,dt);
-  if(now){G.patternClock=-999;if(G.bullets.length>G._v50Cap)G.bullets.splice(0,G.bullets.length-G._v50Cap);if(G.trails.length>10)G.trails.splice(0,G.trails.length-10)}
- };
-
  const oldNext=G.nextTurn;
- G.nextTurn=function(){G._v50Token++;if(isFinal()){G.bullets=[];G.trails=[]}return oldNext.apply(G,arguments)};
-})();
-</script>
-
-
-<script>
-"use strict";
-/* REBIRTH 54 — PHASE 5 REMOVED
-   Keep the real HP and third music tier, but run all combat logic below
-   700,000 HP as the stable phase-4 state immediately above the threshold. */
-(function(){
- const G=Game, FINAL_HP=700000, LOGIC_HP=700001;
- const oldUpdate=G.update;
- const oldBegin=G.beginDefense;
- const oldNext=G.nextTurn;
- const oldSpawn=G.spawnPattern;
- const oldDrawBullets=G.drawBullets;
- const oldEffective=G.effectivePhase;
- const realSync=G.syncThresholdMusic;
- G._v54LogicDepth=0;
- G._v54RealHp=0;
-
- function needsPhase4Logic(){
-  return !!(G.boss&&G.boss.hp>0&&G.boss.hp<=FINAL_HP&&!G.introMode);
- }
- function phase4Call(fn,self,args){
-  if(!needsPhase4Logic()||G._v54LogicDepth>0)return fn.apply(self,args);
-  const realHp=G.boss.hp;
-  G._v54RealHp=realHp;
-  G._v54LogicDepth++;
-  G.boss.hp=LOGIC_HP;
-  try{return fn.apply(self,args)}
-  finally{
-   G.boss.hp=realHp;
-   G._v54LogicDepth--;
-   if(!G._v54LogicDepth)G._v54RealHp=0;
-  }
- }
-
- /* Music still reads the real HP, so the third song remains at 700,000. */
- G.syncMusic=function(){
-  if(G._v54LogicDepth&&G._v54RealHp>0){
-   const fake=G.boss.hp;G.boss.hp=G._v54RealHp;
-   try{return realSync.call(G,false)}finally{G.boss.hp=fake}
-  }
-  return realSync.call(G,false);
- };
-
- G.update=function(dt){return phase4Call(oldUpdate,G,[dt])};
- G.beginDefense=function(){return phase4Call(oldBegin,G,arguments)};
- G.nextTurn=function(){return phase4Call(oldNext,G,arguments)};
- if(typeof oldSpawn==="function")G.spawnPattern=function(){return phase4Call(oldSpawn,G,arguments)};
- if(typeof oldDrawBullets==="function")G.drawBullets=function(){return phase4Call(oldDrawBullets,G,arguments)};
- G.effectivePhase=function(){
-  const p=oldEffective?oldEffective.apply(G,arguments):(G.boss?.phase||1);
-  return Math.min(4,p);
- };
-
- /* Prevent stale phase-5 state from surviving a turn transition. */
- const oldDamageBoss=G.damageBoss;
- G.damageBoss=function(){
-  const out=oldDamageBoss.apply(G,arguments);
-  if(G.boss&&G.boss.hp<=FINAL_HP){G.boss.phase=4;G.boss.armor=250}
+ G.nextTurn=function(){
+  const out=oldNext.apply(G,arguments);
+  if(G.boss&&G.boss.hp<=FINAL_HP){G.boss.phase=4;G.boss.armor=250;}
   return out;
  };
+ const oldUpdate=G.update;
+ G.update=function(dt){
+  oldUpdate.call(G,dt);
+  if(G.boss&&G.boss.hp<=FINAL_HP){G.boss.phase=4;G.boss.armor=250;}
+ };
 })();
 </script>
-
 </body></html>
 <script>
 "use strict";
@@ -2889,14 +2773,13 @@ Game.draw=function(){
 
  /* HP thresholds now directly define the enemy's real combat strength. */
  G.effectivePhase=function(){
-  let p=G.boss.hp<=FINAL_HP?5:G.boss.hp<=RAGE_HP?4:1;
-  if(G.talkCount>=20)p=Math.max(p,5);
-  else if(G.talkCount>=10)p=Math.max(p,4);
+  let p=G.boss.hp<=RAGE_HP?4:1;
+  if(G.talkCount>=10)p=Math.max(p,4);
   return p;
  };
  G.talkAttackMultiplier=function(){
-  let m=G.boss.hp<=FINAL_HP?1.65:G.boss.hp<=RAGE_HP?1.32:1;
-  if(G.talkCount>=20)m*=1.55;else if(G.talkCount>=10)m*=1.25;
+  let m=G.boss.hp<=RAGE_HP?1.32:1;
+  if(G.talkCount>=10)m*=1.25;
   return m;
  };
 
@@ -2939,8 +2822,8 @@ Game.draw=function(){
    G.toast("HP 1,200,000突破　敵出力が大幅上昇",2.1);
   }
   if(before>FINAL_HP&&G.boss.hp<=FINAL_HP&&!G.rebirth44Announced.final){
-   G.rebirth44Announced.final=true;thresholdBurst("final");G.syncThresholdMusic(true);
-   G.toast("HP 700,000突破　最終暴走／ザ・ワールド解放",2.4);
+   G.rebirth44Announced.final=true;G.syncThresholdMusic(true);
+   G.toast("HP 700,000突破　BGM変更／ザ・ワールド解放",2.4);
   }
  };
 
@@ -2960,10 +2843,6 @@ Game.draw=function(){
   if(G.state!=="DEFENSE"||G.introMode)return out;
   if(G.boss.hp<=RAGE_HP){
    setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(28+(G.turn%12)),420);
-  }
-  if(G.boss.hp<=FINAL_HP){
-   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(36+(G.turn%4)),900);
-   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(22+(G.turn%10)),1550);
   }
   return out;
  };
@@ -3042,8 +2921,8 @@ Game.draw=function(){
   G._bgmFade=G._phase1Fade=G._phase2Fade=G._finalFade=null;
   stop(G.bgm);stop(G.bgmPhase2);stop(G.bgmFinal);
   if(t===0)fadePlay(G.bgm,.15,"_phase1Fade");
-  else if(t===1)fadePlay(G.bgmPhase2,.52,"_phase2Fade");
-  else fadePlay(G.bgmFinal,.58,"_finalFade");
+  else if(t===1)fadePlay(G.bgmPhase2,.17,"_phase2Fade");
+  else fadePlay(G.bgmFinal,.19,"_finalFade");
  };
  G.syncMusic=function(){G.syncThresholdMusic(false)};
  G.startMusic=function(){G.rebirth44Tier=-1;G.syncThresholdMusic(true)};
@@ -3057,265 +2936,27 @@ Game.draw=function(){
 </script>
 <script>
 "use strict";
-/* REBIRTH 47 PERFORMANCE + MUSIC BALANCE HOTFIX */
-(function(){
- const G=Game, RAGE_HP=1200000, FINAL_HP=700000;
-
- /* Prevent the many legacy beginDefense extensions from stacking too many patterns. */
- G._phasePatternBudget=99;
- const originalSpawn=G.spawnPattern;
- G.spawnPattern=function(id){
-  if(G.state==="DEFENSE"&&!G.introMode){
-   if(G._phasePatternBudget<=0)return;
-   G._phasePatternBudget--;
-  }
-  return originalSpawn.apply(G,arguments);
- };
- const originalBegin=G.beginDefense;
- G.beginDefense=function(){
-  const hp=G.boss.hp;
-  G._phasePatternBudget=hp<=FINAL_HP?5:hp<=RAGE_HP?4:99;
-  return originalBegin.apply(G,arguments);
- };
-
- /* Hard bullet ceiling for mobile Safari. Keep challenge through speed, not runaway object count. */
- const originalUpdate=G.update;
- G.update=function(dt){
-  originalUpdate.call(G,dt);
-  if(G.state==="DEFENSE"&&!G.introMode&&Array.isArray(G.bullets)){
-   const final=G.boss.hp<=FINAL_HP, rage=!final&&G.boss.hp<=RAGE_HP;
-   const cap=final?88:rage?104:120;
-   if(G.bullets.length>cap)G.bullets.splice(0,G.bullets.length-cap);
-  }
- };
-
- /* Lightweight final-phase bullet renderer: no per-bullet gradients or oversized shadows. */
- const richDraw=G.drawBullets;
- G.drawBullets=function(){
-  if(G.boss.hp>FINAL_HP||G.state!=="DEFENSE")return richDraw.apply(G,arguments);
-  const g=G.ctx;
-  for(const b of G.bullets){
-   if(b.warn>0){
-    const q=.5+.35*Math.sin(G.time*16);
-    g.save();g.globalAlpha=.35+q*.3;g.strokeStyle=b.c||"#ff3659";g.lineWidth=2.5;
-    g.beginPath();g.arc(b.x,b.y,b.r+10+q*4,0,Math.PI*2);g.stroke();g.restore();continue;
-   }
-   g.save();
-   if(b.fake)g.globalAlpha=.28;
-   g.fillStyle=b.c;
-   g.shadowColor=b.c;g.shadowBlur=b.r>=14?8:3;
-   g.beginPath();
-   if(["hand","grab"].includes(b.k))g.roundRect(b.x-b.r*1.5,b.y-b.r*.62,b.r*3,b.r*1.24,9);
-   else g.arc(b.x,b.y,b.r,0,Math.PI*2);
-   g.fill();
-   if(b.r>=8){g.shadowBlur=0;g.globalAlpha*=.65;g.fillStyle="#fff";g.beginPath();g.arc(b.x-b.r*.2,b.y-b.r*.2,Math.max(1,b.r*.22),0,Math.PI*2);g.fill()}
-   g.restore();
-  }
- };
-
- /* Raise only the second and third tracks. */
- const oldSync=G.syncThresholdMusic;
- G.syncThresholdMusic=function(force){
-  oldSync.call(G,force);
-  const t=G.boss.hp<=FINAL_HP?2:G.boss.hp<=RAGE_HP?1:0;
-  const active=t===0?G.bgm:t===1?G.bgmPhase2:G.bgmFinal;
-  const target=t===0?.15:t===1?.52:.58;
-  if(active&&!active.paused){
-   const key=t===0?"_phase1Fade":t===1?"_phase2Fade":"_finalFade";
-   if(typeof G.fadeTrack==="function")G.fadeTrack(active,target,.45,key);else active.volume=target;
-  }
- };
-})();
-</script>
-<script>
-"use strict";
-/* REBIRTH 48 FINAL-PHASE MOBILE STABILITY FIX
-   Bypass stacked legacy attack schedulers below 700,000 HP. */
+/* REBIRTH 47 FINAL OVERRIDE: Phase 4 continues below 700,000. */
 (function(){
  const G=Game, FINAL_HP=700000;
- const previousBegin=G.beginDefense;
- const previousUpdateBullets=G.updateBullets;
- const previousAddBullet=G.addBullet;
- G._finalDefenseToken=0;
- G._finalBulletCap=72;
-
- /* Reject bullets before allocation grows out of control. */
- G.addBullet=function(x,y,vx,vy,r,c,k,extra){
-  if(G.state==="DEFENSE"&&!G.introMode&&G.boss.hp<=FINAL_HP&&G.bullets.length>=G._finalBulletCap)return null;
-  return previousAddBullet.call(G,x,y,vx,vy,r,c,k,extra||{});
+ G.effectivePhase=function(){
+  return (G.boss.hp<=1200000 || G.talkCount>=10) ? 4 : 1;
  };
-
- /* Disable the automatic cadence spawner in the final phase.
-    The two deliberate patterns below are enough; movement/collision still use the normal engine. */
- G.updateBullets=function(dt){
-  const final=G.state==="DEFENSE"&&!G.introMode&&G.boss.hp<=FINAL_HP;
-  if(final)G.patternClock=-999;
-  previousUpdateBullets.call(G,dt);
-  if(final&&G.bullets.length>G._finalBulletCap){
-   G.bullets.splice(0,G.bullets.length-G._finalBulletCap);
-  }
+ G.talkAttackMultiplier=function(){
+  let m=G.boss.hp<=1200000?1.32:1;
+  if(G.talkCount>=10)m*=1.25;
+  return m;
  };
-
- function scheduleFinalPattern(token,id,delay){
-  setTimeout(function(){
-   if(token!==G._finalDefenseToken||G.state!=="DEFENSE"||G.boss.hp>FINAL_HP)return;
-   G.spawnPattern(id);
-   if(G.bullets.length>G._finalBulletCap)G.bullets.length=G._finalBulletCap;
-  },delay);
- }
-
- G.beginDefense=function(){
-  /* Keep all established behavior outside the problematic threshold. */
-  if(G.boss.hp>FINAL_HP||G.introMode)return previousBegin.apply(G,arguments);
-  if(G.boss.hp<=0)return;
-  if(G.timeStopTurns>0){
-   G.timeStopTurns--;
-   G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);
-   return setTimeout(G.nextTurn,650);
-  }
-
-  const token=++G._finalDefenseToken;
-  G.setState("DEFENSE");
-  G.defenseTime=9.2;
-  G.patternClock=-999;
-  G.bullets=[];
-  G.trails=[];
-  G.heart.x=270;G.heart.y=515;G.heart.inv=.55;
-
-  /* Curated mobile-safe combinations: visually varied, no recursive mega-patterns. */
-  const pairs=[
-   [16,34],[20,28],[22,31],[14,30],[6,36],[8,32],[12,38],[21,23]
-  ];
-  const pair=pairs[(G.turn+G.active*2+G.talkCount)%pairs.length];
-  scheduleFinalPattern(token,pair[0],120);
-  scheduleFinalPattern(token,pair[1],3550);
-  G.patternId=pair[1];
- };
-
- /* Invalidate delayed attacks immediately when a defense turn ends. */
  const previousNext=G.nextTurn;
  G.nextTurn=function(){
-  G._finalDefenseToken++;
-  G.bullets=[];
-  return previousNext.apply(G,arguments);
- };
-})();
-</script>
-
-<script>
-"use strict";
-/* REBIRTH 52 — ROOT AUDIO TIMER FIX
-   The previous loudness patch restarted a setInterval fade on every animation frame.
-   At the 700,000 HP threshold this caused continuous timer churn on mobile Safari. */
-(function(){
- const G=Game, RAGE_HP=1200000, FINAL_HP=700000;
- const targets=[.15,.62,.68];
- G._v52MusicTier=-1;
- G._v52RetryAt=0;
-
- function tier(){return G.boss.hp<=FINAL_HP?2:G.boss.hp<=RAGE_HP?1:0}
- function trackFor(t){return t===0?G.bgm:t===1?G.bgmPhase2:G.bgmFinal}
- function stopTrack(a){if(!a)return;try{a.pause();a.currentTime=0;a.volume=0}catch(e){}}
- function clearFadeTimers(){
-  for(const key of ["_bgmFade","_phase1Fade","_phase2Fade","_finalFade"]){
-   if(G[key])clearInterval(G[key]);
-   G[key]=null;
-  }
- }
- function startTrack(a,target){
-  if(!a)return;
-  try{
-   a.muted=false;a.loop=true;a.playsInline=true;a.volume=target;
-   const p=a.play();if(p&&p.catch)p.catch(()=>{});
-  }catch(e){}
- }
-
- G.syncThresholdMusic=function(force){
-  const t=tier(), now=performance.now(), active=trackFor(t);
-  /* Normal frame path: no interval creation, no pause/play calls, no allocations. */
-  if(!force&&t===G._v52MusicTier&&active&&!active.paused){
-   if(Math.abs(active.volume-targets[t])>.015)active.volume=targets[t];
-   return;
-  }
-  /* Avoid Safari play retries running once per frame. */
-  if(!force&&t===G._v52MusicTier&&now<G._v52RetryAt)return;
-  G._v52RetryAt=now+1200;
-  clearFadeTimers();
-  if(t!==G._v52MusicTier||force){
-   stopTrack(G.bgm);stopTrack(G.bgmPhase2);stopTrack(G.bgmFinal);
-   G._v52MusicTier=t;
-  }
-  startTrack(trackFor(t),targets[t]);
-  G.rebirth44Tier=t;
- };
- G.syncMusic=function(){G.syncThresholdMusic(false)};
- G.startMusic=function(){G._v52MusicTier=-1;G.syncThresholdMusic(true)};
- G.startPhase2Music=function(){G.syncThresholdMusic(true)};
-
- const priorReset=G.reset;
- G.reset=function(){
-  clearFadeTimers();G._v52MusicTier=-1;G._v52RetryAt=0;
-  const out=priorReset.apply(G,arguments);
-  G.syncThresholdMusic(true);
+  const out=previousNext.apply(G,arguments);
+  if(G.boss.hp<=FINAL_HP){G.boss.phase=4;G.boss.armor=250;}
   return out;
  };
-
- /* Remove any fade interval left alive by an older patch as this hotfix loads. */
- clearFadeTimers();
-})();
-</script>
-
-
-<script>
-"use strict";
-/* REBIRTH 54 — PHASE 5 REMOVED
-   Below 700,000 HP, the defense turn no longer passes through any accumulated
-   legacy update/beginDefense/spawn wrappers. This avoids hidden callback chains. */
-(function(){
- const G=Game, FINAL_HP=700000;
- const oldUpdate=G.update, oldBegin=G.beginDefense, oldNext=G.nextTurn, oldDrawBullets=G.drawBullets;
- G._v53Token=0; G._v53Cap=48;
- const isFinalDefense=()=>G.state==="DEFENSE"&&!G.introMode&&G.boss.hp>0&&G.boss.hp<=FINAL_HP;
- const add=(x,y,vx,vy,r,c)=>{if(isFinalDefense()&&G.bullets.length<G._v53Cap)G.bullets.push({x,y,vx,vy,r,c,k:"v53"})};
- function burst(mode){
-  if(!isFinalDefense())return;
-  const A=G.arena,cx=270,cy=505;
-  if(mode===0){for(let i=0;i<18;i++){const a=i*Math.PI*2/18;add(cx,cy,Math.cos(a)*220,Math.sin(a)*220,i%6===0?10:6,i%3?"#fff":"#ff4068")}}
-  else if(mode===1){const gap=(G.turn*3)%7;for(let i=0;i<9;i++){if(i===gap||i===gap+1)continue;const y=A.y+28+i*(A.h-56)/8;add(A.x-18,y,285,(i%3-1)*26,8,i%2?"#69dfff":"#fff")}}
-  else if(mode===2){const gap=(G.turn*5)%8;for(let i=0;i<10;i++){if(i===gap||i===gap+1)continue;const x=A.x+24+i*(A.w-48)/9;add(x,A.y-18,(i%2?38:-38),295,7,i%3?"#ffe36a":"#fff")}}
-  else {for(let i=0;i<8;i++){const x=A.x+25+i*(A.w-50)/7,y=A.y-18,a=Math.atan2(G.heart.y-y,G.heart.x-x)+(i-3.5)*.035;add(x,y,Math.cos(a)*265,Math.sin(a)*265,7,i%2?"#ff6f91":"#fff")}}
- }
- function schedule(token,delay,mode){setTimeout(()=>{if(token===G._v53Token&&isFinalDefense())burst(mode)},delay)}
- G.beginDefense=function(){
-  if(G.boss.hp>FINAL_HP||G.introMode)return oldBegin.apply(G,arguments);
-  if(G.boss.hp<=0)return;
-  if(G.timeStopTurns>0){G.timeStopTurns--;G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);return setTimeout(G.nextTurn,650)}
-  const token=++G._v53Token;
-  G.setState("DEFENSE");G.defenseTime=8.4;G.patternClock=-999;G.bullets=[];G.trails=[];G.particles=[];G.redImpactRings=[];
-  G.heart.x=270;G.heart.y=515;G.heart.inv=.55;
-  const base=(G.turn+G.active+G.talkCount)%4;
-  schedule(token,120,base);schedule(token,2850,(base+1)%4);schedule(token,5550,(base+2)%4);
+ const previousUpdate=G.update;
+ G.update=function(dt){
+  previousUpdate.call(G,dt);
+  if(G.boss.hp<=FINAL_HP){G.boss.phase=4;G.boss.armor=250;}
  };
- function updateFinal(dt){
-  G.time+=dt;G.messageTime=Math.max(0,G.messageTime-dt);G.shake*=.86;G.flash=Math.max(0,G.flash-dt);
-  const f=G.bossFx;f.hover+=dt*1.5;f.wing+=dt*8;f.hit=Math.max(0,f.hit-dt);f.transform=Math.max(0,f.transform-dt);f.cinema=Math.max(0,f.cinema-dt);f.dash=Math.max(0,f.dash-dt);f.reach=Math.max(0,f.reach-dt);f.coreOpen=Math.max(0,f.coreOpen-dt);f.eyeBeam=Math.max(0,f.eyeBeam-dt);
-  for(const s of G.stars){s.y+=s.v*dt;if(s.y>960){s.y=-4;s.x=Math.random()*540}}
-  for(const n of G.nebulae){n.x+=n.v*dt;if(n.x-n.r>540)n.x=-n.r}
-  for(const m of G.meteors){m.x+=m.v*dt;m.y+=m.v*.28*dt;if(m.x>650){m.x=-120;m.y=Math.random()*450}}
-  G.particles.length=Math.min(G.particles.length,28);for(const p of G.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=400*dt;p.l-=dt}G.particles=G.particles.filter(p=>p.l>0);
-  G.damageText.length=Math.min(G.damageText.length,10);for(const d of G.damageText){d.y-=75*dt;d.l-=dt}G.damageText=G.damageText.filter(d=>d.l>0);
-  G.trails.length=Math.min(G.trails.length,10);for(const t of G.trails)t.l-=dt;G.trails=G.trails.filter(t=>t.l>0);
-  const speed=1.62;
-  for(const b of G.bullets){b.x+=b.vx*dt*speed;b.y+=b.vy*dt*speed;if(Math.hypot(b.x-G.heart.x,b.y-G.heart.y)<b.r+G.heart.r&&G.heart.inv<=0){G.hurt(46);G.heart.inv=.7;G.shake=9}}
-  const A=G.arena;G.bullets=G.bullets.filter(b=>b.x>A.x-90&&b.x<A.x+A.w+90&&b.y>A.y-90&&b.y<A.y+A.h+90).slice(-G._v53Cap);
-  G.heart.x=G.clamp(G.heart.x,A.x+14,A.x+A.w-14);G.heart.y=G.clamp(G.heart.y,A.y+14,A.y+A.h-14);G.heart.inv=Math.max(0,G.heart.inv-dt);
-  G.defenseTime-=dt;if(G.defenseTime<=0)G.nextTurn();
- }
- G.update=function(dt){if(isFinalDefense())return updateFinal(dt);return oldUpdate.call(G,dt)};
- G.drawBullets=function(){
-  if(!isFinalDefense())return oldDrawBullets.apply(G,arguments);
-  const g=G.ctx;for(const b of G.bullets){g.save();g.fillStyle=b.c||"#fff";g.shadowColor=b.c||"#fff";g.shadowBlur=b.r>=10?5:2;g.beginPath();g.arc(b.x,b.y,b.r,0,Math.PI*2);g.fill();g.restore()}
- };
- G.nextTurn=function(){G._v53Token++;if(G.boss.hp<=FINAL_HP){G.bullets=[];G.trails=[];G.particles.length=Math.min(G.particles.length,18)}return oldNext.apply(G,arguments)};
 })();
 </script>

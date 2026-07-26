@@ -1,6 +1,9 @@
-PYRAMID BREAK ZERO — DAYBREAK L / REBIRTH 50
-Final phase completely rebuilt for mobile stability.
-Below 700,000 HP, legacy delayed pattern spawners are blocked and replaced with a capped lightweight attack system.
+PYRAMID BREAK ZERO DAYBREAK XLV - MUSIC REPLACEMENT
 
-
-REBIRTH 51: Increased phase 2 music volume to 0.52 and phase 3 volume to 0.58. Updated title/version display.
+変更内容:
+- 敵HP 1,400,000
+- HP 1,200,000以下: 「黒翼の終焉」に切替
+- HP 700,000以下: 「がた A♭ major BPM 134」に切替
+- 以前のHP半分時BGMは削除
+- HP 700,000以下でトシユキの必殺技を解放
+- 赤色ダメージ演出・強化効果音を維持
