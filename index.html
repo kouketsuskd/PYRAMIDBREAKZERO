@@ -2072,6 +2072,25 @@ Game.draw=function(){
  };
 })();
 </script>
+
+<script>
+"use strict";
+/* REBIRTH 48 PERFORMANCE FIX: no Phase 5 load at 700k, cap accumulated projectiles */
+(function(){
+ const G=Game;
+ const update48=G.updateBullets;
+ G.updateBullets=function(dt){
+  /* iPhone Safariで弾が異常蓄積した場合もフレーム落ちを防ぐ。 */
+  if(G.bullets.length>180)G.bullets.splice(0,G.bullets.length-180);
+  return update48.call(G,dt);
+ };
+ const spawn48=G.spawnPattern;
+ G.spawnPattern=function(id){
+  if(G.bullets.length>155)return;
+  return spawn48.call(G,id);
+ };
+})();
+</script>
 </body></html>
 <script>
 "use strict";
@@ -2843,7 +2862,8 @@ Game.draw=function(){
 
  /* HP thresholds now directly define the enemy's real combat strength. */
  G.effectivePhase=function(){
-  let p=G.boss.hp<=FINAL_HP?5:G.boss.hp<=RAGE_HP?4:1;
+  /* HP700,000以下でもフェーズ5へ移行しない。120万以下のフェーズ4を最後まで維持する。 */
+  let p=G.boss.hp<=RAGE_HP?4:1;
   if(G.talkCount>=20)p=Math.max(p,5);
   else if(G.talkCount>=10)p=Math.max(p,4);
   return p;
@@ -2916,10 +2936,7 @@ Game.draw=function(){
   if(G.boss.hp<=RAGE_HP){
    setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(28+(G.turn%12)),420);
   }
-  if(G.boss.hp<=FINAL_HP){
-   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(36+(G.turn%4)),900);
-   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(22+(G.turn%10)),1550);
-  }
+  /* 700,000以下の追加同時弾幕は削除。フェーズ4相当の負荷で最後まで進行する。 */
   return out;
  };
 
@@ -3008,5 +3025,97 @@ Game.draw=function(){
  document.addEventListener("pointerdown",()=>G.syncThresholdMusic(false),{passive:true});
  document.addEventListener("touchstart",()=>G.syncThresholdMusic(false),{passive:true});
  document.addEventListener("click",()=>G.syncThresholdMusic(false),{passive:true});
+})();
+</script>
+<script>
+"use strict";
+/* REBIRTH 49 FINAL OVERRIDE — 700k performance + delayed WORLD music rules */
+(function(){
+ const G=Game, RAGE_HP=1200000, FINAL_HP=700000;
+
+ /* 700k never creates Phase 5. HP-based combat stays at the 1.2M tier. */
+ G.effectivePhase=function(){
+  let p=G.boss.hp<=RAGE_HP?4:1;
+  if(G.talkCount>=20)p=5;
+  else if(G.talkCount>=10)p=Math.max(p,4);
+  return p;
+ };
+ G.talkAttackMultiplier=function(){
+  let m=G.boss.hp<=RAGE_HP?1.32:1;
+  if(G.talkCount>=20)m*=1.55;else if(G.talkCount>=10)m*=1.25;
+  return m;
+ };
+
+ /* Hard caps run LAST, after every legacy bullet wrapper has finished. */
+ const finalUB=G.updateBullets;
+ G.updateBullets=function(dt){
+  finalUB.call(G,dt);
+  if(G.bullets.length>110)G.bullets.splice(0,G.bullets.length-110);
+  if(G.particles.length>140)G.particles.splice(0,G.particles.length-140);
+  if(G.trails.length>18)G.trails.splice(0,G.trails.length-18);
+  if(G.damageText.length>24)G.damageText.splice(0,G.damageText.length-24);
+ };
+ const finalSpawn=G.spawnPattern;
+ G.spawnPattern=function(id){
+  if(G.bullets.length>=96)return;
+  return finalSpawn.call(G,id);
+ };
+
+ function stop(a){if(!a)return;try{a.pause();a.currentTime=0;a.volume=0}catch(e){}}
+ function play(a,target,key){
+  if(!a)return;
+  try{a.muted=false;a.volume=0;const p=a.play();if(p&&p.catch)p.catch(()=>{});
+   if(typeof G.fadeTrack==="function")G.fadeTrack(a,target,1.15,key);else a.volume=target;
+  }catch(e){}
+ }
+ function musicTier(){return G.finalMusicActivated?2:(G.boss.hp<=RAGE_HP?1:0)}
+ G.syncThresholdMusic=function(force){
+  const t=musicTier();
+  if(!force&&t===G.rebirth44Tier){
+   const a=t===0?G.bgm:t===1?G.bgmPhase2:G.bgmFinal;
+   if(a&&!a.paused)return;
+  }
+  G.rebirth44Tier=t;
+  clearInterval(G._bgmFade);clearInterval(G._phase1Fade);clearInterval(G._phase2Fade);clearInterval(G._finalFade);
+  G._bgmFade=G._phase1Fade=G._phase2Fade=G._finalFade=null;
+  stop(G.bgm);stop(G.bgmPhase2);stop(G.bgmFinal);
+  if(t===0)play(G.bgm,.15,"_phase1Fade");
+  else if(t===1)play(G.bgmPhase2,.17,"_phase2Fade");
+  else play(G.bgmFinal,.19,"_finalFade");
+ };
+ G.syncMusic=function(){G.syncThresholdMusic(false)};
+ G.startMusic=function(){G.rebirth44Tier=-1;G.syncThresholdMusic(true)};
+ G.startPhase2Music=function(){G.syncThresholdMusic(true)};
+
+ /* Unlock only marks pending at the hit; message remains after defense via existing nextTurn. */
+ const finalDamage=G.damageBoss;
+ G.damageBoss=function(raw){
+  const before=G.boss.hp;
+  finalDamage.call(G,raw);
+  if(before>FINAL_HP&&G.boss.hp<=FINAL_HP){
+   G.worldUnlockPending=true;
+   G.finalMusicActivated=false;
+   G.rebirth44Tier=-1;
+   G.syncThresholdMusic(true);
+  }
+ };
+
+ /* Final track starts only when Toshiyuki actually uses THE WORLD. */
+ const finalSkill=G.useSkill;
+ G.useSkill=function(){
+  if(G.active===0&&G.worldUnlockedAnnounced&&!G.finalMusicActivated){
+   G.finalMusicActivated=true;
+   G.rebirth44Tier=-1;
+   G.syncThresholdMusic(true);
+  }
+  return finalSkill.apply(G,arguments);
+ };
+
+ const finalReset=G.reset;
+ G.reset=function(){
+  finalReset.apply(G,arguments);
+  G.finalMusicActivated=false;G.worldUnlockPending=false;G.worldUnlockedAnnounced=false;
+  G.rebirth44Tier=-1;G.syncThresholdMusic(true);
+ };
 })();
 </script>
