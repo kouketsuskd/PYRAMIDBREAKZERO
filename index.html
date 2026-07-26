@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>PYRAMID BREAK ZERO — REBIRTH 51 700K LIGHTWEIGHT FINAL</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>REBIRTH 51<br>700K LIGHTWEIGHT FINAL</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は REBIRTH 51／70万以下軽量化・はなす完全削除版です。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>PYRAMID BREAK ZERO DAYBREAK XLVII WORLD AWAKENING FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK XLVII WORLD AWAKENING FIX</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -356,7 +356,11 @@ Game.finishAttack=function(){
  const G=Game;if(G.attackEnded)return;G.attackEnded=true;
  const fin=Math.floor(G.attackTotal*(G.attackHits>=5?.35:.15));if(fin>0)G.damageBoss(fin);
  const grand=G.attackTotal+fin;G.damageText.push({x:270,y:285,l:1.85,n:grand.toLocaleString(),crit:true,total:true});G.sfxAttack(true,true);G.shake=22;G.flash=.16;
- /* 700,000以下になった瞬間には何もしない。通常どおり敵ターンへ進む。 */
+ if(G.boss.hp<=G.boss.max/2&&!G.worldUnlockedAnnounced){
+  G.worldUnlockedAnnounced=true;
+  if(G.boss.hp>0)setTimeout(()=>G.playWorldUnlockCinema(),900);
+  return;
+ }
  if(G.boss.hp>0)setTimeout(G.beginDefense,900)
 };
 Game.beginDefense=function(){const G=Game;if(G.boss.hp<=0)return;if(G.timeStopTurns>0){G.timeStopTurns--;G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);return setTimeout(G.nextTurn,650)}G.setState("DEFENSE");const ep=G.effectivePhase();G.defenseTime=[0,7.5,8.5,9.5,10.5,11.5][ep];G.patternClock=0;G.bullets=[];G.trails=[];G.heart.x=270;G.heart.y=515;G.heart.inv=.5;G.patternId=(G.turn*7+G.effectivePhase()*9+G.talkCount)%40;if(G.introMode){
@@ -1982,117 +1986,107 @@ Game.draw=function(){
 
 <script>
 "use strict";
-/* REBIRTH 47 - delayed WORLD unlock / final BGM starts only on skill use */
+/* REBIRTH 47 - delayed WORLD unlock / final music on skill only / TALK removed */
 (function(){
- const G=Game, FINAL_HP=700000, RAGE_HP=1200000;
+ const G=Game, FINAL_HP=700000;
+ G.finalMusicLatched=false;
  G.worldUnlockPending=false;
- G.finalMusicActivated=false;
+ G.worldUnlockedAnnounced=false;
 
  function stop(a){if(!a)return;try{a.pause();a.currentTime=0;a.volume=0}catch(e){}}
  function fadePlay(a,target,key){
   if(!a)return;
   try{
-   a.muted=false;a.volume=0;
-   const q=a.play();if(q&&q.catch)q.catch(()=>{});
+   a.muted=false;
+   if(a.paused){a.volume=0;const p=a.play();if(p&&p.catch)p.catch(()=>{});}
    if(typeof G.fadeTrack==="function")G.fadeTrack(a,target,1.25,key);else a.volume=target;
   }catch(e){}
  }
- function desiredTier(){
-  if(G.finalMusicActivated)return 2;
-  return G.boss.hp<=RAGE_HP?1:0;
- }
+
+ /* TALK and its alternate ending command are completely removed. */
+ G.actions=()=>["こうげき","わざ","武器を使用","どうぐ","こうたい"];
+
+ /* At 700,000 HP the current music continues. The last track is latched only by THE WORLD. */
  G.syncThresholdMusic=function(force){
-  const t=desiredTier();
-  if(!force&&t===G.rebirth44Tier){
-   const active=t===0?G.bgm:t===1?G.bgmPhase2:G.bgmFinal;
+  const tier=G.finalMusicLatched?2:(G.boss.hp<=1200000?1:0);
+  if(!force&&tier===G.rebirth44Tier){
+   const active=tier===0?G.bgm:tier===1?G.bgmPhase2:G.bgmFinal;
    if(active&&!active.paused)return;
   }
-  G.rebirth44Tier=t;
+  G.rebirth44Tier=tier;
   clearInterval(G._bgmFade);clearInterval(G._phase1Fade);clearInterval(G._phase2Fade);clearInterval(G._finalFade);
   G._bgmFade=G._phase1Fade=G._phase2Fade=G._finalFade=null;
   stop(G.bgm);stop(G.bgmPhase2);stop(G.bgmFinal);
-  if(t===0)fadePlay(G.bgm,.15,"_phase1Fade");
-  else if(t===1)fadePlay(G.bgmPhase2,.17,"_phase2Fade");
+  if(tier===0)fadePlay(G.bgm,.15,"_phase1Fade");
+  else if(tier===1)fadePlay(G.bgmPhase2,.17,"_phase2Fade");
   else fadePlay(G.bgmFinal,.19,"_finalFade");
  };
  G.syncMusic=function(){G.syncThresholdMusic(false)};
  G.startMusic=function(){G.rebirth44Tier=-1;G.syncThresholdMusic(true)};
  G.startPhase2Music=function(){G.syncThresholdMusic(true)};
-
- const reset47=G.reset;
- G.reset=function(){
-  reset47.apply(G,arguments);
-  G.worldUnlockPending=false;
-  G.finalMusicActivated=false;
-  G.worldUnlockedAnnounced=false;
-  G.rebirth44Tier=-1;
-  G.syncThresholdMusic(true);
+ G.startFinalWorldMusic=function(){
+  if(G.finalMusicLatched)return;
+  G.finalMusicLatched=true;G.rebirth44Tier=-1;G.syncThresholdMusic(true);
  };
 
+ /* Crossing 700,000 only records a pending unlock. No toast, burst, cinema or music change occurs here. */
+ const damage47=G.damageBoss;
+ G.damageBoss=function(raw){
+  const before=G.boss.hp;
+  const couldCross=before>FINAL_HP;
+  const oldFinal=G.rebirth44Announced&&G.rebirth44Announced.final;
+  if(couldCross&&G.rebirth44Announced)G.rebirth44Announced.final=true;
+  const out=damage47.apply(G,arguments);
+  const crossing=before>FINAL_HP && G.boss.hp<=FINAL_HP;
+  if(couldCross&&G.rebirth44Announced)G.rebirth44Announced.final=!!oldFinal;
+  if(crossing){
+   G.worldUnlockPending=true;
+  }
+  return out;
+ };
+
+ /* Show the tap-through awakening only after an actual enemy attack has fully ended. */
  const next47=G.nextTurn;
  G.nextTurn=function(){
-  next47.apply(G,arguments);
-  if(G.worldUnlockPending&&!G.worldUnlockedAnnounced&&G.boss.hp>0&&G.aliveCount()>0){
-   G.worldUnlockPending=false;
-   G.worldUnlockedAnnounced=true;
+  const endedEnemyAttack=G.state==="DEFENSE" && !G.introMode;
+  const out=next47.apply(G,arguments);
+  if(endedEnemyAttack && G.boss.hp<=FINAL_HP && !G.worldUnlockedAnnounced && G.aliveCount()>0 && G.state!=="END"){
+   G.worldUnlockedAnnounced=true;G.worldUnlockPending=false;G.bullets=[];
+   G.setState("MENU");
    G.say([
-    "激しい攻撃が止み、砕けた宇宙に静寂が戻った。",
-    "仲間たちが繋いできた一秒一秒が、トシユキの胸の奥で重なっていく。",
-    "守れなかった時間も、失いたくない未来も――すべてを背負い、彼は静かに立ち上がった。",
-    "――トシユキの必殺技『ザ・ワールド』が解放された。",
-    "トシユキ「みんなが進むためなら……俺が、この世界を止める。」"
-   ],()=>G.setState("MENU"));
+    "――敵の攻撃が止み、砕けた星の光だけが静かに流れた。",
+    "トシユキは、傷ついた仲間たちの呼吸をひとつずつ確かめた。",
+    "トシユキ「止めたいのは時間じゃない。誰かがいなくなる未来だ。」",
+    "トシユキ「みんなが帰れる一秒を、この手でつくる。」",
+    "眠っていた力が、仲間たちの願いに応えるように目を覚ます。",
+    "――トシユキの『ザ・ワールド』が解放された。"
+   ],()=>{G.setState("MENU");G.toast(G.current().name+"のターン",.8)});
   }
+  return out;
  };
 
+ /* THE WORLD starts the final song for the first time; it remains active through the ending. */
  const skill47=G.useSkill;
  G.useSkill=function(){
-  if(G.active===0&&!G.worldUnlockedAnnounced){
-   G.toast("ザ・ワールドはまだ解放されていない",1.5);
-   G.setState("MENU");
-   return;
-  }
-  if(G.active===0&&G.worldUnlockedAnnounced&&!G.finalMusicActivated){
-   G.finalMusicActivated=true;
-   G.rebirth44Tier=-1;
-   G.syncThresholdMusic(true);
-   setTimeout(()=>G.syncThresholdMusic(true),500);
-   setTimeout(()=>G.syncThresholdMusic(true),1800);
+  if(G.active===0){
+   if(G.boss.hp>FINAL_HP || !G.worldUnlockedAnnounced){
+    G.toast("ザ・ワールドはまだ解放されていない",1.4);G.setState("MENU");return;
+   }
+   if(G.skillUsed[0]<G.skillLimit(0))G.startFinalWorldMusic();
   }
   return skill47.apply(G,arguments);
  };
 
- /* 最終曲が始まった後は、HPや演出に関係なく最後まで固定する。 */
- const update47=G.update;
- G.update=function(dt){
-  update47.call(G,dt);
-  if(G.finalMusicActivated&&G.state!=="BOOT"&&G.state!=="END"&&G.bgmFinal&&G.bgmFinal.paused){
-   G.rebirth44Tier=-1;G.syncThresholdMusic(true);
-  }
+ const reset47=G.reset;
+ G.reset=function(){
+  G.finalMusicLatched=false;G.worldUnlockPending=false;G.worldUnlockedAnnounced=false;
+  const out=reset47.apply(G,arguments);
+  G.finalMusicLatched=false;G.worldUnlockPending=false;G.worldUnlockedAnnounced=false;
+  G.rebirth44Tier=-1;G.syncThresholdMusic(true);
+  return out;
  };
 })();
 </script>
-
-<script>
-"use strict";
-/* REBIRTH 48 PERFORMANCE FIX: no Phase 5 load at 700k, cap accumulated projectiles */
-(function(){
- const G=Game;
- const update48=G.updateBullets;
- G.updateBullets=function(dt){
-  /* iPhone Safariで弾が異常蓄積した場合もフレーム落ちを防ぐ。 */
-  if(G.bullets.length>180)G.bullets.splice(0,G.bullets.length-180);
-  return update48.call(G,dt);
- };
- const spawn48=G.spawnPattern;
- G.spawnPattern=function(id){
-  if(G.bullets.length>155)return;
-  return spawn48.call(G,id);
- };
-})();
-</script>
-
-
 </body></html>
 <script>
 "use strict";
@@ -2864,8 +2858,7 @@ Game.draw=function(){
 
  /* HP thresholds now directly define the enemy's real combat strength. */
  G.effectivePhase=function(){
-  /* HP700,000以下でもフェーズ5へ移行しない。120万以下のフェーズ4を最後まで維持する。 */
-  let p=G.boss.hp<=RAGE_HP?4:1;
+  let p=G.boss.hp<=FINAL_HP?5:G.boss.hp<=RAGE_HP?4:1;
   if(G.talkCount>=20)p=Math.max(p,5);
   else if(G.talkCount>=10)p=Math.max(p,4);
   return p;
@@ -2915,9 +2908,8 @@ Game.draw=function(){
    G.toast("HP 1,200,000突破　敵出力が大幅上昇",2.1);
   }
   if(before>FINAL_HP&&G.boss.hp<=FINAL_HP&&!G.rebirth44Announced.final){
-   /* 解放演出は敵ターン終了後まで保留。ここではフラグだけ立てる。 */
-   G.rebirth44Announced.final=true;
-   G.worldUnlockPending=true;
+   G.rebirth44Announced.final=true;thresholdBurst("final");G.syncThresholdMusic(true);
+   G.toast("HP 700,000突破　最終暴走／ザ・ワールド解放",2.4);
   }
  };
 
@@ -2938,7 +2930,10 @@ Game.draw=function(){
   if(G.boss.hp<=RAGE_HP){
    setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(28+(G.turn%12)),420);
   }
-  /* 700,000以下の追加同時弾幕は削除。フェーズ4相当の負荷で最後まで進行する。 */
+  if(G.boss.hp<=FINAL_HP){
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(36+(G.turn%4)),900);
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(22+(G.turn%10)),1550);
+  }
   return out;
  };
 
@@ -3027,179 +3022,5 @@ Game.draw=function(){
  document.addEventListener("pointerdown",()=>G.syncThresholdMusic(false),{passive:true});
  document.addEventListener("touchstart",()=>G.syncThresholdMusic(false),{passive:true});
  document.addEventListener("click",()=>G.syncThresholdMusic(false),{passive:true});
-})();
-</script>
-<script>
-"use strict";
-/* REBIRTH 49 FINAL OVERRIDE — 700k performance + delayed WORLD music rules */
-(function(){
- const G=Game, RAGE_HP=1200000, FINAL_HP=700000;
-
- /* 700k never creates Phase 5. HP-based combat stays at the 1.2M tier. */
- G.effectivePhase=function(){
-  let p=G.boss.hp<=RAGE_HP?4:1;
-  if(G.talkCount>=20)p=5;
-  else if(G.talkCount>=10)p=Math.max(p,4);
-  return p;
- };
- G.talkAttackMultiplier=function(){
-  let m=G.boss.hp<=RAGE_HP?1.32:1;
-  if(G.talkCount>=20)m*=1.55;else if(G.talkCount>=10)m*=1.25;
-  return m;
- };
-
- /* Hard caps run LAST, after every legacy bullet wrapper has finished. */
- const finalUB=G.updateBullets;
- G.updateBullets=function(dt){
-  finalUB.call(G,dt);
-  if(G.bullets.length>110)G.bullets.splice(0,G.bullets.length-110);
-  if(G.particles.length>140)G.particles.splice(0,G.particles.length-140);
-  if(G.trails.length>18)G.trails.splice(0,G.trails.length-18);
-  if(G.damageText.length>24)G.damageText.splice(0,G.damageText.length-24);
- };
- const finalSpawn=G.spawnPattern;
- G.spawnPattern=function(id){
-  if(G.bullets.length>=96)return;
-  return finalSpawn.call(G,id);
- };
-
- function stop(a){if(!a)return;try{a.pause();a.currentTime=0;a.volume=0}catch(e){}}
- function play(a,target,key){
-  if(!a)return;
-  try{a.muted=false;a.volume=0;const p=a.play();if(p&&p.catch)p.catch(()=>{});
-   if(typeof G.fadeTrack==="function")G.fadeTrack(a,target,1.15,key);else a.volume=target;
-  }catch(e){}
- }
- function musicTier(){return G.finalMusicActivated?2:(G.boss.hp<=RAGE_HP?1:0)}
- G.syncThresholdMusic=function(force){
-  const t=musicTier();
-  if(!force&&t===G.rebirth44Tier){
-   const a=t===0?G.bgm:t===1?G.bgmPhase2:G.bgmFinal;
-   if(a&&!a.paused)return;
-  }
-  G.rebirth44Tier=t;
-  clearInterval(G._bgmFade);clearInterval(G._phase1Fade);clearInterval(G._phase2Fade);clearInterval(G._finalFade);
-  G._bgmFade=G._phase1Fade=G._phase2Fade=G._finalFade=null;
-  stop(G.bgm);stop(G.bgmPhase2);stop(G.bgmFinal);
-  if(t===0)play(G.bgm,.15,"_phase1Fade");
-  else if(t===1)play(G.bgmPhase2,.17,"_phase2Fade");
-  else play(G.bgmFinal,.19,"_finalFade");
- };
- G.syncMusic=function(){G.syncThresholdMusic(false)};
- G.startMusic=function(){G.rebirth44Tier=-1;G.syncThresholdMusic(true)};
- G.startPhase2Music=function(){G.syncThresholdMusic(true)};
-
- /* Unlock only marks pending at the hit; message remains after defense via existing nextTurn. */
- const finalDamage=G.damageBoss;
- G.damageBoss=function(raw){
-  const before=G.boss.hp;
-  finalDamage.call(G,raw);
-  if(before>FINAL_HP&&G.boss.hp<=FINAL_HP){
-   G.worldUnlockPending=true;
-   G.finalMusicActivated=false;
-   G.rebirth44Tier=-1;
-   G.syncThresholdMusic(true);
-  }
- };
-
- /* Final track starts only when Toshiyuki actually uses THE WORLD. */
- const finalSkill=G.useSkill;
- G.useSkill=function(){
-  if(G.active===0&&G.worldUnlockedAnnounced&&!G.finalMusicActivated){
-   G.finalMusicActivated=true;
-   G.rebirth44Tier=-1;
-   G.syncThresholdMusic(true);
-  }
-  return finalSkill.apply(G,arguments);
- };
-
- const finalReset=G.reset;
- G.reset=function(){
-  finalReset.apply(G,arguments);
-  G.finalMusicActivated=false;G.worldUnlockPending=false;G.worldUnlockedAnnounced=false;
-  G.rebirth44Tier=-1;G.syncThresholdMusic(true);
- };
-})();
-</script>
-<script>
-"use strict";
-/* REBIRTH 51 700K LIGHTWEIGHT FINAL — remove TALK route and all legacy extra defense scheduling */
-(function(){
- const G=Game, RAGE_HP=1200000;
-
- /* TALK route is completely removed from UI and logic. */
- G.actions=()=>["こうげき","わざ","武器を使用","どうぐ","こうたい"];
- G.talkCount=0;G.talkRoute=false;G.trueReady=false;
- G.talk=function(){G.setState("MENU")};
- G.talkAttackMultiplier=function(){return G.boss.hp<=RAGE_HP?1.18:1};
-
- const oldChoose=G.chooseAction;
- G.chooseAction=function(i){
-  const a=G.actions()[i];
-  if(a==="こうげき"){G.setState("ATTACK");G.attackX=70;G.attackDir=1;G.attackTime=3.8;G.attackHits=0;G.attackTotal=0;G.attackEnded=false;return}
-  if(a==="わざ"){G.setState("SKILL");return}
-  if(a==="武器を使用"){G.setState("WEAPON");return}
-  if(a==="どうぐ"){G.setState("ITEM");return}
-  if(a==="こうたい"){G.setState("SWITCH");return}
-  return oldChoose.call(G,i);
- };
-
- /* HP 700k never changes the attack phase. Only the 1.2M tier exists after opening. */
- G.effectivePhase=function(){return G.boss.hp<=RAGE_HP?4:1};
-
- /* Replace every wrapped/legacy beginDefense with one clean implementation.
-    No duplicate delayed patterns, no talk-based patterns, no Phase 5 scheduling. */
- G.beginDefense=function(){
-  if(G.boss.hp<=0)return;
-  if(G.timeStopTurns>0){
-   G.timeStopTurns--;
-   G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);
-   return setTimeout(G.nextTurn,650);
-  }
-  G.setState("DEFENSE");
-  const ep=G.effectivePhase();
-  G.defenseTime=ep>=4?9.2:7.5;
-  G.patternClock=0;
-  G.bullets=[];G.trails=[];G.particles=[];
-  G.heart.x=270;G.heart.y=515;G.heart.inv=.5;
-  G.patternId=(G.turn*7+ep*9)%40;
-  if(G.introMode){
-   G.spawnPattern(2);
-   setTimeout(()=>G.state==="DEFENSE"&&G.introMode&&G.bullets.length<52&&G.spawnPattern(8),700);
-  }else{
-   G.spawnPattern(G.patternId);
-  }
- };
-
- /* Strict limits for iPhone rendering. */
- const oldSpawn=G.spawnPattern;
- G.spawnPattern=function(id){
-  if(G.state==="DEFENSE"&&G.bullets.length>=58)return;
-  oldSpawn.call(G,id);
-  if(G.bullets.length>68)G.bullets.splice(68);
- };
- const oldUB=G.updateBullets;
- G.updateBullets=function(dt){
-  G.talkCount=0;G.talkRoute=false;
-  oldUB.call(G,dt);
-  if(G.bullets.length>68)G.bullets.splice(0,G.bullets.length-68);
-  if(G.particles.length>72)G.particles.splice(0,G.particles.length-72);
-  if(G.trails.length>8)G.trails.splice(0,G.trails.length-8);
-  if(G.damageText.length>16)G.damageText.splice(0,G.damageText.length-16);
- };
-
- /* Remove TALK wording from the opening explanation. */
- const oldSay=G.say;
- G.say=function(lines,next){
-  let arr=Array.isArray(lines)?lines:[lines];
-  arr=arr.filter(x=>!String(x).includes("三十回")&&!String(x).includes("言葉を選んだ瞬間"));
-  return oldSay.call(G,arr,next);
- };
-
- const oldReset=G.reset;
- G.reset=function(){
-  oldReset.apply(G,arguments);
-  G.talkCount=0;G.talkRoute=false;G.trueReady=false;
- };
 })();
 </script>
