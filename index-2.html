@@ -1729,8 +1729,8 @@ Game.draw=function(){
  G.corePerfectFx=0;
 
  /* Definitive boss HP. */
- G.boss.max=1200000;
- if(G.boss.hp>1200000 || G.boss.hp===1000000)G.boss.hp=1200000;
+ G.boss.max=1400000;
+ if(G.boss.hp>1200000 || G.boss.hp===1000000)G.boss.hp=1400000;
 
  /* Weapons: pure fixed damage except Keita revival. No legacy status effects. */
  const weaponBases=[70000,60000,35000,40000,55000,70000];
@@ -1747,7 +1747,7 @@ Game.draw=function(){
  const oldReset42=G.reset;
  G.reset=function(){
   oldReset42.apply(G,arguments);
-  G.boss.max=1200000;G.boss.hp=1200000;
+  G.boss.max=1400000;G.boss.hp=1400000;
   G.weaponCritCharge=0;G.weaponOniCharge=0;
   G.finalDamageFx=0;G.weaponDamageFx=0;G.corePerfectFx=0;
  };
@@ -1850,7 +1850,88 @@ Game.draw=function(){
 })();
 </script>
 
-</body></html>
+
+<script>
+"use strict";
+/* FINAL HP / ENEMY POWER LOCK */
+(function(){
+ const G=Game;
+ const MAX_HP=1400000, RAGE_HP=1200000, FINAL_HP=700000;
+ G.boss.max=MAX_HP;
+ if(G.boss.hp>MAX_HP||G.boss.hp<=0)G.boss.hp=MAX_HP;
+
+ const oldReset=G.reset;
+ G.reset=function(){
+  oldReset.apply(G,arguments);
+  G.boss.max=MAX_HP;G.boss.hp=MAX_HP;G.boss.phase=1;G.boss.armor=850;
+  if(typeof G.updateBattleMusic==="function")G.updateBattleMusic(true);
+ };
+
+ const baseEffectivePhase=G.effectivePhase;
+ G.effectivePhase=function(){
+  let p=baseEffectivePhase.call(G);
+  if(G.boss.hp<=FINAL_HP)p=Math.max(p,5);
+  else if(G.boss.hp<=RAGE_HP)p=Math.max(p,3);
+  return p;
+ };
+
+ /* Absolute HP thresholds, not percentage thresholds. */
+ const oldNextTurn=G.nextTurn;
+ G.nextTurn=function(){
+  if(G.boss.hp<=FINAL_HP){G.boss.phase=5;G.boss.armor=80;}
+  else if(G.boss.hp<=RAGE_HP){G.boss.phase=Math.max(G.boss.phase,3);G.boss.armor=Math.min(G.boss.armor,450);}
+  return oldNextTurn.apply(G,arguments);
+ };
+
+ /* 1.2M: clearly harder. 700k: brutally harder. */
+ const oldHurt=G.hurt;
+ G.hurt=function(n){
+  let mult=1;
+  if(G.boss.hp<=FINAL_HP)mult=1.75;
+  else if(G.boss.hp<=RAGE_HP)mult=1.35;
+  return oldHurt.call(G,Math.max(1,Math.round(n*mult)));
+ };
+
+ const oldBeginDefense=G.beginDefense;
+ G.beginDefense=function(){
+  const out=oldBeginDefense.apply(G,arguments);
+  if(G.state==="DEFENSE"&&!G.introMode){
+   if(G.boss.hp<=FINAL_HP)G.defenseTime=Math.max(G.defenseTime,13.5);
+   else if(G.boss.hp<=RAGE_HP)G.defenseTime=Math.max(G.defenseTime,11.0);
+  }
+  return out;
+ };
+
+ const oldUpdateBullets=G.updateBullets;
+ G.updateBullets=function(dt){
+  let speed=1;
+  if(G.boss.hp<=FINAL_HP)speed=1.32;
+  else if(G.boss.hp<=RAGE_HP)speed=1.16;
+  return oldUpdateBullets.call(G,dt*speed);
+ };
+})();
+</script>
+
+</body>
+<script>
+"use strict";
+/* ABSOLUTE FINAL LOCK — must remain the last script */
+(function(){
+ const G=Game, MAX_HP=1400000, RAGE_HP=1200000, FINAL_HP=700000;
+ G.boss.max=MAX_HP; if(G.boss.hp>MAX_HP)G.boss.hp=MAX_HP;
+ const reset=G.reset;
+ G.reset=function(){reset.apply(G,arguments);G.boss.max=MAX_HP;G.boss.hp=MAX_HP;G.boss.phase=1;G.boss.armor=850;if(G.updateBattleMusic)G.updateBattleMusic(true);};
+ const eff=G.effectivePhase;
+ G.effectivePhase=function(){let p=eff.call(G);if(G.boss.hp<=FINAL_HP)return Math.max(p,5);if(G.boss.hp<=RAGE_HP)return Math.max(p,3);return p;};
+ const hurt=G.hurt;
+ G.hurt=function(n){const m=G.boss.hp<=FINAL_HP?1.75:G.boss.hp<=RAGE_HP?1.35:1;return hurt.call(G,Math.max(1,Math.round(n*m)));};
+ const begin=G.beginDefense;
+ G.beginDefense=function(){const out=begin.apply(G,arguments);if(G.state==="DEFENSE"&&!G.introMode){if(G.boss.hp<=FINAL_HP)G.defenseTime=Math.max(G.defenseTime,13.5);else if(G.boss.hp<=RAGE_HP)G.defenseTime=Math.max(G.defenseTime,11);}return out;};
+ const bullets=G.updateBullets;
+ G.updateBullets=function(dt){const m=G.boss.hp<=FINAL_HP?1.32:G.boss.hp<=RAGE_HP?1.16:1;return bullets.call(G,dt*m);};
+})();
+</script>
+</html>
 <script>
 "use strict";
 /* REBIRTH 34 - clean result / persistent weapon charge correction */
@@ -2454,13 +2535,13 @@ Game.draw=function(){
   });
  }
  configureWeapons();
- G.boss.max=1200000;
+ G.boss.max=1400000;
  if(G.boss.hp>G.boss.max)G.boss.hp=G.boss.max;
 
  const reset43=G.reset;
  G.reset=function(){
   reset43.apply(G,arguments);
-  G.boss.max=1200000;G.boss.hp=1200000;
+  G.boss.max=1400000;G.boss.hp=1400000;
   G.final43DamageFx=G.final43WeaponFx=G.final43CoreFx=0;
   G.final43DamageValue=G.final43WeaponValue=0;
   G.weaponCritCharge=0;G.weaponOniCharge=0;
@@ -2575,6 +2656,141 @@ Game.draw=function(){
    const t=G.final43WeaponFx/1.5,a=Math.max(0,Math.min(1,(1-t)*8,t*4));
    g.save();g.globalAlpha=a;g.shadowColor="#ff183d";g.shadowBlur=34;
    G.T(Number(G.final43WeaponValue).toLocaleString(),270,300,62,"#ff183d","center");g.restore();
+  }
+ };
+})();
+</script>
+<script>
+"use strict";
+/* TRUE EOF POWER LOCK */
+(function(){
+ const G=Game, MAX_HP=1400000, RAGE_HP=1200000, FINAL_HP=700000;
+ G.boss.max=MAX_HP;if(G.boss.hp>MAX_HP)G.boss.hp=MAX_HP;
+ const reset=G.reset;
+ G.reset=function(){reset.apply(G,arguments);G.boss.max=MAX_HP;G.boss.hp=MAX_HP;G.boss.phase=1;G.boss.armor=850;if(G.updateBattleMusic)G.updateBattleMusic(true);};
+ const eff=G.effectivePhase;
+ G.effectivePhase=function(){let p=eff.call(G);if(G.boss.hp<=FINAL_HP)return Math.max(p,5);if(G.boss.hp<=RAGE_HP)return Math.max(p,3);return p;};
+ const hurt=G.hurt;
+ G.hurt=function(n){const m=G.boss.hp<=FINAL_HP?1.75:G.boss.hp<=RAGE_HP?1.35:1;return hurt.call(G,Math.max(1,Math.round(n*m)));};
+ const begin=G.beginDefense;
+ G.beginDefense=function(){const out=begin.apply(G,arguments);if(G.state==="DEFENSE"&&!G.introMode){if(G.boss.hp<=FINAL_HP)G.defenseTime=Math.max(G.defenseTime,13.5);else if(G.boss.hp<=RAGE_HP)G.defenseTime=Math.max(G.defenseTime,11);}return out;};
+ const bullets=G.updateBullets;
+ G.updateBullets=function(dt){const m=G.boss.hp<=FINAL_HP?1.32:G.boss.hp<=RAGE_HP?1.16:1;return bullets.call(G,dt*m);};
+})();
+</script>
+
+
+<script>
+"use strict";
+/* REBIRTH 43.2 — VERIFIED ABSOLUTE HP + POWER FIX */
+(function(){
+ const G=Game;
+ const MAX_HP=1400000, RAGE_HP=1200000, FINAL_HP=700000;
+ G.buildLabel="REBIRTH 43.2 HP/POWER FIX";
+
+ function lockBossState(){
+  G.boss.max=MAX_HP;
+  G.boss.hp=Math.max(0,Math.min(MAX_HP,Number(G.boss.hp)||MAX_HP));
+  if(G.boss.hp<=FINAL_HP){G.boss.phase=5;G.boss.armor=80;G.powerTier=2;}
+  else if(G.boss.hp<=RAGE_HP){G.boss.phase=4;G.boss.armor=250;G.powerTier=1;}
+  else {G.boss.phase=Math.max(1,Math.min(3,G.boss.phase||1));G.powerTier=0;}
+ }
+
+ G.boss.max=MAX_HP;
+ G.boss.hp=MAX_HP;
+ lockBossState();
+
+ const previousReset=G.reset;
+ G.reset=function(){
+  previousReset.apply(G,arguments);
+  G.boss.max=MAX_HP;G.boss.hp=MAX_HP;G.boss.phase=1;G.boss.armor=850;G.powerTier=0;
+  G.lastPowerTier=0;
+  if(G.updateBattleMusic)G.updateBattleMusic(true);
+ };
+
+ const previousDamageBoss=G.damageBoss;
+ G.damageBoss=function(raw){
+  const before=G.boss.hp;
+  const out=previousDamageBoss.call(G,raw);
+  lockBossState();
+  if(before>RAGE_HP&&G.boss.hp<=RAGE_HP){G.toast("敵出力急上昇 — PHASE 4",2);G.shake=28;G.flash=.22;}
+  if(before>FINAL_HP&&G.boss.hp<=FINAL_HP){G.toast("LIMIT BREAK — FINAL PHASE",2.2);G.shake=42;G.flash=.35;}
+  return out;
+ };
+
+ const previousEffectivePhase=G.effectivePhase;
+ G.effectivePhase=function(){
+  lockBossState();
+  let p=previousEffectivePhase.call(G);
+  if(G.boss.hp<=FINAL_HP)return 5;
+  if(G.boss.hp<=RAGE_HP)return Math.max(4,p);
+  return p;
+ };
+
+ const previousNextTurn=G.nextTurn;
+ G.nextTurn=function(){
+  const out=previousNextTurn.apply(G,arguments);
+  lockBossState();
+  return out;
+ };
+
+ /* Standalone damage rule so older wrappers cannot cancel or dilute the late-game power. */
+ G.hurt=function(n){
+  if(G.state==="DEFENSE"&&G.hitGrace>0)return;
+  lockBossState();
+  let damage=Math.max(1,Number(n)||1);
+  if(G.barrierTurns>0)damage=Math.ceil(damage*.38);
+  if(G.talkRoute)damage*=2;
+  if(typeof G.talkAttackMultiplier==="function")damage*=G.talkAttackMultiplier();
+  if(G.boss.hp<=FINAL_HP)damage*=2.75;
+  else if(G.boss.hp<=RAGE_HP)damage*=1.85;
+  else if(G.boss.hp<=MAX_HP/2)damage*=1.25;
+  const p=G.current();
+  p.hp=Math.max(0,p.hp-Math.ceil(damage));
+  try{G.sfxHurt()}catch(e){}
+  if(G.state==="DEFENSE"){
+   G.hitGrace=.58;G.heart.inv=.58;
+   G.shake=Math.max(G.shake,18);G.flash=Math.max(G.flash,.12);
+  }
+  if(p.hp<=0){
+   const next=G.party.findIndex((q,i)=>q.hp>0&&!G.permanentDead[i]);
+   if(next<0)return G.gameOver();
+   G.active=next;
+  }
+ };
+
+ const previousBeginDefense=G.beginDefense;
+ G.beginDefense=function(){
+  lockBossState();
+  const out=previousBeginDefense.apply(G,arguments);
+  if(G.state==="DEFENSE"&&!G.introMode){
+   if(G.boss.hp<=FINAL_HP){
+    G.defenseTime=Math.max(G.defenseTime,15.5);
+    setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(47),420);
+    setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(46),1450);
+   }else if(G.boss.hp<=RAGE_HP){
+    G.defenseTime=Math.max(G.defenseTime,12.5);
+    setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(43+(G.turn%4)),650);
+   }
+  }
+  return out;
+ };
+
+ const previousUpdateBullets=G.updateBullets;
+ G.updateBullets=function(dt){
+  lockBossState();
+  const speed=G.boss.hp<=FINAL_HP?1.55:G.boss.hp<=RAGE_HP?1.28:1;
+  return previousUpdateBullets.call(G,dt*speed);
+ };
+
+ const previousDraw=G.draw;
+ G.draw=function(){
+  lockBossState();
+  previousDraw.call(G);
+  if(G.ctx&&G.state!=="BOOT"){
+   G.ctx.save();G.ctx.globalAlpha=.65;
+   G.T("43.2",514,946,10,"#8ca0ba","right");
+   G.ctx.restore();
   }
  };
 })();
