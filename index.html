@@ -1983,6 +1983,162 @@ Game.draw=function(){
 })();
 </script>
 
+
+<script>
+"use strict";
+/* DAYBREAK XLIX - 700K PHASE 5 / command cleanup / barrier rebalance */
+(function(){
+ const G=Game, PHASE5_HP=700000;
+ G.worldUnlockPending=false;
+ G.worldUnlockDialogueShown=false;
+
+ /* Five commands only. Talking route is fully removed. */
+ G.actions=()=>["こうげき","わざ","ブキ","どうぐ","こうたい"];
+ const choose49=G.chooseAction;
+ G.chooseAction=function(i){
+  const a=G.actions()[i];
+  if(a==="ブキ"){G.setState("WEAPON_SELECT");return}
+  if(a==="どうぐ"){G.setState("ITEM_SELECT_XLIX");return}
+  return choose49.call(G,i);
+ };
+
+ /* PHASE 5 begins at 700,000 HP. */
+ G.effectivePhase=function(){return G.boss.hp<=PHASE5_HP?5:G.boss.hp<=1200000?4:1};
+ G.talkAttackMultiplier=function(){return G.boss.hp<=PHASE5_HP?1.65:G.boss.hp<=1200000?1.32:1};
+
+ /* Remove threshold explanation popups. Music/effects still change normally. */
+ const toast49=G.toast;
+ G.toast=function(msg,time){
+  const t=String(msg||"");
+  if(t.includes("HP 1,200,000突破")||t.includes("HP 700,000突破")||t.includes("残りHP10%"))return;
+  return toast49.call(G,msg,time);
+ };
+
+ /* Crossing 700K schedules the unlock message for AFTER the enemy turn. */
+ const damage49=G.damageBoss;
+ G.damageBoss=function(raw){
+  const before=G.boss.hp;
+  const out=damage49.call(G,raw);
+  if(before>PHASE5_HP&&G.boss.hp<=PHASE5_HP&&G.boss.hp>0){
+   G.worldUnlockPending=true;G.worldUnlockedAnnounced=true;
+   G.shake=Math.max(G.shake,38);G.flash=Math.max(G.flash,.28);
+  }
+  return out;
+ };
+
+ /* Legacy half-HP cinema used to appear before the enemy attack. Redirect it. */
+ G.playWorldUnlockCinema=function(){
+  G.worldUnlockPending=true;G.worldUnlockedAnnounced=true;
+  if(G.boss.hp>0)G.beginDefense();
+ };
+
+ const next49=G.nextTurn;
+ G.nextTurn=function(){
+  const shouldShow=G.worldUnlockPending&&!G.worldUnlockDialogueShown&&G.boss.hp<=PHASE5_HP&&G.boss.hp>0&&!G.introMode;
+  next49.apply(G,arguments);
+  if(shouldShow){
+   G.worldUnlockPending=false;G.worldUnlockDialogueShown=true;
+   G.setState("MENU");
+   G.say([
+    "激しい攻撃が止み、砕けた光だけが宇宙を漂っていた。",
+    "トシユキは膝をつきながらも、仲間たちの呼吸を確かめた。",
+    "トシユキ「まだ……終わってない。みんなの時間は、ここで終わらせない。」",
+    "止まるはずのない時計の針が、一度だけ逆向きに震えた。",
+    "カズアキ「やっと届いたか。お前の世界に。」",
+    "トシユキは立ち上がり、静かに機械天使を見据えた。",
+    "――トシユキの必殺技『ザ・ワールド』が使用可能になった。"
+   ],()=>{G.setState("MENU");G.toast(G.current().name+"のターン",.9)});
+  }
+ };
+
+ /* Toshiyuki remains sealed until 700K. */
+ const skill49=G.useSkill;
+ G.useSkill=function(){
+  if(G.active===0&&G.boss.hp>PHASE5_HP){G.toast("ザ・ワールドはまだ使用できない",1.25);G.setState("MENU");return}
+  return skill49.apply(G,arguments);
+ };
+
+ /* Item counts and new full-turn barrier. */
+ const reset49=G.reset;
+ G.reset=function(){
+  reset49.apply(G,arguments);
+  G.items.herb=6;G.items.mae=12;G.items.full=3;G.items.rifle=3;delete G.items.ura;
+  G.guardItem=null;G.droneRifleReady=false;
+  G.worldUnlockPending=false;G.worldUnlockDialogueShown=false;G.worldUnlockedAnnounced=false;
+ };
+ G.items.herb=6;G.items.mae=12;G.items.full=3;G.items.rifle=3;delete G.items.ura;
+
+ G.chooseGuardItem=function(kind){
+  if(G.guardItem){G.toast("バリアンはすでに装着している",1.2);return}
+  if((G.items[kind]||0)<=0){G.toast(kind==="mae"?"マエバリアンはもうない":"完全バリアンはもうない",1);return}
+  G.items[kind]--;G.guardItem=kind;G.guardReflected=0;G.guardPulse=1;
+  G.setState("MENU");G.toast(kind==="mae"?"マエバリアン装着":"完全バリアン装着",1.1);
+ };
+ G.guardActive=function(){
+  if(!G.guardItem||G.state!=="DEFENSE"||!G.defenseTotal)return false;
+  if(G.guardItem==="full")return true;
+  const elapsed=G.defenseTotal-G.defenseTime;
+  return elapsed<=G.defenseTotal*.5;
+ };
+ G.useDroneRifle=function(){
+  if(G.droneRifleReady){G.toast("ポジドローンライフルはすでに装着している",1.3);return}
+  if((G.items.rifle||0)<=0){G.toast("ポジドローンライフルはもうない",1);return}
+  G.items.rifle--;G.droneRifleReady=true;G.setState("MENU");G.toast("ポジドローンライフル装着",1.1);
+ };
+
+ function pos(e){const r=G.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*G.W/r.width,y:(e.clientY-r.top)*G.H/r.height}}
+ G.canvas.addEventListener("pointerdown",e=>{
+  if(G.state!=="ITEM_SELECT_XLIX")return;
+  const p=pos(e);
+  for(const r of G.hitRects){
+   if(!r.xl49||p.x<r.x||p.x>r.x+r.w||p.y<r.y||p.y>r.y+r.h)continue;
+   e.preventDefault();e.stopImmediatePropagation();
+   if(r.xl49==="herb")G.openHerbTarget();
+   if(r.xl49==="mae")G.chooseGuardItem("mae");
+   if(r.xl49==="full")G.chooseGuardItem("full");
+   if(r.xl49==="rifle")G.useDroneRifle();
+   if(r.xl49==="back")G.setState("MENU");
+   return;
+  }
+  e.preventDefault();e.stopImmediatePropagation();
+ },true);
+
+ const draw49=G.draw;
+ G.draw=function(){
+  draw49.apply(G,arguments);
+  const g=G.ctx;
+  if(G.state==="ITEM_SELECT_XLIX"&&G.sub!=="dialog"){
+   G.panel(24,640,492,292,"#7de3ff","#02060cf8");G.T("どうぐ",270,666,19,"#fff","center");
+   const rows=[
+    {y:680,k:"herb",name:`完全回復やくそう ×${G.items.herb}`,c:"#7de3a0",d:"仲間ひとりを完全回復"},
+    {y:730,k:"mae",name:`マエバリアン ×${G.items.mae}`,c:"#62efff",d:"敵ターン前半をバリア"},
+    {y:780,k:"full",name:`完全バリアン ×${G.items.full}`,c:"#fff18a",d:"敵ターン終了までずっとバリア"},
+    {y:830,k:"rifle",name:`ポジドローンライフル ×${G.items.rifle}`,c:"#ff4dff",d:"バリアンと同時装着可能"}
+   ];
+   rows.forEach(r=>{G.hitRects.push({x:42,y:r.y,w:456,h:44,xl49:r.k});G.R(42,r.y,456,44,"#0a1019");G.R(48,r.y+6,8,32,r.c);G.T(r.name,68,r.y+19,15,"#fff");G.T(r.d,68,r.y+37,10,"#b8c7d8")});
+   G.hitRects.push({x:180,y:886,w:180,h:30,xl49:"back"});G.R(180,886,180,30,"#10131a");G.T("← もどる",270,907,13,"#fff","center");
+  }
+  if(G.state==="DEFENSE"&&G.guardItem==="full"&&G.guardActive()){
+   g.save();const rr=34+Math.sin(G.time*13)*4+G.guardPulse*12;g.strokeStyle="#fff18a";g.lineWidth=6;g.shadowColor="#fff18a";g.shadowBlur=30;
+   g.beginPath();g.arc(G.heart.x,G.heart.y,rr,0,Math.PI*2);g.stroke();g.beginPath();g.arc(G.heart.x,G.heart.y,rr+11,G.time*2.4,G.time*2.4+Math.PI*1.55);g.stroke();g.restore();
+  }
+ };
+
+ /* Extra PHASE 5 attacks begin at 700K, not 140K. */
+ const begin49=G.beginDefense;
+ G.beginDefense=function(){
+  /* Keep legacy 140K-only add-on from stacking a second copy below 140K. */
+  const realHp=G.boss.hp;if(realHp<=140000)G.boss.hp=140001;
+  const out=begin49.apply(G,arguments);
+  G.boss.hp=realHp;
+  if(G.state==="DEFENSE"&&!G.introMode&&G.boss.hp<=PHASE5_HP){
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(36+(G.turn%4)),900);
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(22+(G.turn%10)),1550);
+  }
+  return out;
+ };
+})();
+</script>
 </body></html>
 <script>
 "use strict";
