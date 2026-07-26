@@ -1,9 +1,18 @@
-PYRAMID BREAK ZERO DAYBREAK XLV - MUSIC REPLACEMENT
+PYRAMID BREAK ZERO DAYBREAK XXXI — WEAPON IMPACT
 
-変更内容:
-- 敵HP 1,400,000
-- HP 1,200,000以下: 「黒翼の終焉」に切替
-- HP 700,000以下: 「がた A♭ major BPM 134」に切替
-- 以前のHP半分時BGMは削除
-- HP 700,000以下でトシユキの必殺技を解放
-- 赤色ダメージ演出・強化効果音を維持
+- 通常連打時間を1.4秒へ短縮、平均約20,000ダメージへ再調整
+- イサジ「領域展開・鬼」中は連打時間5.6秒（通常の約4倍）
+- コマンド「武器を使用」を追加
+- 各キャラクター専用武器は1回限定
+- 武器攻撃は中央で止める一発タイミング方式
+- 武器ごとに約40,000〜48,000ダメージと特殊効果
+- ケイタ：倒れた仲間を1人蘇生
+- リョウゴ：次の敵攻撃を1回だけ低速化
+- 専用発光、衝撃波、画面揺れ、専用効果音を追加
+
+REBIRTH 40
+- Enemy turn starts with no invulnerability.
+- After a real bullet hit, about 0.7 sec hit grace is restored.
+- Normal attack total is shown over the boss as yellow "TOTAL xx,xxx".
+- Weapon damage is shown in yellow.
+- Removed the unwanted Isaji post-skill explanation paragraph.
