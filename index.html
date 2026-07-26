@@ -35,11 +35,11 @@ Game.ensureAudio=function(){
  if(!Game.audio)Game.audio=new(window.AudioContext||window.webkitAudioContext)();
  if(Game.audio.state==="suspended")Game.audio.resume().catch(()=>{});Game.ensureMaster();
  if(!Game.bgm){
-  Game.bgm=new Audio("audio/pixel-heartbeat.mp3");
+  Game.bgm=new Audio("audio/kokuyoku-no-shuen.mp3");
   Game.bgm.loop=true;Game.bgm.preload="auto";Game.bgm.volume=0;
  }
  if(!Game.bgmPhase2){
-  Game.bgmPhase2=new Audio("audio/kudakebashi-no-ketto.mp3");
+  Game.bgmPhase2=new Audio("audio/gata-ab-major-bpm134.mp3");
   Game.bgmPhase2.loop=true;Game.bgmPhase2.preload="auto";Game.bgmPhase2.volume=0;
  }
 };
@@ -2709,6 +2709,167 @@ Game.draw=function(){
    g.save();g.globalAlpha=a;g.shadowColor="#ff183d";g.shadowBlur=34;
    G.T(Number(G.final43WeaponValue).toLocaleString(),270,300,62,"#ff183d","center");g.restore();
   }
+ };
+})();
+</script>
+<script>
+"use strict";
+/* REBIRTH 44 - 1,400,000 HP / threshold rage / three-stage music / red impact finish */
+(function(){
+ const G=Game;
+ const MAX_HP=1400000, RAGE_HP=1200000, FINAL_HP=700000;
+ G.rebirth44Tier=0;
+ G.rebirth44Announced={rage:false,final:false};
+ G.redImpactRings=[];
+
+ function stopTrack(track){
+  if(!track)return;
+  try{track.pause();track.currentTime=0;track.volume=0}catch(e){}
+ }
+ function safePlay(track,target,key){
+  if(!track)return;
+  try{
+   track.volume=0;
+   const p=track.play();
+   if(p&&p.catch)p.catch(()=>{});
+   if(typeof G.fadeTrack==="function")G.fadeTrack(track,target,1.35,key);
+   else track.volume=target;
+  }catch(e){}
+ }
+ function musicTierForHp(){return G.boss.hp<=FINAL_HP?2:G.boss.hp<=RAGE_HP?1:0}
+ G.syncThresholdMusic=function(force){
+  G.ensureAudio();
+  const tier=musicTierForHp();
+  if(!force&&tier===G.rebirth44Tier)return;
+  G.rebirth44Tier=tier;
+  clearInterval(G._bgmFade);clearInterval(G._phase1Fade);clearInterval(G._phase2Fade);
+  G._bgmFade=G._phase1Fade=G._phase2Fade=null;
+  stopTrack(G.bgm);stopTrack(G.bgmPhase2);
+  /* Opening is intentionally musicless and tense. First uploaded track starts at 1.2M. */
+  if(tier===1)safePlay(G.bgm,.16,"_phase1Fade");
+  if(tier===2)safePlay(G.bgmPhase2,.19,"_phase2Fade");
+ };
+ G.startMusic=function(){G.ensureAudio();G.rebirth44Tier=-1;G.syncThresholdMusic(true)};
+ G.startPhase2Music=function(){G.syncThresholdMusic(true)};
+
+ /* HP thresholds now directly define the enemy's real combat strength. */
+ G.effectivePhase=function(){
+  let p=G.boss.hp<=FINAL_HP?5:G.boss.hp<=RAGE_HP?4:1;
+  if(G.talkCount>=20)p=Math.max(p,5);
+  else if(G.talkCount>=10)p=Math.max(p,4);
+  return p;
+ };
+ G.talkAttackMultiplier=function(){
+  let m=G.boss.hp<=FINAL_HP?1.65:G.boss.hp<=RAGE_HP?1.32:1;
+  if(G.talkCount>=20)m*=1.55;else if(G.talkCount>=10)m*=1.25;
+  return m;
+ };
+
+ function thresholdBurst(kind){
+  G.shake=kind==="final"?44:30;G.flash=kind==="final"?.38:.24;
+  const c=kind==="final"?"#ff082f":"#ff3657";
+  for(let i=0;i<(kind==="final"?90:55);i++)G.particle(270,190,i%3?c:"#fff",1,1.9);
+  G.redImpactRings.push({x:270,y:190,r:18,l:1.15,max:1.15,w:kind==="final"?9:6});
+  try{G.ensureAudio();G.noise(kind==="final"?.55:.34,kind==="final"?.13:.095);G.tone(58,kind==="final"?.8:.55,"sawtooth",.11,0,kind==="final"?260:150)}catch(e){}
+ }
+
+ const reset44=G.reset;
+ G.reset=function(){
+  reset44.apply(G,arguments);
+  G.boss.max=MAX_HP;G.boss.hp=MAX_HP;G.boss.phase=1;
+  G.rebirth44Tier=-1;G.rebirth44Announced={rage:false,final:false};G.redImpactRings=[];
+  G.worldUnlockedAnnounced=false;
+  G.syncThresholdMusic(true);
+ };
+ G.boss.max=MAX_HP;G.boss.hp=MAX_HP;
+
+ const damage44=G.damageBoss;
+ G.damageBoss=function(raw){
+  const before=G.boss.hp;
+  damage44.call(G,raw);
+  const dealt=Math.max(0,before-G.boss.hp);
+  if(dealt>0){
+   const d=G.damageText[G.damageText.length-1];
+   if(d){d.red44=true;d.l=Math.max(d.l||0,1.05);d.x+=G.rnd(-8,8)}
+   G.redImpactRings.push({x:270+G.rnd(-28,28),y:194+G.rnd(-15,18),r:8,l:.42,max:.42,w:dealt>=50000?7:3});
+   try{
+    G.ensureAudio();
+    G.noise(dealt>=50000?.13:.055,dealt>=50000?.085:.042);
+    G.tone(dealt>=50000?82:145,dealt>=50000?.25:.1,"sawtooth",dealt>=50000?.09:.045,0,-55);
+    if(dealt>=50000)G.tone(720,.13,"square",.045,.025,-380);
+   }catch(e){}
+  }
+  if(before>RAGE_HP&&G.boss.hp<=RAGE_HP&&!G.rebirth44Announced.rage){
+   G.rebirth44Announced.rage=true;thresholdBurst("rage");G.syncThresholdMusic(true);
+   G.toast("HP 1,200,000突破　敵出力が大幅上昇",2.1);
+  }
+  if(before>FINAL_HP&&G.boss.hp<=FINAL_HP&&!G.rebirth44Announced.final){
+   G.rebirth44Announced.final=true;thresholdBurst("final");G.syncThresholdMusic(true);
+   G.toast("HP 700,000突破　最終暴走／ザ・ワールド解放",2.4);
+  }
+ };
+
+ /* Toshiyuki's ultimate is sealed until the final threshold. */
+ const skill44=G.useSkill;
+ G.useSkill=function(){
+  if(G.active===0&&G.boss.hp>FINAL_HP){
+   G.toast("ザ・ワールドは敵HP700,000以下で解放",1.5);G.setState("MENU");return;
+  }
+  return skill44.apply(G,arguments);
+ };
+
+ /* Add extra simultaneous attacks at the two rage thresholds. */
+ const begin44=G.beginDefense;
+ G.beginDefense=function(){
+  const out=begin44.apply(G,arguments);
+  if(G.state!=="DEFENSE"||G.introMode)return out;
+  if(G.boss.hp<=RAGE_HP){
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(28+(G.turn%12)),420);
+  }
+  if(G.boss.hp<=FINAL_HP){
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(36+(G.turn%4)),900);
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(22+(G.turn%10)),1550);
+  }
+  return out;
+ };
+
+ const update44=G.update;
+ G.update=function(dt){
+  update44.call(G,dt);
+  for(const r of G.redImpactRings){r.l-=dt;r.r+=dt*(r.w>6?230:145)}
+  G.redImpactRings=G.redImpactRings.filter(r=>r.l>0);
+  if(G.state!=="BOOT"&&G.state!=="END")G.syncThresholdMusic(false);
+ };
+
+ /* Draw all ordinary boss damage in vivid red with impact rings and slash sparks. */
+ const draw44=G.draw;
+ G.draw=function(){
+  const red=Array.isArray(G.damageText)?G.damageText.filter(d=>d.red44):[];
+  if(red.length)G.damageText=G.damageText.filter(d=>!d.red44);
+  draw44.call(G);
+  if(red.length)G.damageText.push(...red);
+  const g=G.ctx;
+  for(const r of G.redImpactRings){
+   const a=Math.max(0,r.l/r.max);
+   g.save();g.globalAlpha=a;g.strokeStyle="#ff173e";g.lineWidth=r.w*a;g.shadowColor="#ff002f";g.shadowBlur=25;
+   g.beginPath();g.arc(r.x,r.y,r.r,0,Math.PI*2);g.stroke();g.restore();
+  }
+  for(const d of red){
+   const a=Math.min(1,Math.max(0,d.l));
+   g.save();g.globalAlpha=a;g.translate(d.x,d.y);g.rotate(Math.sin((d.l||0)*17)*.035);
+   g.shadowColor="#ff002f";g.shadowBlur=32;
+   G.T(String(d.n),0,0,d.crit?52:44,"#ff173e","center");
+   g.strokeStyle="rgba(255,255,255,"+(a*.75)+")";g.lineWidth=2;
+   for(let i=0;i<4;i++){const ang=i*Math.PI/2+.35;g.beginPath();g.moveTo(Math.cos(ang)*30,Math.sin(ang)*18);g.lineTo(Math.cos(ang)*58,Math.sin(ang)*36);g.stroke()}
+   g.restore();
+  }
+ };
+
+ /* Replace the old intro HP sentence without altering the story flow. */
+ const say44=G.say;
+ G.say=function(lines,next){
+  const arr=(Array.isArray(lines)?lines:[lines]).map(x=>String(x).replace("生命値は1,200,000","生命値は1,400,000"));
+  return say44.call(G,arr,next);
  };
 })();
 </script>
