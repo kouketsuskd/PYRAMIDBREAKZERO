@@ -3274,3 +3274,112 @@ Game.draw=function(){
  };
 })();
 </script>
+
+<script>
+"use strict";
+/* DAYBREAK LII - FULL PHASE 5 AT 700K + 8 EXCLUSIVE ATTACKS */
+(function(){
+ const G=Game, PHASE5_HP=700000, RAGE_HP=1200000;
+ const oldEffective=G.effectivePhase;
+ G.effectivePhase=function(){
+  if(G.boss.hp<=PHASE5_HP)return 5;
+  if(G.boss.hp<=RAGE_HP)return 4;
+  return oldEffective?Math.min(3,oldEffective.call(G)):1;
+ };
+ function syncPhase(){
+  const p=G.effectivePhase();
+  G.boss.phase=p;
+  G.boss.armor=[0,850,650,450,250,80][p]||80;
+ }
+ const oldDamage=G.damageBoss;
+ G.damageBoss=function(raw){const out=oldDamage.apply(G,arguments);syncPhase();return out};
+ const oldNext=G.nextTurn;
+ G.nextTurn=function(){syncPhase();const out=oldNext.apply(G,arguments);syncPhase();return out};
+ const oldUpdate=G.update;
+ G.update=function(dt){syncPhase();oldUpdate.call(G,dt);syncPhase()};
+ const oldReset=G.reset;
+ G.reset=function(){oldReset.apply(G,arguments);syncPhase()};
+ syncPhase();
+
+ const names={
+  81:"終末翼・六方向断罪",
+  82:"虚数重力井戸",
+  83:"時間差・紅蓮十字",
+  84:"崩壊する星座檻",
+  85:"反転軌道ミサイル",
+  86:"黒翼ノイズストーム",
+  87:"天使核・収束砲",
+  88:"PHASE 5・ゼロデイブレイク"
+ };
+ const oldSpawn=G.spawnPattern;
+ G.spawnPattern=function(id){
+  if(id<81||id>88)return oldSpawn.apply(G,arguments);
+  const A=G.arena,add=G.addBullet,cx=A.x+A.w/2,cy=A.y+A.h/2;
+  if(G.chaos){G.chaos.label=names[id];G.chaos.labelTime=1.9}
+  G.shake=Math.max(G.shake,12);G.flash=Math.max(G.flash,.08);
+  try{G.sfxEnemy(id===87?"beam":id===88?"core":"spiral")}catch(e){}
+  if(id===81){
+   for(let arm=0;arm<6;arm++)for(let i=0;i<7;i++){
+    const a=arm*Math.PI/3+i*.035,r=26+i*34;
+    add(cx+Math.cos(a)*r,cy+Math.sin(a)*r,Math.cos(a)*(105+i*24),Math.sin(a)*(105+i*24),7,arm%2?"#fff":"#ff315d","judgmentWing",{spin:arm%2?.72:-.72});
+   }
+  }
+  if(id===82){
+   for(let i=0;i<28;i++){const a=i*Math.PI*2/28,r=215+(i%4)*18;add(cx+Math.cos(a)*r,cy+Math.sin(a)*r,-Math.cos(a)*95,-Math.sin(a)*95,8,i%3?"#8deaff":"#ff5a86","gravityWell",{pull:125+(i%5)*18})}
+  }
+  if(id===83){
+   for(let wave=0;wave<5;wave++)for(let i=0;i<9;i++){
+    add(A.x-35,A.y+30+i*44,345,0,8,wave%2?"#fff":"#ff274d","delayCrossX",{wait:.25+wave*.28+i*.018});
+    add(A.x+30+i*52,A.y-35,0,330,8,wave%2?"#ffcc66":"#fff","delayCrossY",{wait:.42+wave*.28+i*.018});
+   }
+  }
+  if(id===84){
+   for(let i=0;i<34;i++){const a=i*Math.PI*2/34,r=175+(i%2)*28;add(cx+Math.cos(a)*r,cy+Math.sin(a)*r,0,0,7,i%4?"#dff8ff":"#ff4d78","starCage",{a:a,r:r,collapse:.7+(i%5)*.08})}
+  }
+  if(id===85){
+   for(let i=0;i<24;i++){const side=i%4,x=side===0?A.x-30:side===1?A.x+A.w+30:A.x+25+(i%8)*58,y=side===2?A.y-30:side===3?A.y+A.h+30:A.y+25+(i%8)*48;add(x,y,side===0?260:side===1?-260:(i%2?110:-110),side===2?260:side===3?-260:(i%2?-120:120),8,i%2?"#ff5bd0":"#7deaff","reverseMissile",{flip:.55+(i%6)*.08})}
+  }
+  if(id===86){
+   for(let i=0;i<52;i++){const a=Math.random()*Math.PI*2,sp=90+Math.random()*210;add(cx,cy,Math.cos(a)*sp,Math.sin(a)*sp,5,i%5?"#f5f8ff":"#ff315d","noiseStorm",{jitter:80+Math.random()*90,life:2.8})}
+  }
+  if(id===87){
+   for(let i=0;i<18;i++){const a=i*Math.PI*2/18;add(cx+Math.cos(a)*185,cy+Math.sin(a)*185,-Math.cos(a)*115,-Math.sin(a)*115,9,i%2?"#fff":"#ffd85d","coreFocus",{lock:.85})}
+   setTimeout(()=>{if(G.state!=="DEFENSE")return;for(let i=0;i<11;i++)add(cx-15+i*3,A.y-60,0,490,10,i%2?"#fff":"#ff173f","coreBeam",{life:1.5})},900);
+  }
+  if(id===88){
+   G.spawnPattern(81);
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(84),420);
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(85),900);
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(87),1450);
+  }
+ };
+
+ const oldUB=G.updateBullets;
+ G.updateBullets=function(dt){
+  const A=G.arena,cx=A.x+A.w/2,cy=A.y+A.h/2;
+  for(const b of G.bullets){
+   if(b.k==="judgmentWing"){const c=Math.cos(b.spin*dt),s=Math.sin(b.spin*dt),vx=b.vx,vy=b.vy;b.vx=vx*c-vy*s;b.vy=vx*s+vy*c}
+   if(b.k==="gravityWell"){const dx=cx-b.x,dy=cy-b.y,l=Math.hypot(dx,dy)||1;b.vx+=dx/l*b.pull*dt;b.vy+=dy/l*b.pull*dt}
+   if(b.k==="delayCrossX"||b.k==="delayCrossY"){if(b.wait>0){b.wait-=dt;b.x-=b.vx*dt;b.y-=b.vy*dt}}
+   if(b.k==="starCage"){b.collapse-=dt;if(b.collapse>0){b.a+=dt*.55;b.x=cx+Math.cos(b.a)*b.r;b.y=cy+Math.sin(b.a)*b.r;b.vx=b.vy=0}else if(b.vx===0&&b.vy===0){const dx=G.heart.x-b.x,dy=G.heart.y-b.y,l=Math.hypot(dx,dy)||1;b.vx=dx/l*285;b.vy=dy/l*285}}
+   if(b.k==="reverseMissile"){b.flip-=dt;if(b.flip<=0){b.flip=99;b.vx*=-1.3;b.vy*=-1.3}}
+   if(b.k==="noiseStorm"){b.vx+=(Math.random()-.5)*b.jitter*dt;b.vy+=(Math.random()-.5)*b.jitter*dt}
+   if(b.k==="coreFocus"){b.lock-=dt;if(b.lock<=0&&b.vx!==9999){const dx=G.heart.x-b.x,dy=G.heart.y-b.y,l=Math.hypot(dx,dy)||1;b.vx=dx/l*340;b.vy=dy/l*340;b.lock=99}}
+  }
+  oldUB.call(G,dt);
+ };
+
+ const oldBegin=G.beginDefense;
+ G.beginDefense=function(){
+  syncPhase();
+  const out=oldBegin.apply(G,arguments);
+  syncPhase();
+  if(G.state==="DEFENSE"&&!G.introMode&&G.boss.hp<=PHASE5_HP){
+   const id=81+((G.turn*3+G.active)%7);
+   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(id),520);
+   if(G.turn%3===1)setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(88),1700);
+  }
+  return out;
+ };
+})();
+</script>
