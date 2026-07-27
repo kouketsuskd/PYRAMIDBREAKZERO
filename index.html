@@ -3383,3 +3383,53 @@ Game.draw=function(){
  };
 })();
 </script>
+<script>
+"use strict";
+/* DAYBREAK LIII - PHASE 5 PERFORMANCE STABILIZER */
+(function(){
+ const G=Game, FINAL_HP=700000;
+ const baseAdd=G.addBullet;
+ G.addBullet=function(){
+  const cap=(G.boss&&G.boss.hp<=FINAL_HP&&!G.introMode)?72:120;
+  if(G.bullets&&G.bullets.length>=cap)return null;
+  return baseAdd.apply(G,arguments);
+ };
+
+ const baseSpawn=G.spawnPattern;
+ G._phase5LastPatternAt=0;
+ G.spawnPattern=function(id){
+  if(!(G.boss&&G.boss.hp<=FINAL_HP)||G.introMode)return baseSpawn.apply(G,arguments);
+  const now=performance.now();
+  /* Prevent several legacy add-on schedulers firing almost simultaneously. */
+  if(now-G._phase5LastPatternAt<300&&G.bullets.length>28)return;
+  if(G.bullets.length>60)return;
+  G._phase5LastPatternAt=now;
+  /* The former pattern 88 recursively stacked four large attacks. Keep its identity,
+     but run the optimized core-finisher pattern instead. */
+  if(id===88)id=87;
+  return baseSpawn.call(G,id);
+ };
+
+ const baseBegin=G.beginDefense;
+ G.beginDefense=function(){
+  G._phase5LastPatternAt=0;
+  const out=baseBegin.apply(G,arguments);
+  if(G.state==="DEFENSE"&&G.boss.hp<=FINAL_HP&&!G.introMode){
+   /* Full phase 5 remains active, but a shorter turn avoids prolonged frame pressure. */
+   G.defenseTime=Math.min(G.defenseTime,9.8);
+   if(G.bullets.length>72)G.bullets.length=72;
+  }
+  return out;
+ };
+
+ const baseUpdate=G.update;
+ G.update=function(dt){
+  if(G.boss&&G.boss.hp<=FINAL_HP&&!G.introMode){
+   if(G.bullets.length>72)G.bullets.length=72;
+   if(G.particles&&G.particles.length>90)G.particles.splice(0,G.particles.length-90);
+   if(G.trails&&G.trails.length>70)G.trails.splice(0,G.trails.length-70);
+  }
+  return baseUpdate.call(G,Math.min(dt,.034));
+ };
+})();
+</script>
