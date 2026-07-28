@@ -3494,3 +3494,90 @@ Game.draw=function(){
  const logo=document.querySelector('.logo b');if(logo)logo.innerHTML='DAYBREAK LIII<br>MANY DRAMATIC ATTACKS';
 })();
 </script>
+
+<script>
+"use strict";
+/* DAYBREAK LIV - definitive MAX cleanup and inventory correction */
+(function(){
+ const G=Game;
+ function applyLIVStock(){
+  G.items.herb=6;
+  G.items.mae=9;
+  G.items.full=2;
+  G.items.rifle=2;
+  delete G.items.ura;
+ }
+ applyLIVStock();
+ const resetLIV=G.reset;
+ G.reset=function(){
+  const out=resetLIV.apply(G,arguments);
+  applyLIVStock();
+  G.livMaxBurst=0;
+  return out;
+ };
+
+ /* One clean MAX burst only. Weapon attacks never display MAX. */
+ G.livMaxBurst=0;
+ const tapLIV=G.attackTap;
+ G.attackTap=function(){
+  const max=(G.active===4&&G.oniTurns>0)?48:12;
+  const before=G.attackHits||0;
+  const out=tapLIV.apply(G,arguments);
+  if(!G.weaponMode&&before<max&&(G.attackHits||0)>=max){
+   G.livMaxBurst=1;
+   G.flash=Math.max(G.flash||0,.32);
+   G.shake=Math.max(G.shake||0,18);
+   try{G.sfxBarrier()}catch(e){}
+  }
+  return out;
+ };
+ const updateLIV=G.update;
+ G.update=function(dt){
+  updateLIV.call(G,dt);
+  G.livMaxBurst=Math.max(0,(G.livMaxBurst||0)-dt*1.55);
+ };
+
+ const drawLIV=G.draw;
+ G.draw=function(){
+  const max=(G.active===4&&G.oniTurns>0)?48:12;
+  const rapidCapped=G.state==="ATTACK"&&!G.weaponMode&&(G.attackHits||0)>=max;
+  const hideLegacyMax=G.state==="ATTACK"&&(G.weaponMode||rapidCapped);
+  const savedHits=G.attackHits;
+  if(hideLegacyMax)G.attackHits=0;
+  drawLIV.apply(G,arguments);
+  if(hideLegacyMax)G.attackHits=savedHits;
+
+  if(!rapidCapped)return;
+  const g=G.ctx,burst=G.livMaxBurst||0;
+  const pulse=1+Math.sin(G.time*11)*.02+burst*.12;
+  g.save();
+  /* Cover the original count completely at the true rapid-circle center. */
+  g.translate(270,735);g.scale(pulse,pulse);
+  g.fillStyle="#f7fdff";g.shadowColor="#71e8ff";g.shadowBlur=48+burst*42;
+  g.beginPath();g.arc(0,0,92,0,Math.PI*2);g.fill();
+  g.shadowBlur=0;
+  G.T("MAX",0,20,58,"#07101b","center");
+  G.T("",0,68,13,"#1b4054","center");
+  g.restore();
+  if(burst>0){
+   g.save();
+   g.globalCompositeOperation="screen";
+   g.globalAlpha=Math.min(.58,burst*.7);g.fillStyle="#fff";g.fillRect(0,0,G.W,G.H);
+   g.translate(270,735);g.strokeStyle="#dffcff";g.lineWidth=5;
+   for(let i=0;i<4;i++){
+    g.globalAlpha=Math.max(0,burst*(.9-i*.12));
+    g.beginPath();g.arc(0,0,112+i*30+(1-burst)*75,0,Math.PI*2);g.stroke();
+   }
+   for(let i=0;i<12;i++){
+    const a=i*Math.PI/6+G.time*.8,r1=105,r2=150+burst*55;
+    g.beginPath();g.moveTo(Math.cos(a)*r1,Math.sin(a)*r1);g.lineTo(Math.cos(a)*r2,Math.sin(a)*r2);g.stroke();
+   }
+   g.restore();
+  }
+ };
+
+ document.title="DAYBREAK LIV MAX CLEAN STOCK FIX";
+ const logo=document.querySelector('.logo b');
+ if(logo)logo.innerHTML='DAYBREAK LIV<br>MAX CLEAN STOCK FIX';
+})();
+</script>
