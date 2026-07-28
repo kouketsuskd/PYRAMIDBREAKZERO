@@ -3650,3 +3650,87 @@ Game.draw=function(){
  if(logo)logo.innerHTML='DAYBREAK LV<br>DARK WARNING STOCK FIX';
 })();
 </script>
+<style id="pbz-final-title-style">
+#start.overlay{
+ background:
+  radial-gradient(circle at 50% 34%,rgba(33,84,136,.32),transparent 30%),
+  radial-gradient(circle at 50% 58%,rgba(91,30,136,.20),transparent 46%),
+  linear-gradient(180deg,#01030a 0%,#040817 52%,#000 100%);
+ overflow:hidden;
+}
+#start.overlay::before{content:"";position:absolute;inset:-25%;pointer-events:none;background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(100,220,255,.055) 0 1deg,transparent 1deg 12deg);animation:pbzSpin 32s linear infinite;filter:blur(.5px)}
+#start.overlay::after{content:"";position:absolute;left:8%;right:8%;top:20%;height:60%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(132,232,255,.12),transparent);transform:skewY(-7deg);filter:blur(18px);animation:pbzSweep 4.8s ease-in-out infinite}
+#start .card{position:relative;z-index:1;width:min(94vw,590px);padding:42px 18px 34px;border:1px solid rgba(170,235,255,.45);background:linear-gradient(180deg,rgba(1,5,16,.90),rgba(1,2,8,.97));box-shadow:0 0 0 1px rgba(80,170,255,.12) inset,0 0 45px rgba(38,145,255,.22),0 35px 90px #000;border-radius:2px;clip-path:polygon(5% 0,95% 0,100% 10%,100% 90%,95% 100%,5% 100%,0 90%,0 10%)}
+#start .logo{font-family:Impact,Haettenschweiler,'Arial Narrow Bold',ui-monospace,monospace;text-transform:none;line-height:.82;letter-spacing:-2px;transform:skewX(-5deg)}
+#start .pbz-main{display:block;font-size:clamp(42px,11vw,76px);font-weight:1000;letter-spacing:-3px;color:#f5fbff;background:linear-gradient(180deg,#fff 0%,#bcefff 36%,#548bc7 62%,#e5f8ff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(4px 5px 0 #08152a) drop-shadow(0 0 12px rgba(74,213,255,.75)) drop-shadow(0 0 34px rgba(64,94,255,.48));animation:pbzLogo 2.8s ease-in-out infinite}
+#start .pbz-zero{color:#ff315f;-webkit-text-fill-color:#ff315f;text-shadow:3px 3px 0 #4b0012,0 0 14px #ff174f,0 0 34px rgba(255,23,79,.7)}
+#start .pbz-version{display:inline-block;margin-top:22px;padding:5px 17px;border-top:1px solid #7ddfff;border-bottom:1px solid #7ddfff;color:#c9f4ff;font:900 13px ui-monospace,monospace;letter-spacing:7px;text-transform:uppercase;transform:skewX(5deg);text-shadow:0 0 12px #45cfff}
+#startButton{position:relative;margin-top:36px;min-width:230px;padding:15px 28px;border:1px solid #aeeeff;background:linear-gradient(90deg,#06101d,#102b45,#06101d);color:#fff;font:900 17px ui-monospace,monospace;letter-spacing:2px;box-shadow:0 0 20px rgba(71,205,255,.25),inset 0 0 18px rgba(70,190,255,.12);clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);animation:pbzButton 1.8s ease-in-out infinite}
+#startButton:active{transform:scale(.97);filter:brightness(1.35)}
+@keyframes pbzSpin{to{transform:rotate(360deg)}}
+@keyframes pbzSweep{0%,100%{transform:translateX(-35%) skewY(-7deg);opacity:.25}50%{transform:translateX(35%) skewY(-7deg);opacity:.75}}
+@keyframes pbzLogo{0%,100%{filter:drop-shadow(4px 5px 0 #08152a) drop-shadow(0 0 10px rgba(74,213,255,.65)) drop-shadow(0 0 28px rgba(64,94,255,.38))}50%{filter:drop-shadow(4px 5px 0 #08152a) drop-shadow(0 0 18px rgba(138,239,255,.95)) drop-shadow(0 0 48px rgba(89,55,255,.65))}}
+@keyframes pbzButton{0%,100%{box-shadow:0 0 14px rgba(71,205,255,.22),inset 0 0 14px rgba(70,190,255,.10)}50%{box-shadow:0 0 28px rgba(71,205,255,.48),inset 0 0 24px rgba(70,190,255,.20)}}
+</style>
+<script>
+"use strict";
+/* pyramidBlakeZERO version1 — final title and eye-friendly arena-only warning effects */
+(function(){
+ const G=Game, RAGE_HP=1200000;
+ document.title="pyramidBlakeZERO version1";
+ const logo=document.querySelector("#start .logo");
+ if(logo)logo.innerHTML='<span class="pbz-main">pyramidBlake<span class="pbz-zero">ZERO</span></span><span class="pbz-version">version 1</span>';
+ const startButton=document.getElementById("startButton");
+ if(startButton)startButton.textContent="物語を始める";
+
+ G.pbzFxCount=0;G.pbzFxEnabled=false;G.pbzPrevLiiiType=-1;G.pbzArenaPulse=0;
+ const oldReset=G.reset;
+ G.reset=function(){
+  const out=oldReset.apply(G,arguments);
+  G.pbzFxCount=0;G.pbzFxEnabled=false;G.pbzPrevLiiiType=-1;G.pbzArenaPulse=0;
+  return out;
+ };
+ const oldUpdate=G.update;
+ G.update=function(dt){
+  oldUpdate.call(G,dt);
+  const f=G.liiiFx;
+  const active=G.state==="DEFENSE"&&G.boss.hp<=RAGE_HP&&f&&f.type>=0;
+  if(active&&G.pbzPrevLiiiType<0){
+   G.pbzFxCount++;
+   G.pbzFxEnabled=(G.pbzFxCount%3===0);
+  }
+  G.pbzPrevLiiiType=active?f.type:-1;
+  if(active&&G.pbzFxEnabled){
+   const q=Math.min(1,f.t/Math.max(.01,f.dur));
+   const target=q<.50?1:0;
+   G.pbzArenaPulse+=(target-G.pbzArenaPulse)*Math.min(1,dt*(target?3.2:6));
+  }else G.pbzArenaPulse=Math.max(0,G.pbzArenaPulse-dt*5);
+ };
+
+ const oldDraw=G.draw;
+ G.draw=function(){
+  const limited=G.state==="DEFENSE"&&G.boss.hp<=RAGE_HP;
+  const savedFlash=G.flash,savedWhite=G.liWhiteAttack,savedDark=G.lvDarkPulse;
+  /* Stop every legacy full-screen white/black layer during the late battle. */
+  if(limited){G.flash=0;G.liWhiteAttack=0;G.lvDarkPulse=0;}
+  oldDraw.apply(G,arguments);
+  if(limited){G.flash=savedFlash;G.liWhiteAttack=savedWhite;G.lvDarkPulse=savedDark;}
+
+  if(!limited||!G.pbzFxEnabled||G.pbzArenaPulse<=.01)return;
+  const g=G.ctx,A=G.arena,f=G.liiiFx;
+  const q=f&&f.type>=0?Math.min(1,f.t/Math.max(.01,f.dur)):0;
+  const d=G.pbzArenaPulse;
+  g.save();g.beginPath();g.rect(A.x,A.y,A.w,A.h);g.clip();
+  /* Darkness and white warning are deliberately restricted to the heart arena. */
+  g.fillStyle=`rgba(0,0,8,${Math.min(.42,d*.42)})`;g.fillRect(A.x,A.y,A.w,A.h);
+  g.globalCompositeOperation="screen";
+  g.globalAlpha=d*.13;g.fillStyle="#79dfff";
+  for(let y=A.y+10;y<A.y+A.h;y+=28)g.fillRect(A.x,y,A.w,1);
+  if(q>.47&&q<.57){
+   const a=Math.sin((q-.47)/.10*Math.PI)*.24;
+   g.globalAlpha=Math.max(0,a);g.fillStyle="#fff";g.fillRect(A.x,A.y,A.w,A.h);
+  }
+  g.restore();
+ };
+})();
+</script>
