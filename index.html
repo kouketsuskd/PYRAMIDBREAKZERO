@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b><span style="font-size:56px;letter-spacing:4px;text-shadow:0 0 12px #6cf,0 0 30px #39f;">pyramidBlakeZERO</span><br><b style="font-size:24px;">version2</b></b></div><button id="startButton">物語を始める</button></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b><span style="font-size:56px;letter-spacing:4px;text-shadow:0 0 12px #6cf,0 0 30px #39f;">pyramidBlakeZERO</span><br><b style="font-size:24px;">version1</b></b></div><button id="startButton">物語を始める</button></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -2191,7 +2191,7 @@ Game.draw=function(){
    G.liiWaveClock=(G.liiWaveClock||0)+dt;
    if(G.liiWaveClock>=7.2){
     G.liiWaveClock=0;
-    G.liiWaveFx=1.55;
+    G.liiWaveFx=3.15;
     G.shake=Math.max(G.shake||0,7);
     try{G.sfxBeam()}catch(e){try{G.sfxBarrier()}catch(_){}}
    }
@@ -2231,10 +2231,9 @@ Game.draw=function(){
 
   /* Slow whiteout wave-cannon attack. It adds no bullets and therefore stays lightweight. */
   if(G.state==="DEFENSE"&&G.boss.hp<=RAGE_HP&&G.liiWaveFx>0){
-   const elapsed=1.55-G.liiWaveFx;
-   /* version 2: ENERGY CHARGE is completely removed; the cannon fires immediately. */
-   const charge=1;
-   const fire=Math.min(1,elapsed/.22);
+   const elapsed=3.15-G.liiWaveFx;
+   const charge=Math.min(1,elapsed/1.85);
+   const fire=Math.max(0,(elapsed-1.75)/1.4);
    const white=(G.pbzFxEnabled?Math.min(.22,charge*.16+fire*.08):0);
    g.save();
    g.globalAlpha=white;g.fillStyle="#fff";g.fillRect(G.arena.x,G.arena.y,G.arena.w,G.arena.h);
@@ -2254,12 +2253,12 @@ Game.draw=function(){
     g.beginPath();g.arc(270,190,r,0,Math.PI*2);g.stroke();
    }
    g.globalCompositeOperation="source-over";
-   g.globalAlpha=Math.min(1,charge*1.2);G.T("WAVE CANNON",270,330,18,"#07101b","center");
+   g.globalAlpha=Math.min(1,charge*1.2);G.T(fire>0?"WAVE CANNON":"ENERGY CHARGE",270,330,18,"#07101b","center");
    g.restore();
   }
  };
 
- document.title="pyramidBlakeZERO version2";
+ document.title="DAYBREAK LII CENTER MAX WAVE CANNON FIX";
  const logo=document.querySelector('.logo b');
  if(logo)logo.innerHTML='DAYBREAK LII<br>CENTER MAX WAVE CANNON FIX';
 })();
@@ -3675,12 +3674,12 @@ Game.draw=function(){
 </style>
 <script>
 "use strict";
-/* pyramidBlakeZERO version2 — ENERGY CHARGE removed */
+/* pyramidBlakeZERO version1 — final title and eye-friendly arena-only warning effects */
 (function(){
  const G=Game, RAGE_HP=1200000;
- document.title="pyramidBlakeZERO version2";
+ document.title="pyramidBlakeZERO version1";
  const logo=document.querySelector("#start .logo");
- if(logo)logo.innerHTML='<span class="pbz-main">pyramidBlake<span class="pbz-zero">ZERO</span></span><span class="pbz-version">version 2</span>';
+ if(logo)logo.innerHTML='<span class="pbz-main">pyramidBlake<span class="pbz-zero">ZERO</span></span><span class="pbz-version">version 1</span>';
  const startButton=document.getElementById("startButton");
  if(startButton)startButton.textContent="物語を始める";
 
@@ -3732,125 +3731,6 @@ Game.draw=function(){
    g.globalAlpha=Math.max(0,a);g.fillStyle="#fff";g.fillRect(A.x,A.y,A.w,A.h);
   }
   g.restore();
- };
-})();
-</script>
-<script>
-"use strict";
-/* pyramidBlakeZERO version 3 — late-game variety / no repeated WAVE CANNON */
-(function(){
- const G=Game;
- document.title="pyramidBlakeZERO version3";
- const logo=document.querySelector("#start .logo");
- if(logo)logo.innerHTML='<span class="pbz-main">pyramidBlake<span class="pbz-zero">ZERO</span></span><span class="pbz-version">version 3</span>';
-
- /* Disable the old timer-based WAVE CANNON. It was firing during every late defense. */
- const prevUpdateV3=G.update;
- G.update=function(dt){
-  prevUpdateV3.call(G,dt);
-  G.liiWaveClock=0;
-  G.liiWaveFx=0;
- };
-
- G.pbzRecentPatterns=[];
- G.pbzWaveCooldown=0;
- const prevResetV3=G.reset;
- G.reset=function(){
-  const out=prevResetV3.apply(G,arguments);
-  G.pbzRecentPatterns=[];G.pbzWaveCooldown=0;G.liiWaveClock=0;G.liiWaveFx=0;
-  return out;
- };
-
- const oldSpawnV3=G.spawnPattern;
- G.spawnPattern=function(id){
-  if(id<90)return oldSpawnV3.call(G,id);
-  const A=G.arena,add=G.addBullet,cx=A.x+A.w/2,cy=A.y+A.h/2;
-  Object.assign(G.bossFx,{handL:0,handR:0,dash:0,reach:0,eyeBeam:0,coreOpen:0});
-
-  /* GRAVITY RING: rings close in from the outside with rotating gaps. */
-  if(id===90){
-   G.toast("GRAVITY RING",.72);G.bossFx.coreOpen=3.8;
-   for(let ring=0;ring<3;ring++)for(let i=0;i<18;i++){
-    if((i+ring*3)%9===0||(i+ring*3)%9===1)continue;
-    const a=i*Math.PI*2/18+ring*.38,r=255+ring*58;
-    add(cx+Math.cos(a)*r,cy+Math.sin(a)*r,-Math.cos(a)*(150+ring*24),-Math.sin(a)*(150+ring*24),7,ring===1?"#ff75b5":"#c9f7ff","core",{warn:.55+ring*.25});
-   }
-  }
-  /* PHOTON GATE: alternating walls leave a different safe lane each row. */
-  else if(id===91){
-   G.toast("PHOTON GATE",.72);G.bossFx.eyeBeam=1.8;
-   for(let row=0;row<7;row++){
-    const gap=(row*2+G.turn)%6;
-    for(let col=0;col<8;col++){
-     if(col===gap||col===gap+1)continue;
-     add(A.x+31+col*59,A.y-45-row*76,0,285,10,row%2?"#8deaff":"#ffffff","spear",{warn:.48+row*.13});
-    }
-   }
-  }
-  /* HUNTER CROSS: corner shots curve toward the heart, followed by a cross burst. */
-  else if(id===92){
-   G.toast("HUNTER CROSS",.72);G.bossFx.eyeBeam=1.5;
-   const corners=[[A.x-28,A.y-28],[A.x+A.w+28,A.y-28],[A.x-28,A.y+A.h+28],[A.x+A.w+28,A.y+A.h+28]];
-   corners.forEach((p,s)=>{for(let i=0;i<4;i++)add(p[0],p[1],(s%2? -1:1)*(55+i*18),(s>1?-1:1)*(45+i*14),8,i%2?"#ff6e97":"#e8fbff","homing",{warn:.55+i*.18})});
-   for(let i=0;i<12;i++){const a=i*Math.PI/6;add(cx,cy,Math.cos(a)*210,Math.sin(a)*210,6,"#fff","burst",{warn:1.1})}
-  }
-  /* METEOR SWITCH: diagonal meteor lanes reverse halfway through. */
-  else if(id===93){
-   G.toast("METEOR SWITCH",.72);G.bossFx.dash=1.3;
-   for(let i=0;i<15;i++){
-    const left=i%2===0;
-    add(left?A.x-45:A.x+A.w+45,A.y-70+(i%5)*92,left?330:-330,190,13,i%3?"#ffcf68":"#fff1c7","drill",{warn:.45+Math.floor(i/5)*.35,spin:left?1.7:-1.7});
-   }
-  }
-  /* WAVE CANNON: retained as a rare attack, contained inside the arena. */
-  else if(id===94){
-   G.toast("WAVE CANNON",.72);G.bossFx.coreOpen=3;G.bossFx.eyeBeam=2;
-   const lane=G.turn%3;
-   for(let row=0;row<9;row++){
-    if(row===lane*3+1||row===lane*3+2)continue;
-    add(A.x-60,A.y+25+row*44,410,0,15,row%2?"#bcefff":"#ffffff","wave",{warn:.75+row*.025});
-   }
-   setTimeout(()=>{
-    if(G.state!=="DEFENSE")return;
-    for(let row=0;row<9;row++){
-     if(row===(2-lane)*3+1||row===(2-lane)*3+2)continue;
-     add(A.x+A.w+60,A.y+25+row*44,-410,0,15,row%2?"#bcefff":"#ffffff","wave",{warn:.35+row*.025});
-    }
-   },1050);
-  }
- };
-
- function choosePattern(pool){
-  let choices=pool.filter(id=>!G.pbzRecentPatterns.includes(id));
-  if(G.pbzWaveCooldown>0)choices=choices.filter(id=>id!==94);
-  if(!choices.length)choices=pool.filter(id=>id!==94);
-  const id=choices[Math.floor(Math.random()*choices.length)];
-  G.pbzRecentPatterns.push(id);if(G.pbzRecentPatterns.length>2)G.pbzRecentPatterns.shift();
-  if(G.pbzWaveCooldown>0)G.pbzWaveCooldown--;
-  if(id===94)G.pbzWaveCooldown=5;
-  return id;
- }
-
- /* Final defense selector: varied attacks, no back-to-back repeats, rare WAVE CANNON. */
- G.beginDefense=function(){
-  if(G.boss.hp<=0)return;
-  if(G.timeStopTurns>0){G.timeStopTurns--;G.toast(`敵ターン停止　残り${G.timeStopTurns}`,1);return setTimeout(G.nextTurn,650)}
-  const ep=G.effectivePhase();
-  G.setState("DEFENSE");G.defenseTime=[0,7.8,8.8,9.8,10.8,12.2][ep];G.patternClock=0;G.bullets=[];G.trails=[];G.safeSpawn=1.1;
-  G.heart.x=270;G.heart.y=G.arena.y+G.arena.h-42;G.heart.inv=1.35;G.liiWaveClock=0;G.liiWaveFx=0;
-  let pool;
-  if(ep>=5)pool=[39,40,41,42,43,44,45,46,47,90,91,92,93,94];
-  else if(ep>=4)pool=[28,30,32,34,36,38,40,41,42,43,44,45,90,91,92,93,94];
-  else if(ep===3)pool=[14,18,19,22,23,24,25,26,27,28,29,30,32,33,34,35,36,38];
-  else pool=Array.from({length:40},(_,i)=>i).filter(i=>![6,7,11,20,31,37,39].includes(i));
-  const id=choosePattern(pool);G.patternId=id;G.spawnPattern(id);
-
-  /* Sometimes combine a lighter second gimmick, but not every turn. */
-  const chance=ep>=5?.52:ep>=4?.36:0;
-  if(Math.random()<chance){
-   const support=choosePattern(ep>=5?[15,23,29,33,90,91,92,93]:[15,23,29,33,34,35]);
-   setTimeout(()=>G.state==="DEFENSE"&&G.spawnPattern(support),ep>=5?1050:1350);
-  }
  };
 })();
 </script>
