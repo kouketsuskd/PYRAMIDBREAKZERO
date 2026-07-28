@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK LI BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK LI<br>BARRIER PERFECT FIX</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK L<br>BARRIER PERFECT FIX</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -3081,7 +3081,7 @@ Game.draw=function(){
 
 <script>
 "use strict";
-/* DAYBREAK LI - perfect barrier damage lock / Mae x9 / all weapons +20,000 */
+/* DAYBREAK L - perfect barrier damage lock / Mae x9 / all weapons +20,000 */
 (function(){
  const G=Game;
 
@@ -3118,159 +3118,6 @@ Game.draw=function(){
  G.startMusic=function(){
   if(G.weapons)G.weapons.forEach((w,i)=>{if(boosted[i]!=null)w.base=boosted[i]});
   return startMusicL&&startMusicL.apply(G,arguments);
- };
-})();
-</script>
-<script>
-"use strict";
-/* DAYBREAK LII - threshold event/audio reliability, time-stop item lock, final counts and weapon damage */
-(function(){
- const G=Game;
- const RAGE_HP=1200000, FINAL_HP=700000;
- const WEAPON_DAMAGE=[90000,80000,55000,60000,75000,90000];
-
- function applyWeaponValues(){
-  if(!G.weapons)return;
-  G.weapons.forEach((w,i)=>{if(WEAPON_DAMAGE[i]!=null)w.base=WEAPON_DAMAGE[i]});
- }
- applyWeaponValues();
-
- /* Exact requested inventory. */
- function applyInventory(){
-  G.items.herb=3;
-  G.items.mae=6;
-  G.items.full=2;
-  G.items.rifle=2;
-  delete G.items.ura;
- }
- applyInventory();
-
- const resetLI=G.reset;
- G.reset=function(){
-  const out=resetLI.apply(G,arguments);
-  G.boss.max=1400000;G.boss.hp=1400000;
-  applyInventory();applyWeaponValues();
-  G.liWorldQueued=false;G.liWorldShown=false;
-  G.worldUnlockPending=false;G.worldUnlockDialogueShown=false;G.worldUnlockedAnnounced=false;
-  G._musicNeedRetry=true;G._musicRetryAfter=0;G._appliedMusicTier=-99;
-  setTimeout(()=>G.syncThresholdMusic&&G.syncThresholdMusic(true),0);
-  return out;
- };
-
- /* Time stop: these items have no meaning, so block them before inventory is consumed. */
- const guardLI=G.chooseGuardItem;
- G.chooseGuardItem=function(kind){
-  if(G.timeStopTurns>0){G.toast("時間停止中はバリアンを使用できない",1.5);G.setState("ITEM_SELECT_XLIX");return}
-  return guardLI.call(G,kind);
- };
- const rifleLI=G.useDroneRifle;
- G.useDroneRifle=function(){
-  if(G.timeStopTurns>0){G.toast("時間停止中はポジドローンライフルを使用できない",1.7);G.setState("ITEM_SELECT_XLIX");return}
-  return rifleLI.apply(G,arguments);
- };
-
- /* Reliable three-stage music. Failed iPhone play attempts remain retryable. */
- function desiredTier(){return G.boss.hp<=FINAL_HP?2:G.boss.hp<=RAGE_HP?1:0}
- function trackFor(t){return t===0?G.bgm:t===1?G.bgmPhase2:G.bgmFinal}
- function stopTrack(a){if(!a)return;try{a.pause();a.currentTime=0;a.volume=0}catch(e){}}
- G.syncThresholdMusic=function(force){
-  G.ensureAudio();
-  const t=desiredTier(), next=trackFor(t);
-  const playing=next&&!next.paused&&!next.ended&&next.volume>.01;
-  if(!force&&G._appliedMusicTier===t&&playing){G._musicNeedRetry=false;return}
-  if(!force&&performance.now()<(G._musicRetryAfter||0))return;
-  G._musicRetryAfter=performance.now()+900;
-  clearInterval(G._bgmFade);clearInterval(G._phase1Fade);clearInterval(G._phase2Fade);clearInterval(G._finalFade);
-  G._bgmFade=G._phase1Fade=G._phase2Fade=G._finalFade=null;
-  [G.bgm,G.bgmPhase2,G.bgmFinal].forEach(a=>{if(a!==next)stopTrack(a)});
-  if(!next)return;
-  try{
-   next.muted=false;next.playsInline=true;next.setAttribute("playsinline","");next.setAttribute("webkit-playsinline","");
-   if(G._appliedMusicTier!==t){try{next.currentTime=0}catch(e){}}
-   next.volume=0;
-   const p=next.play();
-   const success=()=>{G._appliedMusicTier=t;G.rebirth44Tier=t;G._musicNeedRetry=false;if(G.fadeTrack)G.fadeTrack(next,t===0?.15:t===1?.17:.19,1.1,t===0?"_phase1Fade":t===1?"_phase2Fade":"_finalFade");else next.volume=t===0?.15:t===1?.17:.19};
-   if(p&&p.then)p.then(success).catch(()=>{G._musicNeedRetry=true;G._appliedMusicTier=-99});else success();
-  }catch(e){G._musicNeedRetry=true;G._appliedMusicTier=-99}
- };
- G.startMusic=function(){G._appliedMusicTier=-99;G._musicNeedRetry=true;G._musicRetryAfter=0;G.syncThresholdMusic(true)};
- G.startPhase2Music=function(){G._musicNeedRetry=true;G._musicRetryAfter=0;G.syncThresholdMusic(true)};
- ["pointerdown","touchstart","click"].forEach(ev=>document.addEventListener(ev,()=>{if(G._musicNeedRetry||G._appliedMusicTier!==desiredTier())G.syncThresholdMusic(true)},{passive:true}));
-
- /* Any damage source can cross 1.2M / 700K: normal, weapon, homing, buster or rifle. */
- const damageLI=G.damageBoss;
- G.damageBoss=function(raw){
-  const before=G.boss.hp;
-  const out=damageLI.call(G,raw);
-  if(before>RAGE_HP&&G.boss.hp<=RAGE_HP){G._musicNeedRetry=true;G._musicRetryAfter=0;G.syncThresholdMusic(true)}
-  if(before>FINAL_HP&&G.boss.hp<=FINAL_HP&&G.boss.hp>0){
-   G.liWorldQueued=true;
-   G.worldUnlockPending=false;
-   G.worldUnlockedAnnounced=true;
-   G._musicNeedRetry=true;G._musicRetryAfter=0;G.syncThresholdMusic(true);
-  }
-  return out;
- };
-
- function showWorldUnlock(){
-  if(G.liWorldShown||!G.liWorldQueued||G.boss.hp<=0)return false;
-  G.liWorldQueued=false;G.liWorldShown=true;
-  G.worldUnlockPending=false;G.worldUnlockDialogueShown=true;G.worldUnlockedAnnounced=true;
-  G.setState("MENU");
-  G.say([
-   "激しい攻撃が止み、砕けた光だけが宇宙を漂っていた。",
-   "傷ついた仲間たちの前で、トシユキは静かに立ち上がった。",
-   "トシユキ「ここで終わる時間なんて……俺は認めない。」",
-   "止まるはずのない宇宙の時計が、一度だけ逆向きに震えた。",
-   "仲間たちの声と、失いたくない記憶が、ひとつの世界を形づくる。",
-   "トシユキ「みんなの未来は、俺が止めさせない。」",
-   "――トシユキの必殺技『ザ・ワールド』が使用可能になった。"
-  ],()=>{G.setState("MENU");G.toast(G.current().name+"のターン",.9)});
-  return true;
- }
-
- /* Show only after the enemy turn has completely ended. */
- const nextLI=G.nextTurn;
- G.nextTurn=function(){
-  const queued=G.liWorldQueued&&!G.liWorldShown&&G.boss.hp<=FINAL_HP&&G.boss.hp>0&&!G.introMode;
-  const out=nextLI.apply(G,arguments);
-  if(queued)setTimeout(()=>{if(G.sub!=="dialog")showWorldUnlock()},30);
-  return out;
- };
-
- /* Fixed weapon damage and fixed red result number. */
- G.fireWeapon=function(){
-  if(G.weaponStopped)return;
-  G.weaponStopped=true;G.attackEnded=true;
-  const i=G.active,w=G.weapons[i];
-  const accuracy=Math.max(0,1-Math.abs(G.weaponCursor-270)/200);
-  let damage=WEAPON_DAMAGE[i];
-  if(G.critTurns>0)damage=Math.floor(damage*1.45);
-  G.weaponUsed[i]=true;G.weaponFx=1.8;G.shake=36;G.flash=.45;
-  if(accuracy>=.88)G.final43CoreFx=1.25;
-  try{G.ensureAudio();G.beep(52,.34,"sawtooth",.35);G.beep(105,.28,"square",.28);G.beep(620,.18,"sine",.22)}catch(e){}
-  for(let n=0;n<95;n++)G.particle(270,190,n%3?w.color:"#fff",1,1.9);
-  setTimeout(()=>{
-   if(G.boss.hp<=0)return;
-   G.damageBoss(G.boss.armor+damage);
-   const last=G.damageText[G.damageText.length-1];if(last)last.l=0;
-   G.final43WeaponValue=damage;G.final43WeaponFx=1.5;
-   if(G.boss.hp<=0)return;
-   if(i===3){
-    G.reviveCandidates=[];
-    G.party.forEach((p,j)=>{if(j!==3&&(p.hp<=0||G.permanentDead[j]))G.reviveCandidates.push(j)});
-    if(G.reviveCandidates.length){G.pendingWeaponDefense=true;G.setState("REVIVE_SELECT");G.toast("蘇生する仲間を選択",1.2);return}
-   }
-   if(typeof G.finishWeaponFlow==="function")G.finishWeaponFlow();else setTimeout(()=>G.beginDefense(),500);
-  },420);
- };
-
- /* Keep values correct even if an older setup runs on game start. */
- const updateLI=G.update;
- G.update=function(dt){
-  applyWeaponValues();
-  if(G.state!=="BOOT"&&G.state!=="END"&&(G._musicNeedRetry||G._appliedMusicTier!==desiredTier()))G.syncThresholdMusic(false);
-  return updateLI.call(G,dt);
  };
 })();
 </script>
