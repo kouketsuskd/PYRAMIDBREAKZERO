@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK LI<br>RAPID MAX MUSIC FIX</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card title-card"><div class="logo v1-logo"><span class="v1-pyramid">pyramid</span><span class="v1-blake">Blake</span><span class="v1-zero">ZERO</span><small>version1</small></div><button id="startButton" class="v1-start">物語を始める</button></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -2263,6 +2263,50 @@ Game.draw=function(){
  if(logo)logo.innerHTML='DAYBREAK LII<br>CENTER MAX WAVE CANNON FIX';
 })();
 </script>
+
+<style>
+/* pyramidBlakeZERO version1 title screen */
+#start{background:
+ radial-gradient(circle at 50% 30%,rgba(255,45,92,.20),transparent 28%),
+ radial-gradient(circle at 50% 58%,rgba(55,211,255,.13),transparent 42%),
+ linear-gradient(180deg,#02030a 0%,#090014 48%,#000 100%);overflow:hidden}
+#start:before,#start:after{content:"";position:absolute;inset:-25%;pointer-events:none}
+#start:before{background:repeating-linear-gradient(0deg,transparent 0 7px,rgba(255,255,255,.025) 8px 9px);animation:v1scan 8s linear infinite}
+#start:after{background:conic-gradient(from 0deg at 50% 42%,transparent 0 12%,rgba(255,49,102,.10) 13%,transparent 15% 49%,rgba(67,218,255,.08) 50%,transparent 53%);animation:v1turn 16s linear infinite}
+#start .title-card{position:relative;z-index:1;width:min(90vw,520px);padding:54px 18px 42px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(180deg,rgba(4,6,15,.88),rgba(0,0,0,.94));box-shadow:0 0 0 5px rgba(255,255,255,.025),0 0 70px rgba(255,28,89,.20),inset 0 0 45px rgba(71,211,255,.05);clip-path:polygon(4% 0,96% 0,100% 8%,100% 92%,96% 100%,4% 100%,0 92%,0 8%)}
+.v1-logo{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:0;font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;font-style:italic;letter-spacing:-.06em;line-height:.78;text-transform:none;filter:drop-shadow(0 8px 0 #000)}
+.v1-logo span{display:inline-block}
+.v1-pyramid{font-size:clamp(36px,10vw,66px);color:#f7f9ff;text-shadow:0 0 16px rgba(255,255,255,.35)}
+.v1-blake{font-size:clamp(36px,10vw,66px);color:#ff315f;text-shadow:0 0 19px rgba(255,37,91,.65)}
+.v1-zero{font-size:clamp(43px,12vw,78px);color:#fff;letter-spacing:-.08em;text-shadow:4px 0 0 #39d9ff,-4px 0 0 #ff315f,0 0 25px rgba(255,255,255,.5)}
+.v1-logo small{flex-basis:100%;margin-top:28px;font:900 clamp(14px,4vw,21px)/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.52em;padding-left:.52em;color:#ffd75a;text-transform:uppercase;text-shadow:0 0 14px rgba(255,215,90,.5)}
+#start .v1-start{position:relative;margin-top:55px;min-width:230px;padding:17px 34px;border:1px solid #fff;background:rgba(0,0,0,.72);font-size:18px;letter-spacing:.14em;box-shadow:0 0 0 4px rgba(255,255,255,.05),0 0 25px rgba(57,217,255,.18);animation:v1button 2.2s ease-in-out infinite}
+#start .v1-start:before,#start .v1-start:after{content:"";position:absolute;top:50%;width:34px;height:1px;background:#ff315f;box-shadow:0 0 8px #ff315f}
+#start .v1-start:before{right:calc(100% + 12px)}#start .v1-start:after{left:calc(100% + 12px);background:#39d9ff;box-shadow:0 0 8px #39d9ff}
+@keyframes v1scan{to{transform:translateY(40px)}}@keyframes v1turn{to{transform:rotate(360deg)}}@keyframes v1button{50%{box-shadow:0 0 0 4px rgba(255,255,255,.09),0 0 35px rgba(255,49,95,.28);transform:translateY(-2px)}}
+</style>
+<script>
+"use strict";
+/* pyramidBlakeZERO version1 - stock and title lock */
+(function(){
+ const G=Game;
+ function applyVersion1Stock(){
+  G.items.herb=6;
+  G.items.mae=6;
+  G.items.full=2;
+  G.items.rifle=2;
+  delete G.items.ura;
+ }
+ applyVersion1Stock();
+ const previousReset=G.reset;
+ G.reset=function(){
+  const result=previousReset.apply(G,arguments);
+  applyVersion1Stock();
+  return result;
+ };
+ document.title="pyramidBlakeZERO version1";
+})();
+</script>
 </body></html>
 <script>
 "use strict";
@@ -3579,5 +3623,74 @@ Game.draw=function(){
  document.title="DAYBREAK LIV MAX CLEAN STOCK FIX";
  const logo=document.querySelector('.logo b');
  if(logo)logo.innerHTML='DAYBREAK LIV<br>MAX CLEAN STOCK FIX';
+})();
+</script>
+
+<script>
+"use strict";
+/* DAYBREAK LV - final inventory and cinematic darkness restoration */
+(function(){
+ const G=Game;
+ function applyLVStock(){
+  G.items.herb=9;
+  G.items.mae=9;
+  G.items.full=3;
+  G.items.rifle=3;
+  delete G.items.ura;
+ }
+ applyLVStock();
+ const oldReset=G.reset;
+ G.reset=function(){
+  const out=oldReset.apply(G,arguments);
+  applyLVStock();
+  G.lvDarkPulse=0;
+  return out;
+ };
+
+ /* Restore a lightweight cinematic dark warning before every LIII large attack. */
+ G.lvDarkPulse=0;
+ const oldUpdate=G.update;
+ G.update=function(dt){
+  oldUpdate.call(G,dt);
+  const f=G.liiiFx;
+  if(G.state==="DEFENSE"&&f&&f.type>=0){
+   const q=Math.min(1,f.t/Math.max(.01,f.dur));
+   if(q<.48)G.lvDarkPulse=Math.min(1,G.lvDarkPulse+dt*1.15);
+   else G.lvDarkPulse=Math.max(0,G.lvDarkPulse-dt*2.4);
+  }else G.lvDarkPulse=Math.max(0,G.lvDarkPulse-dt*2.8);
+ };
+
+ const oldDraw=G.draw;
+ G.draw=function(){
+  oldDraw.apply(G,arguments);
+  const f=G.liiiFx,d=G.lvDarkPulse||0;
+  if(G.state!=="DEFENSE"||!f||f.type<0||d<=0)return;
+  const g=G.ctx,q=Math.min(1,f.t/Math.max(.01,f.dur));
+  g.save();
+  /* Darken only the battle field; this is one overlay, not extra bullets. */
+  g.fillStyle=`rgba(0,0,7,${Math.min(.58,d*.58)})`;
+  g.fillRect(0,0,G.W,710);
+  /* Keep the enemy core visible as a red warning light. */
+  const pulse=.65+.35*Math.sin(G.time*9);
+  g.globalCompositeOperation="screen";
+  g.globalAlpha=d*(.42+.28*pulse);
+  g.fillStyle="#ff264f";
+  g.shadowColor="#ff264f";g.shadowBlur=38+24*pulse;
+  g.beginPath();g.arc(270,208,16+8*pulse,0,Math.PI*2);g.fill();
+  g.shadowBlur=0;
+  /* Thin warning scan lines make the darkness feel intentional. */
+  g.globalAlpha=d*.18;g.fillStyle="#fff";
+  for(let y=115;y<640;y+=32)g.fillRect(35,y,470,1);
+  /* A brief white pre-flash immediately before the large attack fires. */
+  if(q>.47&&q<.58){
+   const a=Math.sin((q-.47)/.11*Math.PI)*.32;
+   g.globalAlpha=Math.max(0,a);g.fillStyle="#fff";g.fillRect(0,0,G.W,G.H);
+  }
+  g.restore();
+ };
+
+ document.title="DAYBREAK LV DARK WARNING STOCK FIX";
+ const logo=document.querySelector('.logo b');
+ if(logo)logo.innerHTML='DAYBREAK LV<br>DARK WARNING STOCK FIX';
 })();
 </script>
