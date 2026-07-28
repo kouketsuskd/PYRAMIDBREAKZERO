@@ -410,7 +410,7 @@ Game.draw=function(){const G=Game,g=G.ctx,sx=G.shake?G.rnd(-G.shake,G.shake):0,s
    G.wrapped(G.dialogue[G.dialogueIndex]||"",270,412,400,30,17);
    G.T("タップで進む",270,520,13,"#d7d7d7","center");g.restore();
  }
- g.restore();g.save();const vg=g.createRadialGradient(270,470,260,270,470,650);vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,0,.72)");g.fillStyle=vg;g.fillRect(0,0,540,960);G.R(0,0,540,24,"#000");G.R(0,936,540,24,"#000");g.restore();if(G.flash>0){g.fillStyle=`rgba(255,255,255,${G.flash*4})`;g.fillRect(0,0,540,960)}};
+ g.restore();g.save();const vg=g.createRadialGradient(270,470,260,270,470,650);vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,0,.72)");g.fillStyle=vg;g.fillRect(0,0,540,960);G.R(0,0,540,24,"#000");G.R(0,936,540,24,"#000");g.restore();if(G.flash>0){g.fillStyle=`rgba(255,255,255,${G.flash*4})`;if(G.state==="DEFENSE"){const A=G.arena;g.fillRect(A.x,A.y,A.w,A.h)}else g.fillRect(0,0,540,960)}};
 
 </script><script>
 "use strict";
@@ -2222,7 +2222,7 @@ Game.draw=function(){
    g.shadowBlur=0;G.T("MAX",0,19,48,"#07101b","center");
    g.restore();
    if(burst>0){
-    g.save();g.globalAlpha=Math.min(.5,burst*.55);g.fillStyle="#fff";g.fillRect(0,0,G.W,G.H);
+    g.save();g.globalAlpha=Math.min(.5,burst*.55);g.fillStyle="#fff";g.fillRect(G.arena.x,G.arena.y,G.arena.w,G.arena.h);
     g.globalAlpha=burst*.8;g.strokeStyle="#d9fbff";g.lineWidth=6;
     for(let i=0;i<3;i++){g.beginPath();g.arc(270,827,105+(1-burst)*90+i*28,0,Math.PI*2);g.stroke()}
     g.restore();
@@ -2234,9 +2234,9 @@ Game.draw=function(){
    const elapsed=3.15-G.liiWaveFx;
    const charge=Math.min(1,elapsed/1.85);
    const fire=Math.max(0,(elapsed-1.75)/1.4);
-   const white=Math.min(.82,charge*.62+fire*.34);
+   const white=(G.pbzFxEnabled?Math.min(.22,charge*.16+fire*.08):0);
    g.save();
-   g.globalAlpha=white;g.fillStyle="#fff";g.fillRect(0,0,G.W,G.H);
+   g.globalAlpha=white;g.fillStyle="#fff";g.fillRect(G.arena.x,G.arena.y,G.arena.w,G.arena.h);
    g.globalCompositeOperation="screen";
    const beamW=18+charge*52+fire*180;
    const grad=g.createLinearGradient(0,0,G.W,0);
@@ -3389,10 +3389,10 @@ Game.draw=function(){
     G.T("MAX",270,778,48,"#07101b","center");g.restore();
    }
   }
-  if(G.state==="DEFENSE"&&G.boss.hp<=RAGE_HP&&G.liWhiteAttack>0){
+  if(G.state==="DEFENSE"&&G.boss.hp<=RAGE_HP&&G.liWhiteAttack>0&&G.pbzFxEnabled){
    const t=G.liWhiteAttack/.72;
    const a=Math.sin(Math.min(1,(1-t)*3.2)*Math.PI)*.68;
-   g.save();g.globalAlpha=Math.max(0,a);g.fillStyle="#fff";g.fillRect(0,0,G.W,G.H);
+   g.save();g.globalAlpha=Math.max(0,a);g.fillStyle="#fff";g.fillRect(G.arena.x,G.arena.y,G.arena.w,G.arena.h);
    g.globalAlpha=Math.max(0,a*.72);g.strokeStyle="#bdefff";g.lineWidth=5;
    const sweep=(1-t)*760-110;
    for(let i=0;i<5;i++){g.beginPath();g.moveTo(-80,sweep+i*62);g.lineTo(620,sweep-170+i*62);g.stroke()}
@@ -3562,7 +3562,7 @@ Game.draw=function(){
   if(burst>0){
    g.save();
    g.globalCompositeOperation="screen";
-   g.globalAlpha=Math.min(.58,burst*.7);g.fillStyle="#fff";g.fillRect(0,0,G.W,G.H);
+   g.globalAlpha=Math.min(.58,burst*.7);g.fillStyle="#fff";g.fillRect(G.arena.x,G.arena.y,G.arena.w,G.arena.h);
    g.translate(270,735);g.strokeStyle="#dffcff";g.lineWidth=5;
    for(let i=0;i<4;i++){
     g.globalAlpha=Math.max(0,burst*(.9-i*.12));
@@ -3625,7 +3625,7 @@ Game.draw=function(){
   g.save();
   /* Darken only the battle field; this is one overlay, not extra bullets. */
   g.fillStyle=`rgba(0,0,7,${Math.min(.58,d*.58)})`;
-  g.fillRect(0,0,G.W,710);
+  g.fillRect(G.arena.x,G.arena.y,G.arena.w,G.arena.h);
   /* Keep the enemy core visible as a red warning light. */
   const pulse=.65+.35*Math.sin(G.time*9);
   g.globalCompositeOperation="screen";
@@ -3640,7 +3640,7 @@ Game.draw=function(){
   /* A brief white pre-flash immediately before the large attack fires. */
   if(q>.47&&q<.58){
    const a=Math.sin((q-.47)/.11*Math.PI)*.32;
-   g.globalAlpha=Math.max(0,a);g.fillStyle="#fff";g.fillRect(0,0,G.W,G.H);
+   g.globalAlpha=Math.max(0,a);g.fillStyle="#fff";g.fillRect(G.arena.x,G.arena.y,G.arena.w,G.arena.h);
   }
   g.restore();
  };
