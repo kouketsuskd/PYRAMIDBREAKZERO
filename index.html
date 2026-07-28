@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK L<br>BARRIER PERFECT FIX</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b>DAYBREAK LI<br>RAPID MAX MUSIC FIX</b></div><p>倒すRPGではなく、心を折らずに朝を迎えるRPG。</p><button id="startButton">物語を始める</button><p class="small">縦画面専用／ハートは指で直接ドラッグ<br>この修正版は index.html 1ファイルだけで動作します。</p></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -3119,5 +3119,165 @@ Game.draw=function(){
   if(G.weapons)G.weapons.forEach((w,i)=>{if(boosted[i]!=null)w.base=boosted[i]});
   return startMusicL&&startMusicL.apply(G,arguments);
  };
+})();
+</script>
+<script>
+"use strict";
+/* DAYBREAK LI - rapid MAX / reliable threshold events / time-stop item lock / low-cost rage visuals */
+(function(){
+ const G=Game, RAGE_HP=1200000, FINAL_HP=700000;
+
+ /* Exact requested stock. Weapon values are intentionally untouched. */
+ function applyStock(){
+  G.items.herb=3;
+  G.items.mae=6;
+  G.items.full=2;
+  G.items.rifle=2;
+ }
+ applyStock();
+ const resetLI=G.reset;
+ G.reset=function(){
+  const out=resetLI.apply(G,arguments);
+  applyStock();
+  G.liUnlockPending=false;
+  G.liUnlockShown=false;
+  G.liLastHp=G.boss.hp;
+  G.liWhiteAttack=0;
+  G.liWhiteAttackClock=0;
+  return out;
+ };
+
+ /* 12 taps normally, 48 taps during Isaji's boosted rapid attack. Extra taps keep feel only. */
+ const attackTapLI=G.attackTap;
+ G.attackTap=function(){
+  if(G.state!=="ATTACK"||G.attackEnded||G.weaponMode||G.attackTime<=0)return;
+  const max=(G.active===4&&G.oniTurns>0)?48:12;
+  if((G.attackHits||0)>=max){
+   G.attackPulse=1;
+   G.shake=Math.min(18,7+(G.attackHits||0)*.08);
+   G.flash=Math.max(G.flash,.018);
+   try{G.rapidStrikeSound(1.45)}catch(e){try{G.sfxTap()}catch(_){} }
+   const p=G.current();
+   try{G.particle(270+G.rnd(-70,70),190+G.rnd(-20,30),p.c,5,.5)}catch(e){}
+   return;
+  }
+  return attackTapLI.apply(G,arguments);
+ };
+
+ /* Final item handlers: all three tactical items are meaningless while time is stopped. */
+ const chooseGuardLI=G.chooseGuardItem;
+ G.chooseGuardItem=function(kind){
+  if(G.timeStopTurns>0){G.toast("時間停止中はバリアンを使用できない",1.5);return}
+  return chooseGuardLI.apply(G,arguments);
+ };
+ const rifleLI=G.useDroneRifle;
+ G.useDroneRifle=function(){
+  if(G.timeStopTurns>0){G.toast("時間停止中はポジドローンライフルを使用できない",1.7);return}
+  return rifleLI.apply(G,arguments);
+ };
+
+ /* Detect 700K from the actual HP value, regardless of homing, buster, rapid attack or weapon path. */
+ G.liLastHp=G.boss.hp;
+ G.liUnlockPending=false;
+ G.liUnlockShown=!!G.worldUnlockDialogueShown;
+ function markUnlockIfNeeded(before,after){
+  if(before>FINAL_HP&&after<=FINAL_HP&&after>0&&!G.liUnlockShown){
+   G.liUnlockPending=true;
+   G.worldUnlockPending=true;
+   G.worldUnlockedAnnounced=true;
+  }
+ }
+ const damageLI=G.damageBoss;
+ G.damageBoss=function(raw){
+  const before=G.boss.hp;
+  const out=damageLI.apply(G,arguments);
+  markUnlockIfNeeded(before,G.boss.hp);
+  G.liLastHp=G.boss.hp;
+  if(before>RAGE_HP&&G.boss.hp<=RAGE_HP)G.liWhiteAttack=Math.max(G.liWhiteAttack,.9);
+  return out;
+ };
+
+ const nextLI=G.nextTurn;
+ G.nextTurn=function(){
+  const need=(G.liUnlockPending||G.worldUnlockPending)&&!G.liUnlockShown&&G.boss.hp<=FINAL_HP&&G.boss.hp>0&&!G.introMode;
+  if(!need)return nextLI.apply(G,arguments);
+  /* Consume before calling any older wrapper so the dialogue can never duplicate. */
+  G.liUnlockPending=false;G.worldUnlockPending=false;
+  G.liUnlockShown=true;G.worldUnlockDialogueShown=true;G.worldUnlockedAnnounced=true;
+  nextLI.apply(G,arguments);
+  G.setState("MENU");
+  G.say([
+   "激しい攻撃が止み、砕けた光だけが宇宙を漂っていた。",
+   "トシユキは膝をつきながらも、仲間たちの呼吸を確かめた。",
+   "トシユキ「まだ……終わってない。みんなの時間は、ここで終わらせない。」",
+   "止まるはずのない時計の針が、一度だけ逆向きに震えた。",
+   "カズアキ「やっと届いたか。お前の世界に。」",
+   "トシユキは立ち上がり、静かに機械天使を見据えた。",
+   "――トシユキの必殺技『ザ・ワールド』が使用可能になった。"
+  ],()=>{G.setState("MENU");G.toast(G.current().name+"のターン",.9)});
+ };
+
+ /* Music repair: retry the correct track without restarting a track that is already playing. */
+ function wantedMusic(){return G.boss.hp<=FINAL_HP?G.bgmFinal:G.boss.hp<=RAGE_HP?G.bgmPhase2:G.bgm}
+ function wantedVolume(){return G.boss.hp<=FINAL_HP?.19:G.boss.hp<=RAGE_HP?.17:.15}
+ G.liMusicRetry=function(){
+  const a=wantedMusic();if(!a)return;
+  for(const x of [G.bgm,G.bgmPhase2,G.bgmFinal]){
+   if(x&&x!==a&&!x.paused){try{x.pause();x.currentTime=0;x.volume=0}catch(e){}}
+  }
+  try{
+   a.muted=false;
+   if(a.paused){const p=a.play();if(p&&p.catch)p.catch(()=>{});}
+   if(a.volume<wantedVolume()*.7)a.volume=wantedVolume();
+  }catch(e){}
+ };
+ const syncLI=G.syncThresholdMusic;
+ G.syncThresholdMusic=function(force){
+  const out=syncLI.apply(G,arguments);
+  G.liMusicRetry();
+  return out;
+ };
+ G.canvas.addEventListener("pointerdown",()=>G.liMusicRetry(),{passive:true});
+
+ /* Low-cost dramatic attack layer below 1.2M: whiteouts, scan slashes and warning rings; no bullets added. */
+ G.liWhiteAttack=0;G.liWhiteAttackClock=0;
+ const updateLI=G.update;
+ G.update=function(dt){
+  updateLI.call(G,dt);
+  markUnlockIfNeeded(G.liLastHp,G.boss.hp);G.liLastHp=G.boss.hp;
+  if(G.state==="DEFENSE"&&G.boss.hp<=RAGE_HP){
+   G.liWhiteAttackClock+=dt;
+   if(G.liWhiteAttackClock>2.65){G.liWhiteAttackClock=0;G.liWhiteAttack=.72;G.shake=Math.max(G.shake,9);}
+  }else G.liWhiteAttackClock=0;
+  G.liWhiteAttack=Math.max(0,G.liWhiteAttack-dt);
+ };
+
+ const drawLI=G.draw;
+ G.draw=function(){
+  drawLI.apply(G,arguments);
+  const g=G.ctx;
+  if(G.state==="ATTACK"){
+   const max=(G.active===4&&G.oniTurns>0)?48:12;
+   if((G.attackHits||0)>=max){
+    /* Cover the live counter number and replace it with MAX. */
+    g.save();g.fillStyle="#f7fdff";g.shadowColor="#71e8ff";g.shadowBlur=28;
+    g.beginPath();g.arc(270,758,76,0,Math.PI*2);g.fill();g.shadowBlur=0;
+    G.T("MAX",270,778,48,"#07101b","center");g.restore();
+   }
+  }
+  if(G.state==="DEFENSE"&&G.boss.hp<=RAGE_HP&&G.liWhiteAttack>0){
+   const t=G.liWhiteAttack/.72;
+   const a=Math.sin(Math.min(1,(1-t)*3.2)*Math.PI)*.68;
+   g.save();g.globalAlpha=Math.max(0,a);g.fillStyle="#fff";g.fillRect(0,0,G.W,G.H);
+   g.globalAlpha=Math.max(0,a*.72);g.strokeStyle="#bdefff";g.lineWidth=5;
+   const sweep=(1-t)*760-110;
+   for(let i=0;i<5;i++){g.beginPath();g.moveTo(-80,sweep+i*62);g.lineTo(620,sweep-170+i*62);g.stroke()}
+   g.globalAlpha=Math.max(0,a*.9);g.lineWidth=8;g.beginPath();g.arc(270,190,35+(1-t)*220,0,Math.PI*2);g.stroke();
+   g.restore();
+  }
+ };
+
+ /* Make the build visibly identifiable. */
+ document.title="DAYBREAK LI RAPID MAX MUSIC FIX";
 })();
 </script>
