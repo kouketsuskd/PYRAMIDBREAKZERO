@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b><span style="font-size:56px;letter-spacing:4px;text-shadow:0 0 12px #6cf,0 0 30px #39f;">pyramidBlakeZERO</span><br><b style="font-size:24px;">version1</b></b></div><button id="startButton">物語を始める</button></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#02040b"><title>DAYBREAK L BARRIER PERFECT FIX</title><style>*{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}body{display:grid;place-items:center}#wrap{position:relative;width:100vw;height:100dvh;background:#000}canvas{display:block;width:100%;height:100%;touch-action:none}.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#1c3157,#050711 65%,#010103)}.card{width:min(92vw,560px);padding:24px;border:3px solid #e9f7ff;background:#02040bf2;text-align:center;box-shadow:0 0 42px #000,0 0 24px #65d9ff55}.logo{font-size:clamp(30px,8vw,58px);font-weight:1000;line-height:.92;text-shadow:5px 5px 0 #153255}.logo b{color:#ffd75a}button{margin-top:18px;padding:14px 26px;border:3px solid #fff;background:#05070d;color:#fff;font:900 18px monospace}.small{font-size:12px;line-height:1.7;color:#c8d4e2}.hidden{display:none!important}#rotate{display:none;position:absolute;inset:0;z-index:50;background:#000;place-items:center;text-align:center;padding:28px;font-weight:900}@media(orientation:landscape) and (max-height:850px){#rotate{display:grid}}</style></head><body><div id="wrap"><canvas id="game" width="540" height="960"></canvas><div id="start" class="overlay"><div class="card"><div class="logo">PYRAMID BREAK ZERO<br><b><span style="font-size:56px;letter-spacing:4px;text-shadow:0 0 12px #6cf,0 0 30px #39f;">pyramidBlakeZERO</span><br><b style="font-size:24px;">version2</b></b></div><button id="startButton">物語を始める</button></div></div><div id="ending" class="overlay hidden"><div class="card"><div id="endingTitle" class="logo">DAYBREAK</div><p id="endingText"></p><button id="restartButton">もう一度</button></div></div><div id="fatal" class="overlay hidden"><div class="card"><h2>起動エラー</h2><p id="fatalText"></p><button onclick="location.reload()">再読み込み</button></div></div><div id="rotate">iPhoneを縦向きにしてください</div></div>\n<script>
 (function(){
   if(!CanvasRenderingContext2D.prototype.roundRect){
     CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
@@ -2191,7 +2191,7 @@ Game.draw=function(){
    G.liiWaveClock=(G.liiWaveClock||0)+dt;
    if(G.liiWaveClock>=7.2){
     G.liiWaveClock=0;
-    G.liiWaveFx=3.15;
+    G.liiWaveFx=1.55;
     G.shake=Math.max(G.shake||0,7);
     try{G.sfxBeam()}catch(e){try{G.sfxBarrier()}catch(_){}}
    }
@@ -2231,9 +2231,10 @@ Game.draw=function(){
 
   /* Slow whiteout wave-cannon attack. It adds no bullets and therefore stays lightweight. */
   if(G.state==="DEFENSE"&&G.boss.hp<=RAGE_HP&&G.liiWaveFx>0){
-   const elapsed=3.15-G.liiWaveFx;
-   const charge=Math.min(1,elapsed/1.85);
-   const fire=Math.max(0,(elapsed-1.75)/1.4);
+   const elapsed=1.55-G.liiWaveFx;
+   /* version 2: ENERGY CHARGE is completely removed; the cannon fires immediately. */
+   const charge=1;
+   const fire=Math.min(1,elapsed/.22);
    const white=(G.pbzFxEnabled?Math.min(.22,charge*.16+fire*.08):0);
    g.save();
    g.globalAlpha=white;g.fillStyle="#fff";g.fillRect(G.arena.x,G.arena.y,G.arena.w,G.arena.h);
@@ -2253,12 +2254,12 @@ Game.draw=function(){
     g.beginPath();g.arc(270,190,r,0,Math.PI*2);g.stroke();
    }
    g.globalCompositeOperation="source-over";
-   g.globalAlpha=Math.min(1,charge*1.2);G.T(fire>0?"WAVE CANNON":"ENERGY CHARGE",270,330,18,"#07101b","center");
+   g.globalAlpha=Math.min(1,charge*1.2);G.T("WAVE CANNON",270,330,18,"#07101b","center");
    g.restore();
   }
  };
 
- document.title="DAYBREAK LII CENTER MAX WAVE CANNON FIX";
+ document.title="pyramidBlakeZERO version2";
  const logo=document.querySelector('.logo b');
  if(logo)logo.innerHTML='DAYBREAK LII<br>CENTER MAX WAVE CANNON FIX';
 })();
@@ -3674,12 +3675,12 @@ Game.draw=function(){
 </style>
 <script>
 "use strict";
-/* pyramidBlakeZERO version1 — final title and eye-friendly arena-only warning effects */
+/* pyramidBlakeZERO version2 — ENERGY CHARGE removed */
 (function(){
  const G=Game, RAGE_HP=1200000;
- document.title="pyramidBlakeZERO version1";
+ document.title="pyramidBlakeZERO version2";
  const logo=document.querySelector("#start .logo");
- if(logo)logo.innerHTML='<span class="pbz-main">pyramidBlake<span class="pbz-zero">ZERO</span></span><span class="pbz-version">version 1</span>';
+ if(logo)logo.innerHTML='<span class="pbz-main">pyramidBlake<span class="pbz-zero">ZERO</span></span><span class="pbz-version">version 2</span>';
  const startButton=document.getElementById("startButton");
  if(startButton)startButton.textContent="物語を始める";
 
